@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { CortiClient, CortiEnvironment } from '@corti/sdk';
+import { CortiClient } from '@corti/sdk';
 
 export async function GET() {
     try {
         const client = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: CortiEnvironment.Eu,
+            environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
             auth: {
                 clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
                 clientSecret: process.env.CLIENT_SECRET!,
