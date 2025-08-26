@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { CortiClient, CortiEnvironment } from '@corti/sdk';
+import { CortiClient } from '@corti/sdk';
 import { readFileSync } from 'node:fs';
 
 export async function GET() {
     try {
         const client = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: CortiEnvironment.Eu,
+            environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
             auth: {
                 clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
                 clientSecret: process.env.CLIENT_SECRET!,
@@ -27,7 +27,6 @@ export async function GET() {
         const buffer = readFileSync('public/trouble-breathing.mp3');
         const blob = new Blob([buffer], { type: 'audio/mpeg' });
 
-        // @ts-expect-error Blob is differently typed
         const recording = await client.recordings.upload(blob, interaction.interactionId);
 
         const list = await client.transcripts.list(interaction.interactionId);

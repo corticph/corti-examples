@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CortiAuth, CortiEnvironment } from '@corti/sdk';
+import { CortiAuth } from '@corti/sdk';
 
 export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
 
         const auth = new CortiAuth({
-            environment: CortiEnvironment.Eu,
+            environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
         });
 

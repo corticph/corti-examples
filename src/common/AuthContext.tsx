@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useState } from 'react';
-import { CortiClient, CortiEnvironment, CortiAuth } from '@corti/sdk';
+import { CortiClient, CortiAuth } from '@corti/sdk';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 type AuthContext = {
@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function handleCodeAuthRedirect() {
         const auth = new CortiAuth({
-            environment: CortiEnvironment.Eu,
+            environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
         });
 
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const client = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: CortiEnvironment.Eu,
+            environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
             auth: {
                 ...tokenData,
                 refreshAccessToken: async (refreshToken) => {
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const client = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: CortiEnvironment.Eu,
+            environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
             auth: {
                 ...tokenData,
                 refreshAccessToken: async () => { // no refresh token for client credentials, we just get a new one
