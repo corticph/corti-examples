@@ -34,7 +34,6 @@ export async function GET() {
         const createdTranscript = await client.transcripts.create(interaction.interactionId, {
             recordingId: recording.recordingId,
             primaryLanguage: 'en',
-            modelName: 'premier'
         });
 
         const getTranscript = await client.transcripts.get(interaction.interactionId, createdTranscript.id);

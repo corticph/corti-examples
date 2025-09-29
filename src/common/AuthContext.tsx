@@ -60,14 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function getClientCredentialsToken() {
-        const res = await fetch('/api/frontend-endpoints/auth-cred');
-        const tokenData = await res.json();
-
         const client = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
             environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
             auth: {
-                ...tokenData,
                 refreshAccessToken: async () => { // no refresh token for client credentials, we just get a new one
                     return fetch('/api/frontend-endpoints/auth-cred')
                         .then(async res => {
