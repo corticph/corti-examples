@@ -49,7 +49,6 @@ export default function Page() {
             const createdTranscriptRes = await cortiClient.transcripts.create(interaction.id, {
                 recordingId: recordingRes.recordingId,
                 primaryLanguage: 'en',
-                modelName: 'premier'
             });
             setCreatedTranscript(createdTranscriptRes);
 
