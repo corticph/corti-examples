@@ -2,12 +2,23 @@
 
 import { useContext, useEffect } from 'react';
 import { AuthContext } from '@/common/AuthContext';
+import { CortiAuth } from '@corti/sdk';
 
 export default function Page() {
-    const { getTokenFromCode } = useContext(AuthContext);
+    const { getTokenFromCode, getTokenFromPkceCode } = useContext(AuthContext);
 
     useEffect(() => {
-        void getTokenFromCode();
+        const auth = new CortiAuth({
+            environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
+            tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
+        });
+        
+        const codeVerifier = auth.getCodeVerifier();
+        if (codeVerifier) {
+            void getTokenFromPkceCode();
+        } else {
+            void getTokenFromCode();
+        }
     }, []);
 
     return (
