@@ -14,7 +14,9 @@ type Messages =
     | Corti.TranscribeErrorMessage
     | Corti.TranscribeTranscriptMessage
     | Corti.TranscribeCommandMessage
-    | Corti.TranscribeEndMessage;
+    | Corti.TranscribeEndMessage
+    | Corti.TranscribeFlushMessage
+    | Corti.TranscribeFlushedMessage;
 
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
@@ -90,6 +92,16 @@ export default function Page() {
         setMessages(messages => ([...messages, message]));
     }
 
+    function handleFlushClick() {
+        const message = {
+            type: 'flush' as const,
+        };
+
+        ws?.sendFlush(message);
+
+        setMessages(messages => ([...messages, message]));
+    }
+
     function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
         if (!e.target.files || !ws) {
             return;
@@ -124,6 +136,7 @@ export default function Page() {
             <div className={'flex gap-6'}>
                 Transcribe WS: {status}
                 {actionsAvailable && <button onClick={handleEndClick}>Send end of stream</button>}
+                {actionsAvailable && <button onClick={handleFlushClick}>Send flush event</button>}
                 {actionsAvailable && <input type={'file'} onChange={handleFileUpload}></input>}
             </div>
             <div>
