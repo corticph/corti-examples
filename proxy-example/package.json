@@ -1,0 +1,19 @@
+{
+  "name": "proxy-example",
+  "version": "1.0.0",
+  "main": "simple-proxy-server.js",
+  "scripts": {
+    "start": "node simple-proxy-server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "@corti/sdk": "^0.8.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "ws": "^8.18.3"
+  }
+}
