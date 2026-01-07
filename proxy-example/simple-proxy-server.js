@@ -1,6 +1,6 @@
 /**
  * WebSocket Proxy Server for Corti API
- * 
+ *
  * Proxies WebSocket connections from clients to the Corti transcription service.
  * Requires authentication via proxy-auth-token query parameter.
  */
@@ -80,12 +80,14 @@ wss.on('connection', async function connection(clientWs, req) {
 
         // Handle client connection errors
         clientWs.on('error', async (error) => {
-            (await getTranscribeSocket()).close()
+            (await getTranscribeSocket()).close();
+            getTranscribeSocket.reset();
         });
 
         // Clean up on client disconnect
         clientWs.on('close', async () => {
-            (await getTranscribeSocket()).close()
+            (await getTranscribeSocket()).close();
+            getTranscribeSocket.reset();
         });
 
     } catch (error) {

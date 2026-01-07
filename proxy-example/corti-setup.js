@@ -19,7 +19,7 @@ const cortiClient = new CortiClient({
 const socketFactory = () => {
     let socket;
 
-    return async () => {
+    const getSocket = async () => {
         if (socket) {
             return socket;
         }
@@ -27,7 +27,13 @@ const socketFactory = () => {
         socket = cortiClient.transcribe.connect();
 
         return socket;
-    }
+    };
+
+    getSocket.reset = () => {
+        socket = null;
+    };
+
+    return getSocket;
 };
 
 // Alternative approach: If you only need WebSocket proxying and don't use other Corti API calls,
@@ -72,4 +78,3 @@ const socketFactory = () => {
 // };
 
 export { cortiClient, socketFactory };
-
