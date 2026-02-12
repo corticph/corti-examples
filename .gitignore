@@ -9,7 +9,9 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+# TypeScript projects (per-project build artifacts)
 typescript/node_modules
+typescript/next/node_modules
 
 # testing
 /coverage
@@ -17,11 +19,13 @@ typescript/node_modules
 # next.js
 /.next/
 typescript/.next/
+typescript/next/.next/
 /out/
 
 # production
 /build
 typescript/build
+typescript/next/build
 
 # misc
 .DS_Store
@@ -43,4 +47,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 typescript/next-env.d.ts
+typescript/next/next-env.d.ts
 
