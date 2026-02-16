@@ -49,3 +49,7 @@ yarn-error.log*
 typescript/next-env.d.ts
 typescript/next/next-env.d.ts
 
+# C# / .NET
+csharp/**/bin/
+csharp/**/obj/
+
