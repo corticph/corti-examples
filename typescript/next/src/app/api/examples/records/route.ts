@@ -1,19 +1,31 @@
 import { NextResponse } from 'next/server';
-import { CortiClient } from '@corti/sdk';
+import { CortiClient, CortiEnvironment } from '@corti/sdk';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { finished } from 'stream/promises';
 import { ReadableStream } from 'node:stream/web';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const token = new URL(request.url).searchParams.get('token');
+        if (!token) {
+            return NextResponse.json(
+                { error: 'Missing required query parameter: token' },
+                { status: 400 }
+            );
+        }
+        const tenantName = process.env.NEXT_PUBLIC_TENANT_NAME;
+        if (!tenantName) {
+            return NextResponse.json(
+                { error: 'Missing NEXT_PUBLIC_TENANT_NAME' },
+                { status: 400 }
+            );
+        }
+
         const client = new CortiClient({
-            tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
-            auth: {
-                clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
-                clientSecret: process.env.CLIENT_SECRET!,
-            },
+            tenantName,
+            environment: CortiEnvironment.Us,
+            token,
         });
 
         const interaction = await client.interactions.create({

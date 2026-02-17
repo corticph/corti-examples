@@ -1,15 +1,27 @@
 import { NextResponse } from 'next/server';
-import { CortiClient } from '@corti/sdk';
+import { CortiClient, CortiEnvironment } from '@corti/sdk';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const token = new URL(request.url).searchParams.get('token');
+        if (!token) {
+            return NextResponse.json(
+                { error: 'Missing required query parameter: token' },
+                { status: 400 }
+            );
+        }
+        const tenantName = process.env.NEXT_PUBLIC_TENANT_NAME;
+        if (!tenantName) {
+            return NextResponse.json(
+                { error: 'Missing NEXT_PUBLIC_TENANT_NAME' },
+                { status: 400 }
+            );
+        }
+
         const client = new CortiClient({
-            tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
-            auth: {
-                clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
-                clientSecret: process.env.CLIENT_SECRET!,
-            },
+            tenantName,
+            environment: CortiEnvironment.Us,
+            token,
         });
 
         const interaction = await client.interactions.create({
@@ -20,8 +32,8 @@ export async function GET() {
             },
             patient: {
                 identifier: Date.now().toString(),
-                gender: 'unknown'
-            }
+                gender: 'unknown',
+            },
         });
 
         const factsGroups = await client.facts.factGroupsList();
@@ -29,36 +41,29 @@ export async function GET() {
         const listResponse = await client.facts.list(interaction.interactionId);
 
         const createdFacts = await client.facts.create(interaction.interactionId, {
-            facts: [{
-                text: 'Patient has trouble breathing',
-                group: 'history-of-present-illness'
-            }, {
-                text: 'Patient is experiencing chest pain',
-                group: 'allergies'
-            }]
+            facts: [
+                { text: 'Patient has trouble breathing', group: 'history-of-present-illness' },
+                { text: 'Patient is experiencing chest pain', group: 'allergies' },
+            ],
         });
 
-        const updatedFacts = await client.facts.update(interaction.interactionId, createdFacts.facts![0].id!,
-            {
-                text: 'Patient has severe trouble breathing',
-                source: 'user'
-            });
-
+        const updatedFacts = await client.facts.update(interaction.interactionId, createdFacts.facts![0].id!, {
+            text: 'Patient has severe trouble breathing',
+            source: 'user',
+        });
 
         const batchUpdate = await client.facts.batchUpdate(interaction.interactionId, {
             facts: [
-                {
-                    factId: createdFacts.facts![0].id!,
-                    text: 'Patient has minor trouble breathing',
-                },
-                {
-                    factId: createdFacts.facts![1].id!,
-                    text: 'Patient is experiencing severe chest pain',
-                }
-            ]
+                { factId: createdFacts.facts![0].id!, text: 'Patient has minor trouble breathing' },
+                { factId: createdFacts.facts![1].id!, text: 'Patient is experiencing severe chest pain' },
+            ],
         });
 
-        // clean up
+        const extractResponse = await client.facts.extract({
+            context: [{ type: 'text', text: 'Patient reports headache and fever for two days. No known allergies.' }],
+            outputLanguage: 'en',
+        });
+
         await client.interactions.delete(interaction.interactionId);
 
         return NextResponse.json({
@@ -66,11 +71,13 @@ export async function GET() {
             listResponse,
             createdFacts,
             updatedFacts,
-            batchUpdate
+            batchUpdate,
+            extractResponse,
         });
     } catch (error) {
-        return NextResponse.json({
-            error: error,
-        });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : error },
+            { status: 500 }
+        );
     }
-} 
+}
