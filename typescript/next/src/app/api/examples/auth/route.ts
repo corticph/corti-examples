@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { CortiAuth, CortiClient } from '@corti/sdk';
+import { cortiErrorResponse } from '../cortiErrorResponse';
 
 export async function GET() {
     try {
@@ -44,8 +45,6 @@ export async function GET() {
             bearer: bearerList.data.length,
         });
     } catch (error) {
-        return NextResponse.json({
-            error: error,
-        });
+        return cortiErrorResponse(error);
     }
 }

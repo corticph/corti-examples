@@ -47,9 +47,20 @@ export async function GET() {
             data: document
         });
     } catch (error) {
-        console.log(error);
-        return NextResponse.json({
-            error: error,
-        });
+        if (error && typeof error.statusCode === 'number') {
+            return NextResponse.json(
+                {
+                    statusCode: error.statusCode,
+                    message: error.message,
+                    body: error.body,
+                    rawResponse: error.rawResponse,
+                },
+                { status: error.statusCode }
+            );
+        }
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : error },
+            { status: 500 }
+        );
     }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { CortiClient, CortiEnvironment } from '@corti/sdk';
+import { cortiErrorResponse } from '../cortiErrorResponse';
 
 export async function GET(request: Request) {
     try {
@@ -61,9 +62,6 @@ export async function GET(request: Request) {
             message: 'List templates, list sections, and get by key completed successfully',
         });
     } catch (error) {
-        return NextResponse.json(
-            { error: error instanceof Error ? error.message : error },
-            { status: 500 }
-        );
+        return cortiErrorResponse(error);
     }
 }

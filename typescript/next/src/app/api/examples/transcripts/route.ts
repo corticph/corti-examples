@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { CortiClient, CortiEnvironment } from '@corti/sdk';
+import { cortiErrorResponse } from '../cortiErrorResponse';
 import { readFileSync } from 'node:fs';
 
 export async function GET(request: Request) {
@@ -64,9 +65,6 @@ export async function GET(request: Request) {
             getTranscript,
         });
     } catch (error) {
-        return NextResponse.json(
-            { error: error instanceof Error ? error.message : error },
-            { status: 500 }
-        );
+        return cortiErrorResponse(error);
     }
 }

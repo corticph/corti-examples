@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { CortiClient, CortiEnvironment } from '@corti/sdk';
+import { cortiErrorResponse } from '../cortiErrorResponse';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { finished } from 'stream/promises';
@@ -65,9 +66,6 @@ export async function GET(request: Request) {
             recordCreate: res,
         });
     } catch (error) {
-        console.log(error);
-        return NextResponse.json({
-            error: error,
-        });
+        return cortiErrorResponse(error);
     }
 }
