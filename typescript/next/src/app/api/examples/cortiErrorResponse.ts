@@ -13,8 +13,16 @@ export function cortiErrorResponse(error: unknown): NextResponse {
             { status: error.statusCode ?? 500 }
         );
     }
+    const message =
+        error instanceof Error
+            ? error.message
+            : typeof error === 'string'
+              ? error
+              : error != null && typeof error === 'object' && 'message' in error
+                ? String((error as { message: unknown }).message)
+                : String(error ?? 'Unknown error');
     return NextResponse.json(
-        { error: error instanceof Error ? error.message : error },
+        { error: message || 'Internal server error' },
         { status: 500 }
     );
 }
