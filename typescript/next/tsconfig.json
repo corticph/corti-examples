@@ -21,7 +21,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@public/*": ["./public/*"],
-      "@corti/sdk": ["../../../corti-sdk-typescript/dist/cjs/index.js"],
+      "@corti/sdk": ["../../../corti-sdk-typescript/dist/esm/index.mjs"],
       "@corti/sdk/*": ["../../../corti-sdk-typescript/*"]
     }
   },

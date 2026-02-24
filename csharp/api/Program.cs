@@ -16,5 +16,6 @@ app.MapTemplatesEndpoint();
 app.MapAgentsEndpoint();
 app.MapDocumentsEndpoint();
 app.MapTranscribeEndpoint();
+app.MapStreamEndpoint();
 
 app.Run();
