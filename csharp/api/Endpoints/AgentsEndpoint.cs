@@ -1,4 +1,4 @@
-using CortiApi;
+using Corti;
 using CortiApiExamples;
 
 namespace CortiApiExamples.Endpoints;

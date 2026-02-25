@@ -1,4 +1,4 @@
-using CortiApi;
+using Corti;
 
 namespace CortiApiExamples;
 
@@ -28,8 +28,32 @@ public static class CortiHelpers
         var environment = string.Equals(config["Corti:Environment"], "us", StringComparison.OrdinalIgnoreCase)
             ? CortiClientEnvironment.Us
             : CortiClientEnvironment.Eu;
-        client = new CortiClient(tenantName, resolvedToken, new ClientOptions { Environment = environment });
+        client = new CortiClient(resolvedToken, tenantName, new ClientOptions { Environment = environment });
         errorResult = null!;
+        return true;
+    }
+
+    /// <summary>
+    /// Creates a Corti client suitable only for calling the auth token endpoint (no valid token required).
+    /// </summary>
+    public static bool TryCreateCortiClientForAuth(
+        IConfiguration config,
+        out CortiClient? client,
+        out IResult? errorResult)
+    {
+        var tenantName = config["Corti:TenantName"];
+        if (string.IsNullOrEmpty(tenantName))
+        {
+            client = null;
+            errorResult = Results.BadRequest(new { error = "Corti:TenantName is required. Set it in appsettings or environment." });
+            return false;
+        }
+
+        var environment = string.Equals(config["Corti:Environment"], "us", StringComparison.OrdinalIgnoreCase)
+            ? CortiClientEnvironment.Us
+            : CortiClientEnvironment.Eu;
+        client = new CortiClient("", tenantName, new ClientOptions { Environment = environment });
+        errorResult = null;
         return true;
     }
 

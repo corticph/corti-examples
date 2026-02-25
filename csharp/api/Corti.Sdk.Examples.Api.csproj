@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../corti-sdk-csh/src/CortiApi/CortiApi.csproj" />
+    <ProjectReference Include="../../../corti-sdk-csh/src/Corti/Corti.csproj" />
     <Content Include="sample\trouble-breathing.mp3" CopyToOutputDirectory="PreserveNewest" Link="sample\trouble-breathing.mp3" />
   </ItemGroup>
 

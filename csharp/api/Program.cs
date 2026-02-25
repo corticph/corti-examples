@@ -7,6 +7,7 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 
 app.MapHomeEndpoint();
+app.MapTokenEndpoint();
 app.MapInteractionsEndpoint();
 app.MapRecordingsEndpoint();
 app.MapTranscriptsEndpoint();
