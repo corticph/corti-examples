@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -9,9 +9,6 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-# TypeScript projects (per-project build artifacts)
-typescript/node_modules
-typescript/next/node_modules
 
 # testing
 /coverage

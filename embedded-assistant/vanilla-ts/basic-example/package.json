@@ -1,0 +1,26 @@
+{
+  "name": "embedded-assistant-vanilla-basic",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm:dev:*\"",
+    "dev:client": "tsc --watch",
+    "dev:server": "tsx watch --clear-screen=false server.ts"
+  },
+  "dependencies": {
+    "@corti/embedded-web": "^0.1.1",
+    "@corti/sdk": "^0.10.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.2",
+    "concurrently": "^9.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
