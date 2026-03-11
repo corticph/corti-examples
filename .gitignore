@@ -2,7 +2,7 @@
 
 # dependencies
 node_modules
-/.pnp
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -11,18 +11,15 @@ node_modules
 !.yarn/versions
 
 # testing
-/coverage
+coverage
 
 # next.js
-/.next/
-typescript/.next/
-typescript/next/.next/
-/out/
+.next
+out
 
 # production
-/build
-typescript/build
-typescript/next/build
+build
+dist
 
 # misc
 .DS_Store
@@ -43,10 +40,11 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-typescript/next-env.d.ts
-typescript/next/next-env.d.ts
+next-env.d.ts
 
 # C# / .NET
-csharp/**/bin/
-csharp/**/obj/
+bin/
+obj/
 
+# Local Corti SDK path (copy from local.Corti.props.example to local.Corti.props)
+local.Corti.props
