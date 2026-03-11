@@ -316,6 +316,50 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Token – ROPC (get access token)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/token/ropc",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"token",
+						"ropc"
+					],
+					"query": [
+						{
+							"key": "scopes",
+							"value": "openid",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Token – ROPC (call API)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/token/ropc-client",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"token",
+						"ropc-client"
+					],
+					"query": []
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [

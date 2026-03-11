@@ -46,8 +46,10 @@ The API needs Corti credentials to call the Corti API. Set these **before** runn
 | Parameter   | Description                    | Required |
 |------------|--------------------------------|----------|
 | TenantName | Your Corti tenant name         | Yes      |
-| ClientId   | OAuth2 client ID (client credentials) | Yes |
-| ClientSecret | OAuth2 client secret          | Yes      |
+| ClientId   | OAuth2 client ID (client credentials grant) | Yes |
+| ClientSecret | OAuth2 client secret (client credentials grant only) | Yes for `/token`, `/token/cc`, `/token/bearer` |
+| RopcClientId | OAuth2 client ID for ROPC grant (resource owner password credentials) | For `/token/ropc`, `/token/ropc-client`; falls back to `ClientId` if unset. ROPC is another OAuth grant type and may use a different client (e.g. public/native) than the client credentials grant (confidential). |
+| Username / Password | OAuth ROPC grant: resource owner credentials | For `/token/ropc`, `/token/ropc-client` |
 | Environment | `us` or `eu` (Corti region)   | No (default: `us`) |
 
 You can provide them in **any one** of these ways (later sources override earlier):
@@ -59,15 +61,19 @@ You can provide them in **any one** of these ways (later sources override earlie
      "TenantName": "your-tenant",
      "ClientId": "your-client-id",
      "ClientSecret": "your-client-secret",
+     "RopcClientId": "your-ropc-client-id",
      "Environment": "us"
    }
    ```
+   Different OAuth grant types use different client IDs in this system: `ClientId` is for the client credentials grant; `RopcClientId` is for the ROPC grant. Set both when using both grant types.
 
 2. **Environment variables**  
    Use double underscore for the `Corti` section:
    - `CORTI__TENANTNAME`
    - `CORTI__CLIENTID`
    - `CORTI__CLIENTSECRET`
+   - `CORTI__ROPCCLIENTID` (for ROPC endpoints; optional, falls back to `CORTI__CLIENTID`)
+   - `CORTI__USERNAME`, `CORTI__PASSWORD` (for ROPC endpoints `/token/ropc`, `/token/ropc-client`)
    - `CORTI__ENVIRONMENT` (optional, default `us`)
 
    You can set these in `Properties/launchSettings.json` (per profile), in your shell, or in your host environment.

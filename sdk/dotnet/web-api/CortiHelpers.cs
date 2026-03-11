@@ -12,6 +12,16 @@ public sealed record CortiConfig(
     CortiClientEnvironment Environment);
 
 /// <summary>
+/// ROPC (resource owner password credentials) config: TenantName, ClientId, Username, Password, Environment.
+/// </summary>
+public sealed record RopcConfig(
+    string TenantName,
+    string ClientId,
+    string Username,
+    string Password,
+    CortiClientEnvironment Environment);
+
+/// <summary>
 /// Shared helpers for Corti SDK example endpoints.
 /// </summary>
 public static class CortiHelpers
@@ -64,6 +74,60 @@ public static class CortiHelpers
             TenantName = cortiConfig.TenantName,
             Environment = cortiConfig.Environment,
             Auth = new CortiClientAuth.ClientCredentials(cortiConfig.ClientId, cortiConfig.ClientSecret),
+        });
+        return true;
+    }
+
+    private static readonly IResult RopcConfigError = Results.BadRequest(new
+    {
+        error = "ROPC credentials required. Set Corti:TenantName, Corti:ClientId (or Corti:RopcClientId), Corti:Username and Corti:Password (or CORTI__TENANTNAME, CORTI__CLIENTID/CORTI__ROPCCLIENTID, CORTI__USERNAME, CORTI__PASSWORD) in appsettings or environment.",
+    });
+
+    /// <summary>
+    /// Reads ROPC config from IConfiguration. Returns (config, null) on success, (null, errorResult) when required values are missing.
+    /// Uses Corti:RopcClientId when set, otherwise Corti:ClientId (ROPC typically uses a different OAuth client than client credentials).
+    /// </summary>
+    public static bool TryGetRopcConfig(IConfiguration config, out RopcConfig? ropcConfig, out IResult errorResult)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        var tenantName = config["Corti:TenantName"];
+        var clientId = config["Corti:RopcClientId"] ?? config["Corti:ClientId"];
+        var username = config["Corti:Username"];
+        var password = config["Corti:Password"];
+
+        if (string.IsNullOrEmpty(tenantName) || string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+        {
+            ropcConfig = null;
+            errorResult = RopcConfigError;
+            return false;
+        }
+
+        var environment = string.Equals(config["Corti:Environment"], "us", StringComparison.OrdinalIgnoreCase)
+            ? CortiClientEnvironment.Us
+            : CortiClientEnvironment.Eu;
+
+        ropcConfig = new RopcConfig(tenantName, clientId, username, password, environment);
+        errorResult = null!;
+        return true;
+    }
+
+    public static bool TryCreateCortiClientRopc(
+        IConfiguration config,
+        out CortiClient? client,
+        out IResult errorResult)
+    {
+        if (!TryGetRopcConfig(config, out var ropcConfig, out errorResult) || ropcConfig is null)
+        {
+            client = null;
+            return false;
+        }
+
+        client = new CortiClient(new CortiClientOptions
+        {
+            TenantName = ropcConfig.TenantName,
+            Environment = ropcConfig.Environment,
+            Auth = new CortiClientAuth.Ropc(ropcConfig.ClientId, ropcConfig.Username, ropcConfig.Password),
         });
         return true;
     }

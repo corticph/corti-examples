@@ -10,6 +10,8 @@ public static class TokenEndpoint
         app.MapGet("/token", HandleGetToken);
         app.MapGet("/token/cc", Handle);
         app.MapGet("/token/bearer", HandleBearer);
+        app.MapGet("/token/ropc", HandleGetTokenRopc);
+        app.MapGet("/token/ropc-client", HandleRopcClient);
     }
 
     /// <summary>
@@ -102,6 +104,73 @@ public static class TokenEndpoint
 
             var factGroups = await client.Facts.FactGroupsListAsync();
             return Results.Ok(new { message = "Corti client (Bearer token from CC) called Facts.FactGroupsListAsync successfully." });
+        }
+        catch (CortiClientApiException ex)
+        {
+            return Results.Json(
+                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
+                statusCode: (int)ex.StatusCode);
+        }
+    }
+
+    /// <summary>
+    /// Exchange username/password for a token via ROPC (resource owner password credentials). Optional query: scopes (comma-separated).
+    /// </summary>
+    private static async Task<IResult> HandleGetTokenRopc(IConfiguration config, string? scopes)
+    {
+        if (!CortiHelpers.TryGetRopcConfig(config, out var ropcConfig, out var credentialError))
+        {
+            return credentialError;
+        }
+
+        try
+        {
+            var auth = CustomAuthClient.Create(new CortiAuthClientOptions
+            {
+                TenantName = ropcConfig!.TenantName,
+                Environment = ropcConfig.Environment,
+            });
+
+            var request = string.IsNullOrWhiteSpace(scopes)
+                ? new RopcTokenRequest
+                {
+                    ClientId = ropcConfig.ClientId,
+                    Username = ropcConfig.Username,
+                    Password = ropcConfig.Password,
+                }
+                : new RopcTokenRequestWithScopes
+                {
+                    ClientId = ropcConfig.ClientId,
+                    Username = ropcConfig.Username,
+                    Password = ropcConfig.Password,
+                    Scopes = scopes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                };
+
+            var tokenResponse = await auth.GetTokenAsync(request);
+            return Results.Ok(tokenResponse);
+        }
+        catch (CortiClientApiException ex)
+        {
+            return Results.Json(
+                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
+                statusCode: (int)ex.StatusCode);
+        }
+    }
+
+    /// <summary>
+    /// Create a Corti client with ROPC auth (from config/env) and call Facts.FactGroupsListAsync().
+    /// </summary>
+    private static async Task<IResult> HandleRopcClient(IConfiguration config)
+    {
+        if (!CortiHelpers.TryCreateCortiClientRopc(config, out var client, out var credentialError))
+        {
+            return credentialError;
+        }
+
+        try
+        {
+            await client!.Facts.FactGroupsListAsync();
+            return Results.Ok(new { message = "Corti client (ROPC auth) called Facts.FactGroupsListAsync successfully." });
         }
         catch (CortiClientApiException ex)
         {

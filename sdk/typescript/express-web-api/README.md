@@ -29,6 +29,8 @@ npm run dev
 | `/token` | Raw token (client credentials); optional `?scopes=...` |
 | `/token/cc` | Call Facts.FactGroupsList with client credentials |
 | `/token/bearer` | Get bearer token then call Facts.FactGroupsList |
+| `/token/ropc` | Raw token via ROPC (username/password); optional `?scopes=...` |
+| `/token/ropc-client` | Call Facts.FactGroupsList with ROPC auth |
 | `/interactions` | List, create, get, update, delete interactions (query: sort, direction, pageSize, index, encounterStatus, patient) |
 | `/recordings` | List, upload sample, get (download), delete recording |
 | `/transcripts` | List, create transcript from sample, get status, get, delete |
@@ -47,12 +49,14 @@ Set Corti credentials in `.env` or `.env.local` (or environment):
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `CORTI_TENANT_NAME` | Your Corti tenant name | Yes |
-| `CORTI_CLIENT_ID` | OAuth2 client ID | Yes |
-| `CORTI_CLIENT_SECRET` | OAuth2 client secret | Yes |
+| `CORTI_CLIENT_ID` | OAuth2 client ID (client credentials grant) | Yes |
+| `CORTI_CLIENT_SECRET` | OAuth2 client secret (client credentials grant only) | Yes for `/token`, `/token/cc`, `/token/bearer` |
+| `CORTI_ROPC_CLIENT_ID` | OAuth2 client ID for ROPC grant (resource owner password credentials) | For `/token/ropc`, `/token/ropc-client`; falls back to `CORTI_CLIENT_ID` if unset. ROPC is another OAuth grant type and may use a different client (e.g. public/native) than the client credentials grant (confidential). |
+| `CORTI_USERNAME` | OAuth ROPC grant: resource owner username | For `/token/ropc`, `/token/ropc-client` |
+| `CORTI_PASSWORD` | OAuth ROPC grant: resource owner password | For `/token/ropc`, `/token/ropc-client` |
 | `CORTI_ENVIRONMENT` | `us` or `eu` | No (default: `us`) |
 | `PORT` | Server port | No (default: 3000) |
 
-Alternative env names (matching .NET): `CORTI__TENANTNAME`, `CORTI__CLIENTID`, `CORTI__CLIENTSECRET`.
 
 ## SDK
 
