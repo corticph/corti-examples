@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         const client = new CortiClient({
             tenantName,
             environment: CortiEnvironment.Us,
-            token,
+            auth: { accessToken: token },
         });
 
         const predictResponse = await client.codes.predict({

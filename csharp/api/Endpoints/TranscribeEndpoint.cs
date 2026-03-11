@@ -1,3 +1,4 @@
+// Not currently exposed in the API (MapTranscribeEndpoint is commented out in Program.cs). Code kept for when it works.
 using Corti;
 using CortiApiExamples;
 
@@ -16,7 +17,7 @@ public static class TranscribeEndpoint
         string? token)
     {
         Console.WriteLine("[Transcribe] Starting /transcribe request.");
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             Console.WriteLine("[Transcribe] Credentials missing or invalid.");
             return credentialError;
@@ -122,7 +123,7 @@ public static class TranscribeEndpoint
             Console.WriteLine("[Transcribe] Sending config once (primaryLanguage=en)...");
             await transcribeApi.Send(new TranscribeConfigMessage
             {
-                Type = TranscribeConfigMessageType.Config,
+                Type = "config",
                 Configuration = new TranscribeConfig { PrimaryLanguage = "en" },
             });
             await configAcceptedTcs.Task;
@@ -146,7 +147,7 @@ public static class TranscribeEndpoint
             Console.WriteLine("[Transcribe] Audio sent ({0} chunks).", chunkCount);
 
             Console.WriteLine("[Transcribe] Sending flush...");
-            await transcribeApi.Send(new TranscribeFlushMessage { Type = TranscribeFlushMessageType.Flush });
+            await transcribeApi.Send(new TranscribeFlushMessage { Type = "flush" });
             await flushedTcs.Task;
             Console.WriteLine("[Transcribe] Flush completed.");
 

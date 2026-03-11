@@ -12,7 +12,6 @@ public static class InteractionsEndpoint
 
     private static async Task<IResult> Handle(
         IConfiguration config,
-        string? token,
         string? sort,
         string? direction,
         long? pageSize,
@@ -20,7 +19,7 @@ public static class InteractionsEndpoint
         string? encounterStatus,
         string? patient)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             return credentialError;
         }

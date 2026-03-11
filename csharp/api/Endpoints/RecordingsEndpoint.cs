@@ -12,30 +12,15 @@ public static class RecordingsEndpoint
 
     private static async Task<IResult> Handle(
         IConfiguration config,
-        IWebHostEnvironment env,
-        string? token,
-        string? interactionId)
+        IWebHostEnvironment env)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             return credentialError;
         }
 
         try
         {
-            if (!string.IsNullOrEmpty(interactionId))
-            {
-                var listResponse = await client!.Recordings.ListAsync(interactionId);
-                var recordings = listResponse.Recordings?.ToList() ?? new List<string>();
-                return Results.Ok(new
-                {
-                    interactionId,
-                    listCount = recordings.Count,
-                    recordings,
-                    message = "List recordings completed successfully",
-                });
-            }
-
             var id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             var created = await client!.Interactions.CreateAsync(new InteractionsCreateRequest
             {

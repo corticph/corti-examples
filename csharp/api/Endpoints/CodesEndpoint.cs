@@ -10,9 +10,9 @@ public static class CodesEndpoint
         app.MapGet("/codes", Handle);
     }
 
-    private static async Task<IResult> Handle(IConfiguration config, string? token)
+    private static async Task<IResult> Handle(IConfiguration config)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             return credentialError;
         }

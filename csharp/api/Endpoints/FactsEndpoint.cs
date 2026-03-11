@@ -10,31 +10,15 @@ public static class FactsEndpoint
         app.MapGet("/facts", Handle);
     }
 
-    private static async Task<IResult> Handle(
-        IConfiguration config,
-        string? token,
-        string? interactionId)
+    private static async Task<IResult> Handle(IConfiguration config)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             return credentialError;
         }
 
         try
         {
-            if (!string.IsNullOrEmpty(interactionId))
-            {
-                var listResp = await client!.Facts.ListAsync(interactionId);
-                var facts = listResp.Facts?.ToList() ?? new List<FactsListItem>();
-                return Results.Ok(new
-                {
-                    interactionId,
-                    listCount = facts.Count,
-                    facts,
-                    message = "List facts completed successfully",
-                });
-            }
-
             var id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             var created = await client!.Interactions.CreateAsync(new InteractionsCreateRequest
             {

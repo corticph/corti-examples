@@ -12,12 +12,11 @@ public static class AgentsEndpoint
 
     private static async Task<IResult> Handle(
         IConfiguration config,
-        string? token,
         int? limit,
         int? offset,
         bool? ephemeral)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             return credentialError;
         }

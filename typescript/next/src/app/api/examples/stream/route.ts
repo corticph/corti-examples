@@ -31,7 +31,7 @@ export async function GET(request: Request) {
         const client = new CortiClient({
             tenantName,
             environment: CortiEnvironment.Us,
-            token: rawToken,
+            auth: { accessToken: rawToken },
         });
 
         let interactionId = interactionIdParam?.trim() || null;

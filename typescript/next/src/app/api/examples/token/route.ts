@@ -60,7 +60,7 @@ export async function GET(request: Request) {
         const client = new CortiClient({
             tenantName,
             environment: CortiEnvironment.Us,
-            token: '',
+            auth: { accessToken: '' },
         });
 
         const tokenResponse = isPkce

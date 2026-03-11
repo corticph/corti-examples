@@ -12,30 +12,15 @@ public static class TranscriptsEndpoint
 
     private static async Task<IResult> Handle(
         IConfiguration config,
-        IWebHostEnvironment env,
-        string? token,
-        string? interactionId)
+        IWebHostEnvironment env)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             return credentialError;
         }
 
         try
         {
-            if (!string.IsNullOrEmpty(interactionId))
-            {
-                var listResp = await client!.Transcripts.ListAsync(interactionId, new TranscriptsListRequest());
-                var transcripts = listResp.Transcripts?.ToList() ?? new List<TranscriptsListItem>();
-                return Results.Ok(new
-                {
-                    interactionId,
-                    listCount = transcripts.Count,
-                    transcripts,
-                    message = "List transcripts completed successfully",
-                });
-            }
-
             var id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             var created = await client!.Interactions.CreateAsync(new InteractionsCreateRequest
             {

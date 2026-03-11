@@ -1,3 +1,4 @@
+// Not currently exposed in the API (MapStreamEndpoint is commented out in Program.cs). Code kept for when it works.
 using Corti;
 using CortiApiExamples;
 
@@ -19,7 +20,7 @@ public static class StreamEndpoint
         string? interactionId)
     {
         Console.WriteLine("[Stream] Starting /stream request.");
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             Console.WriteLine("[Stream] Credentials missing or invalid.");
             return credentialError;
@@ -127,7 +128,7 @@ public static class StreamEndpoint
             Console.WriteLine("[Stream] Sending config once (transcription, primaryLanguage=en)...");
             await streamApi.Send(new StreamConfigMessage
             {
-                Type = StreamConfigMessageType.Config,
+                Type = "config",
                 Configuration = new StreamConfig
                 {
                     Transcription = new StreamConfigTranscription
@@ -158,7 +159,7 @@ public static class StreamEndpoint
             Console.WriteLine("[Stream] Audio sent ({0} chunks).", chunkCount);
 
             Console.WriteLine("[Stream] Sending flush...");
-            await streamApi.Send(new StreamFlushMessage { Type = StreamFlushMessageType.Flush });
+            await streamApi.Send(new StreamFlushMessage { Type = "flush" });
             await flushedTcs.Task;
             Console.WriteLine("[Stream] Flush completed.");
 

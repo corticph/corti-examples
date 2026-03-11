@@ -1,0 +1,4 @@
+<Project>
+  <!-- Optional: import a local path for Corti SDK (file is gitignored). See local.Corti.props.example. -->
+  <Import Project="local.Corti.props" Condition="Exists('local.Corti.props')" />
+</Project>

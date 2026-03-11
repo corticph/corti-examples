@@ -53,3 +53,6 @@ typescript/next/next-env.d.ts
 csharp/**/bin/
 csharp/**/obj/
 
+# Local Corti SDK path (copy from local.Corti.props.example to local.Corti.props)
+csharp/api/local.Corti.props
+

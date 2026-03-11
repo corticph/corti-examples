@@ -27,7 +27,7 @@ export async function GET(request: Request) {
         const client = new CortiClient({
             tenantName,
             environment: CortiEnvironment.Us,
-            token,
+            auth: { accessToken: token },
         });
 
         const listRequest: { limit?: number; offset?: number; ephemeral?: boolean } = {};

@@ -12,29 +12,17 @@ public static class TemplatesEndpoint
 
     private static async Task<IResult> Handle(
         IConfiguration config,
-        string? token,
-        string? key,
         string? org,
         string? lang,
         string? status)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             return credentialError;
         }
 
         try
         {
-            if (!string.IsNullOrEmpty(key))
-            {
-                var template = await client!.Templates.GetAsync(key);
-                return Results.Ok(new
-                {
-                    template,
-                    message = "Get template by key completed successfully",
-                });
-            }
-
             var listRequest = new TemplatesListRequest();
             if (!string.IsNullOrEmpty(org))
             {

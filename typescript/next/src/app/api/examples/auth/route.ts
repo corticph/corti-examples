@@ -26,15 +26,7 @@ export async function GET() {
         const bearerClient = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
             environment: process.env.NEXT_PUBLIC_ENVIRONMENT_ID!,
-            auth: {
-                ...token,
-                refreshAccessToken: async () => {
-                    return auth.getToken({
-                        clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
-                        clientSecret: process.env.CLIENT_SECRET!,
-                    });
-                }
-            },
+            auth: { accessToken: token.accessToken },
         });
 
         const credentialsList = await credentialsClient.interactions.list();

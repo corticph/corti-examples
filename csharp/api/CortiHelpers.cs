@@ -3,57 +3,68 @@ using Corti;
 namespace CortiApiExamples;
 
 /// <summary>
+/// Corti configuration from config/env (TenantName, ClientId, ClientSecret, Environment).
+/// </summary>
+public sealed record CortiConfig(
+    string TenantName,
+    string ClientId,
+    string ClientSecret,
+    CortiClientEnvironment Environment);
+
+/// <summary>
 /// Shared helpers for Corti SDK example endpoints.
 /// </summary>
 public static class CortiHelpers
 {
-    public static bool TryCreateCortiClient(
-        IConfiguration config,
-        string? token,
-        out CortiClient? client,
-        out IResult errorResult)
+    private static readonly IResult CortiConfigError = Results.BadRequest(new
     {
-        var resolvedToken = token ?? config["Corti:AccessToken"] ?? config["Corti:Token"];
+        error = "Corti credentials required. Set Corti:TenantName, Corti:ClientId and Corti:ClientSecret (or CORTI__TENANTNAME, CORTI__CLIENTID, CORTI__CLIENTSECRET) in appsettings or environment.",
+    });
+
+    /// <summary>
+    /// Reads Corti config from IConfiguration. Returns (config, null) on success, (null, errorResult) when required values are missing.
+    /// </summary>
+    public static bool TryGetCortiConfig(IConfiguration config, out CortiConfig? cortiConfig, out IResult errorResult)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
         var tenantName = config["Corti:TenantName"];
-        if (string.IsNullOrEmpty(tenantName) || string.IsNullOrEmpty(resolvedToken))
+        var clientId = config["Corti:ClientId"];
+        var clientSecret = config["Corti:ClientSecret"];
+
+        if (string.IsNullOrEmpty(tenantName) || string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
         {
-            client = null;
-            errorResult = Results.BadRequest(new
-            {
-                error = "Corti credentials required. Pass token as query parameter, or set Corti:TenantName and Corti:AccessToken in appsettings or environment.",
-            });
+            cortiConfig = null;
+            errorResult = CortiConfigError;
             return false;
         }
 
         var environment = string.Equals(config["Corti:Environment"], "us", StringComparison.OrdinalIgnoreCase)
             ? CortiClientEnvironment.Us
             : CortiClientEnvironment.Eu;
-        client = new CortiClient(resolvedToken, tenantName, new ClientOptions { Environment = environment });
+
+        cortiConfig = new CortiConfig(tenantName, clientId, clientSecret, environment);
         errorResult = null!;
         return true;
     }
 
-    /// <summary>
-    /// Creates a Corti client suitable only for calling the auth token endpoint (no valid token required).
-    /// </summary>
-    public static bool TryCreateCortiClientForAuth(
+    public static bool TryCreateCortiClient(
         IConfiguration config,
         out CortiClient? client,
-        out IResult? errorResult)
+        out IResult errorResult)
     {
-        var tenantName = config["Corti:TenantName"];
-        if (string.IsNullOrEmpty(tenantName))
+        if (!TryGetCortiConfig(config, out var cortiConfig, out errorResult) || cortiConfig is null)
         {
             client = null;
-            errorResult = Results.BadRequest(new { error = "Corti:TenantName is required. Set it in appsettings or environment." });
             return false;
         }
 
-        var environment = string.Equals(config["Corti:Environment"], "us", StringComparison.OrdinalIgnoreCase)
-            ? CortiClientEnvironment.Us
-            : CortiClientEnvironment.Eu;
-        client = new CortiClient("", tenantName, new ClientOptions { Environment = environment });
-        errorResult = null;
+        client = new CortiClient(new CortiClientOptions
+        {
+            TenantName = cortiConfig.TenantName,
+            Environment = cortiConfig.Environment,
+            Auth = new CortiClientAuth.ClientCredentials(cortiConfig.ClientId, cortiConfig.ClientSecret),
+        });
         return true;
     }
 

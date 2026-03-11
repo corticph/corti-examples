@@ -10,31 +10,15 @@ public static class DocumentsEndpoint
         app.MapGet("/documents", Handle);
     }
 
-    private static async Task<IResult> Handle(
-        IConfiguration config,
-        string? token,
-        string? interactionId)
+    private static async Task<IResult> Handle(IConfiguration config)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, token, out var client, out var credentialError))
+        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             return credentialError;
         }
 
         try
         {
-            if (!string.IsNullOrEmpty(interactionId))
-            {
-                var listResp = await client!.Documents.ListAsync(interactionId);
-                var documents = listResp.Data?.ToList() ?? new List<DocumentsGetResponse>();
-                return Results.Ok(new
-                {
-                    interactionId,
-                    listCount = documents.Count,
-                    documents,
-                    message = "List documents completed successfully",
-                });
-            }
-
             var id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             var created = await client!.Interactions.CreateAsync(new InteractionsCreateRequest
             {

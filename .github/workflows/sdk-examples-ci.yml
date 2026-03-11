@@ -1,0 +1,31 @@
+# Format check and build for C# SDK examples (runs only on PRs)
+name: SDK Examples CI
+
+on:
+  pull_request:
+
+jobs:
+  csharp:
+    name: C# format & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: csharp/api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Format check
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
