@@ -12,6 +12,7 @@ public static class TokenEndpoint
         app.MapGet("/token/bearer", HandleBearer);
         app.MapGet("/token/ropc", HandleGetTokenRopc);
         app.MapGet("/token/ropc-client", HandleRopcClient);
+        app.MapGet("/token/ropc-refresh", HandleRopcRefresh);
     }
 
     /// <summary>
@@ -132,13 +133,13 @@ public static class TokenEndpoint
             });
 
             var request = string.IsNullOrWhiteSpace(scopes)
-                ? new RopcTokenRequest
+                ? new OAuthRopcTokenRequest
                 {
                     ClientId = ropcConfig.ClientId,
                     Username = ropcConfig.Username,
                     Password = ropcConfig.Password,
                 }
-                : new RopcTokenRequestWithScopes
+                : new OAuthRopcTokenRequestWithScopes
                 {
                     ClientId = ropcConfig.ClientId,
                     Username = ropcConfig.Username,
@@ -148,6 +149,53 @@ public static class TokenEndpoint
 
             var tokenResponse = await auth.GetTokenAsync(request);
             return Results.Ok(tokenResponse);
+        }
+        catch (CortiClientApiException ex)
+        {
+            return Results.Json(
+                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
+                statusCode: (int)ex.StatusCode);
+        }
+    }
+
+    /// <summary>
+    /// Perform ROPC flow, then exchange the refresh token for a new access token and return that response.
+    /// Demonstrates the refresh_token grant: first call returns a refresh token, second call uses it.
+    /// </summary>
+    private static async Task<IResult> HandleRopcRefresh(IConfiguration config)
+    {
+        if (!CortiHelpers.TryGetRopcConfig(config, out var ropcConfig, out var credentialError))
+        {
+            return credentialError;
+        }
+
+        try
+        {
+            var auth = CustomAuthClient.Create(new CortiAuthClientOptions
+            {
+                TenantName = ropcConfig!.TenantName,
+                Environment = ropcConfig.Environment,
+            });
+
+            var ropcResponse = await auth.GetTokenAsync(new OAuthRopcTokenRequest
+            {
+                ClientId = ropcConfig.ClientId,
+                Username = ropcConfig.Username,
+                Password = ropcConfig.Password,
+            });
+
+            if (ropcResponse.RefreshToken is null)
+            {
+                return Results.BadRequest(new { error = "ROPC response did not include a refresh token." });
+            }
+
+            var refreshResponse = await auth.GetTokenAsync(new OAuthRefreshTokenRequest
+            {
+                ClientId = ropcConfig.ClientId,
+                RefreshToken = ropcResponse.RefreshToken,
+            });
+
+            return Results.Ok(refreshResponse);
         }
         catch (CortiClientApiException ex)
         {

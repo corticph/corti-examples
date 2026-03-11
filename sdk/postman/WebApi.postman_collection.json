@@ -360,6 +360,25 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Token – ROPC refresh (get refreshed access token)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/token/ropc-refresh",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"token",
+						"ropc-refresh"
+					],
+					"query": []
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [

@@ -20,6 +20,7 @@ export function registerToken(app: Application): void {
   app.get("/token/bearer", asyncHandler(tokenBearer));
   app.get("/token/ropc", asyncHandler(tokenRopc));
   app.get("/token/ropc-client", asyncHandler(tokenRopcClient));
+  app.get("/token/ropc-refresh", asyncHandler(tokenRopcRefresh));
 }
 
 async function getToken(req: Request, res: Response): Promise<void> {
@@ -161,6 +162,46 @@ async function tokenRopc(req: Request, res: Response): Promise<void> {
     });
 
     res.json(data);
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+async function tokenRopcRefresh(_req: Request, res: Response): Promise<void> {
+  if (sendRopcConfigError(res)) {
+    return;
+  }
+
+  const config = getRopcConfig();
+
+  if (!config) {
+    res.status(400).json({ error: "ROPC credentials required." });
+    return;
+  }
+
+  try {
+    const cortiAuth = new CortiAuth({
+      tenantName: config.tenantName,
+      environment: config.environment,
+    });
+
+    const ropcData = await cortiAuth.getRopcFlowToken({
+      clientId: config.clientId,
+      username: config.username,
+      password: config.password,
+    });
+
+    if (!ropcData.refreshToken) {
+      res.status(400).json({ error: "ROPC response did not include a refresh token." });
+      return;
+    }
+
+    const refreshData = await cortiAuth.refreshToken({
+      clientId: config.clientId,
+      refreshToken: ropcData.refreshToken,
+    });
+
+    res.json(refreshData);
   } catch (e) {
     cortiErrorResponse(e, res);
   }
