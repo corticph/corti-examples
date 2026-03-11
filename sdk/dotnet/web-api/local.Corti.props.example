@@ -1,0 +1,7 @@
+<Project>
+  <!-- Copy to local.Corti.props (gitignored) and set CortiProjectPath to your local corti-sdk-csh project. -->
+  <PropertyGroup>
+    <!-- Example: relative path from this file (sdk/dotnet/web-api). Use absolute path if your layout differs. -->
+    <CortiProjectPath>$(MSBuildThisFileDirectory)../../../../corti-sdk-csh/src/Corti/Corti.csproj</CortiProjectPath>
+  </PropertyGroup>
+</Project>
