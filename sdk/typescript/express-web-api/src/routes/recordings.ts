@@ -2,7 +2,12 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import type { Application, Request, Response } from "express";
 import { asyncHandler } from "../lib/asyncHandler.js";
-import { Corti, cortiErrorResponse, createCortiClient, sendCortiConfigError } from "../lib/corti.js";
+import {
+  Corti,
+  cortiErrorResponse,
+  createCortiClient,
+  sendCortiConfigError,
+} from "../lib/corti.js";
 import { resolveSampleFilePath } from "../lib/sample.js";
 
 export function registerRecordings(app: Application): void {
