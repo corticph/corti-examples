@@ -1,0 +1,351 @@
+{
+	"info": {
+		"_postman_id": "4729f1c6-cd0a-4046-b930-57cda8c97df9",
+		"name": "Web Api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42424863"
+	},
+	"item": [
+		{
+			"name": "Interactions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/interactions",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"interactions"
+					],
+					"query": [
+						{
+							"key": "sort",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "direction",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "pageSize",
+							"value": "3",
+							"disabled": true
+						},
+						{
+							"key": "index",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "encounterStatus",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "patient",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Recordings",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/recordings",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"recordings"
+					],
+					"query": []
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Transcripts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/transcripts",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"transcripts"
+					],
+					"query": []
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Facts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/facts",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"facts"
+					],
+					"query": []
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Codes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/codes",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"codes"
+					],
+					"query": []
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Documents",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/documents",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"documents"
+					],
+					"query": []
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Templates",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/templates",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"templates"
+					],
+					"query": [
+						{
+							"key": "org",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "lang",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "status",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Agents",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/agents",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"agents"
+					],
+					"query": [
+						{
+							"key": "limit",
+							"value": "10",
+							"disabled": true
+						},
+						{
+							"key": "offset",
+							"value": "0",
+							"disabled": true
+						},
+						{
+							"key": "ephemeral",
+							"value": "false",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Transcribe",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/transcribe",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"transcribe"
+					],
+					"query": []
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Stream",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/stream",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"stream"
+					],
+					"query": [
+						{
+							"key": "interactionId",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Token – client credentials (call API)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/token/cc",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"token",
+						"cc"
+					],
+					"query": []
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Token – get access token",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/token",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"token"
+					],
+					"query": [
+						{
+							"key": "scopes",
+							"value": "openid",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Token – bearer (call API)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/token/bearer",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"token",
+						"bearer"
+					],
+					"query": []
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": ""
+		}
+	]
+}
