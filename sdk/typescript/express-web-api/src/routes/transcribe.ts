@@ -17,7 +17,7 @@ export function registerTranscribe(app: Application): void {
   app.get("/transcribe", asyncHandler(handle));
 }
 
-async function handle(req: Request, res: Response): Promise<void> {
+async function handle(_req: Request, res: Response): Promise<void> {
   if (sendCortiConfigError(res)) {
     return;
   }

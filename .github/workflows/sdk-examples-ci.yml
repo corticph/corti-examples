@@ -1,12 +1,34 @@
 # Format check and build for SDK examples (runs only on PRs)
+# Each job runs only when files in its path were changed.
 name: SDK Examples CI
 
 on:
   pull_request:
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      dotnet: ${{ steps.filter.outputs.dotnet }}
+      express: ${{ steps.filter.outputs.express }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            dotnet:
+              - 'sdk/dotnet/web-api/**'
+              - '.github/workflows/sdk-examples-ci.yml'
+            express:
+              - 'sdk/typescript/express-web-api/**'
+              - '.github/workflows/sdk-examples-ci.yml'
+
   dotnet:
     name: C# format & build
+    needs: changes
+    if: needs.changes.outputs.dotnet == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -32,6 +54,8 @@ jobs:
 
   express-web-api:
     name: Express Web API lint & build
+    needs: changes
+    if: needs.changes.outputs.express == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
