@@ -21,8 +21,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@public/*": ["./public/*"],
-      "@corti/sdk": ["../../../corti-sdk-typescript/dist/esm/index.mjs"],
-      "@corti/sdk/*": ["../../../corti-sdk-typescript/*"]
+      "@corti/sdk": ["../../../../corti-sdk-typescript/dist/esm/index.mjs"],
+      "@corti/sdk/*": ["../../../../corti-sdk-typescript/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

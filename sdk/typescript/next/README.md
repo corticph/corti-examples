@@ -11,12 +11,12 @@ readiness and actual workflows.
     - Go to the Corti self-service portal and generate the required credentials for the SDK and API usage.
 
 2. **Create Environment File**
-    - In the `typescript/next/` directory, create a file named `.env.local`.
+    - In the `sdk/typescript/next/` directory, create a file named `.env.local`.
     - Copy the contents of `.env.example` and fill in the required values.
 
-3. **Install Dependencies** (from the `typescript/next/` directory)
+3. **Install Dependencies** (from the `sdk/typescript/next/` directory)
    ```bash
-   cd typescript/next && npm install
+   cd sdk/typescript/next && npm install
    ```
 
 4. **Run the Development Server**
@@ -28,7 +28,7 @@ readiness and actual workflows.
 ## Project Structure & Where to Look
 
 - **Frontend Auth Flows**: Two different authentication flows are implemented for the frontend. Check `src/app/page.tsx` and `src/common/AuthContext` for the implementation.
-- **Examples** (all paths relative to this `typescript/next/` directory):
+- **Examples** (all paths relative to this `sdk/typescript/next/` directory):
     - **Frontend**: Example pages are under `src/app/examples/` (e.g., `documents`, `facts`, `interactions`, etc.).
     - **API**: Example API endpoints are under `src/app/api/examples/`.
 - **Auth Endpoints**: Endpoints used for frontend authentication examples are in `src/app/api/frontend-endpoints/`.

@@ -1,31 +1,24 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-# TypeScript projects (per-project build artifacts)
-typescript/node_modules
-typescript/next/node_modules
 
 # testing
-/coverage
+coverage
 
 # next.js
-/.next/
-typescript/.next/
-typescript/next/.next/
-/out/
+.next
+out
 
 # production
-/build
-typescript/build
-typescript/next/build
+build
 
 # misc
 .DS_Store
@@ -46,13 +39,11 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-typescript/next-env.d.ts
-typescript/next/next-env.d.ts
+next-env.d.ts
 
 # C# / .NET
-csharp/**/bin/
-csharp/**/obj/
+bin/
+obj/
 
 # Local Corti SDK path (copy from local.Corti.props.example to local.Corti.props)
-csharp/api/local.Corti.props
-
+local.Corti.props

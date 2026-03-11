@@ -5,12 +5,12 @@ on:
   pull_request:
 
 jobs:
-  csharp:
+  dotnet:
     name: C# format & build
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: csharp/api
+        working-directory: sdk/dotnet/web-api
 
     steps:
       - name: Checkout

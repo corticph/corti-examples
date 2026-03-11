@@ -6,11 +6,11 @@ This repository contains example applications for the Corti SDK, organized by la
 
 | Language    | Directory   | Description                    |
 |------------|-------------|--------------------------------|
-| TypeScript | [typescript/](typescript/) | [next/](typescript/next/) – Next.js app with SDK examples (documents, facts, interactions, stream, etc.) and API route examples. |
-| C#         | [csharp/](csharp/)        | Placeholder for C# example applications. |
+| TypeScript | [sdk/typescript/](sdk/typescript/) | [next/](sdk/typescript/next/) – Next.js app with SDK examples (documents, facts, interactions, stream, etc.) and API route examples. |
+| .NET      | [sdk/dotnet/](sdk/dotnet/)        | [web-api/](sdk/dotnet/web-api/) – ASP.NET Core API with SDK examples (token, interactions, recordings, etc.). |
 
-Additional languages can be added as new top-level directories.
+Additional languages can be added under `sdk/`.
 
 ## Getting started
 
-Open the directory for the language and project you want (e.g. [typescript/next/](typescript/next/) for the Next.js app) and follow that project’s README.
+Open the directory for the language and project you want (e.g. [sdk/typescript/next/](sdk/typescript/next/) for the Next.js app, [sdk/dotnet/web-api/](sdk/dotnet/web-api/) for the .NET web API) and follow that project’s README.

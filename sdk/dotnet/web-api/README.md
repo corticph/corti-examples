@@ -11,7 +11,7 @@ Minimal ASP.NET Core API that demonstrates the Corti SDK (token, interactions, r
 From the repo root:
 
 ```bash
-cd csharp/api
+cd sdk/dotnet/web-api
 dotnet run
 ```
 
@@ -24,7 +24,7 @@ Or run from your IDE (e.g. Visual Studio / Rider / VS Code) using the **http** o
 
 ## Run with Docker
 
-From `csharp/api`:
+From `sdk/dotnet/web-api`:
 
 ```bash
 docker build -t corti-examples-api .
@@ -72,7 +72,7 @@ You can provide them in **any one** of these ways (later sources override earlie
 
    You can set these in `Properties/launchSettings.json` (per profile), in your shell, or in your host environment.
 
-3. **.env or .env.local** (in `csharp/api`)  
+3. **.env or .env.local** (in `sdk/dotnet/web-api`)  
    Same keys as environment variables, e.g.:
    ```
    CORTI__TENANTNAME=your-tenant
