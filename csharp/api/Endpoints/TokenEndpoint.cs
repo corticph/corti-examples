@@ -7,8 +7,48 @@ public static class TokenEndpoint
 {
     public static void MapTokenEndpoint(this WebApplication app)
     {
+        app.MapGet("/token", HandleGetToken);
         app.MapGet("/token/cc", Handle);
         app.MapGet("/token/bearer", HandleBearer);
+    }
+
+    /// <summary>
+    /// Exchange client credentials for a token and return the raw token response (access_token, expires_in, etc.).
+    /// Optional query: scopes (comma-separated), e.g. ?scopes=api,read.
+    /// </summary>
+    private static async Task<IResult> HandleGetToken(IConfiguration config, string? scopes)
+    {
+        if (!CortiHelpers.TryGetCortiConfig(config, out var cortiConfig, out var credentialError))
+        {
+            return credentialError;
+        }
+
+        try
+        {
+            var auth = CustomAuthClient.Create(new CortiAuthClientOptions
+            {
+                TenantName = cortiConfig!.TenantName,
+                Environment = cortiConfig.Environment,
+            });
+
+            var request = string.IsNullOrWhiteSpace(scopes)
+                ? new OAuthTokenRequest { ClientId = cortiConfig.ClientId, ClientSecret = cortiConfig.ClientSecret }
+                : new OAuthTokenRequestWithScopes
+                {
+                    ClientId = cortiConfig.ClientId,
+                    ClientSecret = cortiConfig.ClientSecret,
+                    Scopes = scopes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                };
+
+            var tokenResponse = await auth.GetTokenAsync(request);
+            return Results.Ok(tokenResponse);
+        }
+        catch (CortiClientApiException ex)
+        {
+            return Results.Json(
+                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
+                statusCode: (int)ex.StatusCode);
+        }
     }
 
     /// <summary>
