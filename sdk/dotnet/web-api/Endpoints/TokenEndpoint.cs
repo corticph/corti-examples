@@ -13,6 +13,7 @@ public static class TokenEndpoint
         app.MapGet("/token/ropc", HandleGetTokenRopc);
         app.MapGet("/token/ropc-client", HandleRopcClient);
         app.MapGet("/token/ropc-refresh", HandleRopcRefresh);
+        app.MapGet("/token/custom-refresh", HandleCustomRefresh);
     }
 
     /// <summary>
@@ -196,6 +197,62 @@ public static class TokenEndpoint
             });
 
             return Results.Ok(refreshResponse);
+        }
+        catch (CortiClientApiException ex)
+        {
+            return Results.Json(
+                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
+                statusCode: (int)ex.StatusCode);
+        }
+    }
+
+    /// <summary>
+    /// Create a CortiClient with only a custom RefreshAccessToken delegate (no initial token).
+    /// The delegate performs an ROPC flow to obtain a token — demonstrating that any arbitrary
+    /// token source can be wired in. The client calls the delegate on the first API request.
+    /// </summary>
+    private static async Task<IResult> HandleCustomRefresh(IConfiguration config)
+    {
+        if (!CortiHelpers.TryGetRopcConfig(config, out var ropcConfig, out var credentialError))
+        {
+            return credentialError;
+        }
+
+        try
+        {
+            var auth = CustomAuthClient.Create(new CortiAuthClientOptions
+            {
+                TenantName = ropcConfig!.TenantName,
+                Environment = ropcConfig.Environment,
+            });
+
+            var client = new CortiClient(new CortiClientOptions
+            {
+                TenantName = ropcConfig.TenantName,
+                Environment = ropcConfig.Environment,
+                Auth = new CortiClientAuth.BearerCustomRefresh(
+                    RefreshAccessToken: async (_, ct) =>
+                    {
+                        var r = await auth.GetTokenAsync(new OAuthRopcTokenRequest
+                        {
+                            ClientId = ropcConfig.ClientId,
+                            Username = ropcConfig.Username,
+                            Password = ropcConfig.Password,
+                        }, cancellationToken: ct);
+                        return new CustomRefreshResult
+                        {
+                            AccessToken = r.AccessToken,
+                            ExpiresIn = r.ExpiresIn,
+                            TokenType = r.TokenType,
+                            RefreshToken = r.RefreshToken,
+                            RefreshExpiresIn = r.RefreshExpiresIn,
+                        };
+                    }
+                ),
+            });
+
+            await client.Facts.FactGroupsListAsync();
+            return Results.Ok(new { message = "Corti client (custom RefreshAccessToken) called Facts.FactGroupsListAsync successfully." });
         }
         catch (CortiClientApiException ex)
         {

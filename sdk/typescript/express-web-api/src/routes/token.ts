@@ -21,6 +21,7 @@ export function registerToken(app: Application): void {
   app.get("/token/ropc", asyncHandler(tokenRopc));
   app.get("/token/ropc-client", asyncHandler(tokenRopcClient));
   app.get("/token/ropc-refresh", asyncHandler(tokenRopcRefresh));
+  app.get("/token/custom-refresh", asyncHandler(customRefresh));
 }
 
 async function getToken(req: Request, res: Response): Promise<void> {
@@ -202,6 +203,51 @@ async function tokenRopcRefresh(_req: Request, res: Response): Promise<void> {
     });
 
     res.json(refreshData);
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+/**
+ * Create a CortiClient with only a custom refreshAccessToken function (no initial token).
+ * The callback performs an ROPC flow to obtain a token — demonstrating that any arbitrary
+ * token source can be wired in. The client calls the function on the first API request.
+ */
+async function customRefresh(_req: Request, res: Response): Promise<void> {
+  if (sendRopcConfigError(res)) {
+    return;
+  }
+
+  const config = getRopcConfig();
+
+  if (!config) {
+    res.status(400).json({ error: "ROPC credentials required." });
+    return;
+  }
+
+  try {
+    const cortiAuth = new CortiAuth({
+      tenantName: config.tenantName,
+      environment: config.environment,
+    });
+
+    const client = new CortiClient({
+      tenantName: config.tenantName,
+      environment: cortiEnvironment,
+      auth: {
+        refreshAccessToken: () =>
+          cortiAuth.getRopcFlowToken({
+            clientId: config.clientId,
+            username: config.username,
+            password: config.password,
+          }),
+      },
+    });
+
+    await client.facts.factGroupsList();
+    res.json({
+      message: "Corti client (custom refreshAccessToken) called Facts.FactGroupsList successfully.",
+    });
   } catch (e) {
     cortiErrorResponse(e, res);
   }

@@ -379,6 +379,25 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Token – custom refresh (call API)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/token/custom-refresh",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"token",
+						"custom-refresh"
+					],
+					"query": []
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
