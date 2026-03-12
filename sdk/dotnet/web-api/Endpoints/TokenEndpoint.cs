@@ -97,12 +97,10 @@ public static class TokenEndpoint
             });
             var tokenResponse = await auth.GetTokenAsync(new OAuthTokenRequest { ClientId = cortiConfig.ClientId, ClientSecret = cortiConfig.ClientSecret });
 
-            var client = new CortiClient(new CortiClientOptions
-            {
-                TenantName = cortiConfig.TenantName,
-                Environment = cortiConfig.Environment,
-                Auth = new CortiClientAuth.Bearer(tokenResponse.AccessToken ?? string.Empty),
-            });
+            var client = new CortiClient(
+                cortiConfig.TenantName,
+                cortiConfig.Environment,
+                new CortiClientAuth.Bearer(tokenResponse.AccessToken ?? string.Empty));
 
             var factGroups = await client.Facts.FactGroupsListAsync();
             return Results.Ok(new { message = "Corti client (Bearer token from CC) called Facts.FactGroupsListAsync successfully." });
@@ -226,11 +224,10 @@ public static class TokenEndpoint
                 Environment = ropcConfig.Environment,
             });
 
-            var client = new CortiClient(new CortiClientOptions
-            {
-                TenantName = ropcConfig.TenantName,
-                Environment = ropcConfig.Environment,
-                Auth = new CortiClientAuth.BearerCustomRefresh(
+            var client = new CortiClient(
+                ropcConfig.TenantName,
+                ropcConfig.Environment,
+                new CortiClientAuth.BearerCustomRefresh(
                     RefreshAccessToken: async (_, ct) =>
                     {
                         var r = await auth.GetTokenAsync(new OAuthRopcTokenRequest
@@ -247,9 +244,7 @@ public static class TokenEndpoint
                             RefreshToken = r.RefreshToken,
                             RefreshExpiresIn = r.RefreshExpiresIn,
                         };
-                    }
-                ),
-            });
+                    }));
 
             await client.Facts.FactGroupsListAsync();
             return Results.Ok(new { message = "Corti client (custom RefreshAccessToken) called Facts.FactGroupsListAsync successfully." });

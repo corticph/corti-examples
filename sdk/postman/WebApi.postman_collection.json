@@ -398,6 +398,24 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Client variants – all auth options",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/client-variants",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"client-variants"
+					],
+					"query": []
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [

@@ -19,6 +19,7 @@ if (urls.Contains("https", StringComparison.OrdinalIgnoreCase))
     app.UseHttpsRedirection();
 
 app.MapTokenEndpoint();
+app.MapClientVariantsEndpoint();
 app.MapInteractionsEndpoint();
 app.MapRecordingsEndpoint();
 app.MapTranscriptsEndpoint();

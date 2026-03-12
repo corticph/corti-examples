@@ -9,7 +9,7 @@ public sealed record CortiConfig(
     string TenantName,
     string ClientId,
     string ClientSecret,
-    CortiClientEnvironment Environment);
+    string Environment);
 
 /// <summary>
 /// ROPC (resource owner password credentials) config: TenantName, ClientId, Username, Password, Environment.
@@ -19,7 +19,7 @@ public sealed record RopcConfig(
     string ClientId,
     string Username,
     string Password,
-    CortiClientEnvironment Environment);
+    string Environment);
 
 /// <summary>
 /// Shared helpers for Corti SDK example endpoints.
@@ -49,9 +49,7 @@ public static class CortiHelpers
             return false;
         }
 
-        var environment = string.Equals(config["Corti:Environment"], "us", StringComparison.OrdinalIgnoreCase)
-            ? CortiClientEnvironment.Us
-            : CortiClientEnvironment.Eu;
+        var environment = config["Corti:Environment"] ?? "eu";
 
         cortiConfig = new CortiConfig(tenantName, clientId, clientSecret, environment);
         errorResult = null!;
@@ -69,12 +67,10 @@ public static class CortiHelpers
             return false;
         }
 
-        client = new CortiClient(new CortiClientOptions
-        {
-            TenantName = cortiConfig.TenantName,
-            Environment = cortiConfig.Environment,
-            Auth = new CortiClientAuth.ClientCredentials(cortiConfig.ClientId, cortiConfig.ClientSecret),
-        });
+        client = new CortiClient(
+            cortiConfig.TenantName,
+            cortiConfig.Environment,
+            new CortiClientAuth.ClientCredentials(cortiConfig.ClientId, cortiConfig.ClientSecret));
         return true;
     }
 
@@ -103,9 +99,7 @@ public static class CortiHelpers
             return false;
         }
 
-        var environment = string.Equals(config["Corti:Environment"], "us", StringComparison.OrdinalIgnoreCase)
-            ? CortiClientEnvironment.Us
-            : CortiClientEnvironment.Eu;
+        var environment = config["Corti:Environment"] ?? "eu";
 
         ropcConfig = new RopcConfig(tenantName, clientId, username, password, environment);
         errorResult = null!;
@@ -123,12 +117,10 @@ public static class CortiHelpers
             return false;
         }
 
-        client = new CortiClient(new CortiClientOptions
-        {
-            TenantName = ropcConfig.TenantName,
-            Environment = ropcConfig.Environment,
-            Auth = new CortiClientAuth.Ropc(ropcConfig.ClientId, ropcConfig.Username, ropcConfig.Password),
-        });
+        client = new CortiClient(
+            ropcConfig.TenantName,
+            ropcConfig.Environment,
+            new CortiClientAuth.Ropc(ropcConfig.ClientId, ropcConfig.Username, ropcConfig.Password));
         return true;
     }
 

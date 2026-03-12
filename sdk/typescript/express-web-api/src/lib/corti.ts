@@ -1,9 +1,7 @@
 import { Corti, CortiAuth, CortiClient, CortiEnvironment, CortiError } from "@corti/sdk";
 import type { Response } from "express";
 
-const env = process.env.CORTI_ENVIRONMENT?.toLowerCase();
-
-export const cortiEnvironment = env === "eu" ? CortiEnvironment.Eu : CortiEnvironment.Us;
+export const cortiEnvironment = process.env.CORTI_ENVIRONMENT ?? "eu";
 
 /** Re-export SDK types and client so routes can import from one place. */
 export { Corti, CortiAuth, CortiClient, CortiEnvironment, CortiError };
@@ -29,7 +27,7 @@ export function getCortiConfig(): {
   tenantName: string;
   clientId: string;
   clientSecret: string;
-  environment: typeof cortiEnvironment;
+  environment: string;
 } | null {
   const tenantName = process.env.CORTI_TENANT_NAME ?? process.env.CORTI__TENANTNAME;
   const clientId = process.env.CORTI_CLIENT_ID ?? process.env.CORTI__CLIENTID;
@@ -53,7 +51,7 @@ export function getRopcConfig(): {
   clientId: string;
   username: string;
   password: string;
-  environment: typeof cortiEnvironment;
+  environment: string;
 } | null {
   const tenantName = process.env.CORTI_TENANT_NAME ?? process.env.CORTI__TENANTNAME;
   const clientId =
