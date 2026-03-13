@@ -1,4 +1,3 @@
-// Not currently exposed in the API (MapTranscribeEndpoint is commented out in Program.cs). Code kept for when it works.
 using Corti;
 using CortiApiExamples;
 
@@ -13,21 +12,13 @@ public static class TranscribeEndpoint
 
     private static async Task<IResult> Handle(
         IConfiguration config,
-        IWebHostEnvironment env,
-        string? token)
+        IWebHostEnvironment env)
     {
         Console.WriteLine("[Transcribe] Starting /transcribe request.");
         if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
             Console.WriteLine("[Transcribe] Credentials missing or invalid.");
             return credentialError;
-        }
-
-        var resolvedToken = token ?? config["Corti:AccessToken"] ?? config["Corti:Token"];
-        var tenantName = config["Corti:TenantName"];
-        if (!resolvedToken!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            resolvedToken = "Bearer " + resolvedToken;
         }
 
         var samplePath = CortiHelpers.ResolveSampleFilePath(env.ContentRootPath, "trouble-breathing.mp3");
@@ -41,19 +32,9 @@ public static class TranscribeEndpoint
         }
         Console.WriteLine("[Transcribe] Sample file: {0}", samplePath);
 
-        var transcribeEnvironment = string.Equals(config["Corti:Environment"], "us", StringComparison.OrdinalIgnoreCase)
-            ? "US"
-            : "EU";
-        Console.WriteLine("[Transcribe] Environment: {0}", transcribeEnvironment);
-
         try
         {
-            var transcribeApi = client!.CreateTranscribeApi(new TranscribeApi.Options
-            {
-                Environment = transcribeEnvironment,
-                TenantName = tenantName!,
-                Token = resolvedToken,
-            });
+            var transcribeApi = await client!.CreateTranscribeApiAsync();
             Console.WriteLine("[Transcribe] TranscribeApi created.");
 
             var messages = new List<object>();
@@ -123,7 +104,6 @@ public static class TranscribeEndpoint
             Console.WriteLine("[Transcribe] Sending config once (primaryLanguage=en)...");
             await transcribeApi.Send(new TranscribeConfigMessage
             {
-                Type = "config",
                 Configuration = new TranscribeConfig { PrimaryLanguage = "en" },
             });
             await configAcceptedTcs.Task;
@@ -147,7 +127,7 @@ public static class TranscribeEndpoint
             Console.WriteLine("[Transcribe] Audio sent ({0} chunks).", chunkCount);
 
             Console.WriteLine("[Transcribe] Sending flush...");
-            await transcribeApi.Send(new TranscribeFlushMessage { Type = "flush" });
+            await transcribeApi.Send(new TranscribeFlushMessage());
             await flushedTcs.Task;
             Console.WriteLine("[Transcribe] Flush completed.");
 

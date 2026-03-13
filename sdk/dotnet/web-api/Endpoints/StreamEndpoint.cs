@@ -1,4 +1,3 @@
-// Not currently exposed in the API (MapStreamEndpoint is commented out in Program.cs). Code kept for when it works.
 using Corti;
 using CortiApiExamples;
 
@@ -16,7 +15,6 @@ public static class StreamEndpoint
     private static async Task<IResult> Handle(
         IConfiguration config,
         IWebHostEnvironment env,
-        string? token,
         string? interactionId)
     {
         Console.WriteLine("[Stream] Starting /stream request.");
@@ -24,13 +22,6 @@ public static class StreamEndpoint
         {
             Console.WriteLine("[Stream] Credentials missing or invalid.");
             return credentialError;
-        }
-
-        var resolvedToken = token ?? config["Corti:AccessToken"] ?? config["Corti:Token"];
-        var tenantName = config["Corti:TenantName"];
-        if (!resolvedToken!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            resolvedToken = "Bearer " + resolvedToken;
         }
 
         var interactionIdToUse = interactionId?.Trim();
@@ -64,18 +55,9 @@ public static class StreamEndpoint
             });
         }
 
-        var streamEnvironment = string.Equals(config["Corti:Environment"], "us", StringComparison.OrdinalIgnoreCase) ? "US" : "EU";
-        Console.WriteLine("[Stream] Environment: {0}", streamEnvironment);
-
         try
         {
-            var streamApi = client!.CreateStreamApi(new StreamApi.Options
-            {
-                Environment = streamEnvironment,
-                TenantName = tenantName!,
-                Token = resolvedToken,
-                Id = interactionIdToUse!,
-            });
+            var streamApi = await client!.CreateStreamApiAsync(interactionIdToUse!);
             Console.WriteLine("[Stream] StreamApi created.");
 
             var messages = new List<object>();
@@ -128,7 +110,6 @@ public static class StreamEndpoint
             Console.WriteLine("[Stream] Sending config once (transcription, primaryLanguage=en)...");
             await streamApi.Send(new StreamConfigMessage
             {
-                Type = "config",
                 Configuration = new StreamConfig
                 {
                     Transcription = new StreamConfigTranscription
@@ -159,7 +140,7 @@ public static class StreamEndpoint
             Console.WriteLine("[Stream] Audio sent ({0} chunks).", chunkCount);
 
             Console.WriteLine("[Stream] Sending flush...");
-            await streamApi.Send(new StreamFlushMessage { Type = "flush" });
+            await streamApi.Send(new StreamFlushMessage());
             await flushedTcs.Task;
             Console.WriteLine("[Stream] Flush completed.");
 
