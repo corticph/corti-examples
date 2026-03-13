@@ -1,5 +1,6 @@
 "use client";
 
+import { clsx } from "clsx";
 import { useCallback, useState } from "react";
 
 type CopyableFieldProps = {
@@ -18,9 +19,7 @@ export function CopyableField({ value, masked, label }: CopyableFieldProps) {
   }, [value]);
   return (
     <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-        {label}
-      </label>
+      <span className="block text-sm font-medium text-gray-700 mb-1.5">{label}</span>
       <div className="flex gap-2 items-center">
         <code className="flex-1 bg-gray-100 px-3 py-2 rounded-lg text-sm truncate border border-gray-200">
           {masked}
@@ -28,7 +27,10 @@ export function CopyableField({ value, masked, label }: CopyableFieldProps) {
         <button
           type="button"
           onClick={copy}
-          className="px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm font-medium transition-colors shrink-0"
+          className={clsx(
+            "px-3 py-2 rounded-lg text-sm font-medium transition-colors shrink-0",
+            copied ? "bg-green-200 text-green-900" : "bg-gray-200 hover:bg-gray-300",
+          )}
         >
           {copied ? "Copied" : "Copy"}
         </button>

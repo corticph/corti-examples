@@ -1,8 +1,8 @@
 "use client";
 
+import { CopyableField } from "@/app/components/CopyableField";
 import type { TokenResponse } from "@/app/lib/types";
 import { maskToken } from "@/app/lib/utils";
-import { CopyableField } from "@/app/components/CopyableField";
 
 type SuccessViewProps = {
   token: TokenResponse;
@@ -11,17 +11,36 @@ type SuccessViewProps = {
   interactionsError: string | null;
 };
 
+function hasId(item: unknown): item is { id: unknown } {
+  return typeof item === "object" && item !== null && "id" in item;
+}
+
+function interactionDisplayValue(item: unknown): string {
+  if (hasId(item)) {
+    return String(item.id);
+  }
+  return `${JSON.stringify(item).slice(0, 60)}…`;
+}
+
+function interactionKey(item: unknown, index: number): string {
+  if (hasId(item)) {
+    return String(item.id);
+  }
+  return `item-${index}`;
+}
+
 export function SuccessView({
   token,
   interactionsList,
   interactionsLoading,
   interactionsError,
 }: SuccessViewProps) {
+  const preview = interactionsList.slice(0, 5);
+  const remaining = interactionsList.length - 5;
+
   return (
     <div className="w-full max-w-md mx-auto space-y-6 text-left">
-      <p className="text-green-700 font-medium text-center">
-        Token acquired successfully.
-      </p>
+      <p className="text-green-700 font-medium text-center">Token acquired successfully.</p>
       <CopyableField
         label="Access token"
         value={token.accessToken}
@@ -46,12 +65,8 @@ export function SuccessView({
         <p className="text-sm text-gray-600 mb-3">
           We made a request to the Corti API; here is the result.
         </p>
-        {interactionsLoading && (
-          <p className="text-sm text-gray-500">Loading interactions…</p>
-        )}
-        {interactionsError && (
-          <p className="text-sm text-red-600">{interactionsError}</p>
-        )}
+        {interactionsLoading && <p className="text-sm text-gray-500">Loading interactions…</p>}
+        {interactionsError && <p className="text-sm text-red-600">{interactionsError}</p>}
         {!interactionsLoading && !interactionsError && (
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
             <p className="font-medium text-gray-700 mb-1">
@@ -61,18 +76,10 @@ export function SuccessView({
               <p className="text-gray-500">No interactions returned.</p>
             ) : (
               <ul className="list-disc list-inside space-y-1 text-gray-600">
-                {interactionsList.slice(0, 5).map((item: unknown, i) => (
-                  <li key={i}>
-                    {typeof item === "object" && item !== null && "id" in item
-                      ? String((item as { id: unknown }).id)
-                      : JSON.stringify(item).slice(0, 60) + "…"}
-                  </li>
+                {preview.map((item, i) => (
+                  <li key={interactionKey(item, i)}>{interactionDisplayValue(item)}</li>
                 ))}
-                {interactionsList.length > 5 && (
-                  <li className="text-gray-500">
-                    … and {interactionsList.length - 5} more
-                  </li>
-                )}
+                {remaining > 0 && <li className="text-gray-500">… and {remaining} more</li>}
               </ul>
             )}
           </div>

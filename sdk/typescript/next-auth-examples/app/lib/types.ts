@@ -4,7 +4,6 @@ export type TokenResponse = {
   refreshToken?: string;
   refreshExpiresIn?: number;
   tokenType?: string;
-  [key: string]: unknown;
 };
 
 export type FormState = {

@@ -1,24 +1,10 @@
 import { CortiAuth } from "@corti/sdk";
 import { NextResponse } from "next/server";
-
-type PkceRequestBody = {
-  clientId?: unknown;
-  environment?: unknown;
-  tenant?: unknown;
-  code?: unknown;
-  redirectUri?: unknown;
-  codeVerifier?: unknown;
-};
-
-function isNonEmptyString(v: unknown): v is string {
-  return typeof v === "string" && v.trim().length > 0;
-}
+import { getErrorStatus, isNonEmptyString, parseJsonBody } from "@/app/lib/utils";
 
 export async function POST(request: Request) {
-  let body: PkceRequestBody;
-  try {
-    body = (await request.json()) as PkceRequestBody;
-  } catch {
+  const body = await parseJsonBody(request);
+  if (body === null || typeof body !== "object") {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
@@ -35,7 +21,7 @@ export async function POST(request: Request) {
         error:
           "Missing or empty required fields: clientId, environment, tenant, code, redirectUri, codeVerifier",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -44,22 +30,15 @@ export async function POST(request: Request) {
       tenantName: tenant,
       environment,
     });
-
-    // Here you should check that the user has access to request a token (e.g. session, role, tenant membership) before calling CortiAuth.
     const tokenResponse = await cortiAuth.getPkceFlowToken({
       clientId,
       code,
       redirectUri,
       codeVerifier,
     });
-
     return NextResponse.json(tokenResponse);
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Token exchange failed";
-    const status =
-      typeof (e as { statusCode?: number })?.statusCode === "number"
-        ? (e as { statusCode: number }).statusCode
-        : 500;
+    const { message, status } = getErrorStatus(e, "Token exchange failed");
     return NextResponse.json({ error: message }, { status });
   }
 }

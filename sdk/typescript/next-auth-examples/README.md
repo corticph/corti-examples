@@ -1,6 +1,19 @@
 # Corti SDK — Next auth examples
 
-A minimal Next.js application demonstrating auth flows with the [`@corti/sdk`](https://www.npmjs.com/package/@corti/sdk) in a frontend context.
+A minimal Next.js application demonstrating **four Corti auth flows** with the [`@corti/sdk`](https://www.npmjs.com/package/@corti/sdk) in a frontend context.
+
+## What this example presents
+
+- **Client Credentials** — Exchange client ID and secret for an access token (machine-to-machine).
+- **ROPC (Resource Owner Password Credentials)** — Exchange username and password for a token (embedded assistant / “customers” in Console).
+- **Authorization Code** — Redirect user to Corti login, then exchange the returned `code` for a token (with client secret).
+- **PKCE (Authorization Code + PKCE)** — Same redirect flow without a client secret; uses code verifier/challenge.
+
+For each flow you enter credentials in the form (tenant, environment, client ID, etc.). After a successful token exchange, the app shows a **success view** with a masked access token, optional refresh token, and a short list of **interactions** fetched from the Corti API to prove the token works.
+
+Token requests are sent to **Next.js API routes** (`/api/auth/token/...`), which call the Corti auth APIs server-side so the client secret (when used) never leaves your server.
+
+---
 
 ## ⚠️ Security notice
 
@@ -20,31 +33,18 @@ Keeping credentials or short-lived tokens in frontend code exposes them to XSS a
 
 ### Prerequisites
 
-- Node.js 18+
-- A Corti account with API credentials
+- **Node.js 18+**
+- A **Corti account** and API clients created in [Corti Console](https://console.corti.app). Each auth flow requires the corresponding client type (e.g. “Use with Embedded Assistant” and ROPC or Auth Code/PKCE). The in-app copy links to Console where relevant.
 
-### Environment variables
-
-Copy `.env.local.example` to `.env.local` and fill in your values:
-
-```bash
-cp .env.local.example .env.local
-```
-
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_CORTI_TENANT` | Your Corti tenant name |
-| `NEXT_PUBLIC_CORTI_ENVIRONMENT` | Environment region, e.g. `eu` |
-
-> Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser bundle. Never put secrets (client secrets, passwords) in `NEXT_PUBLIC_` variables.
 
 ### Run locally
 
 ```bash
+npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000). Choose an auth flow, fill in your Corti credentials (client ID, tenant, environment, etc.), and complete the flow to see the token and interactions list.
 
 ---
 
@@ -52,8 +52,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```
 app/
-  layout.tsx       # Root layout
-  page.tsx         # Home page
+  layout.tsx          # Root layout
+  page.tsx            # Home: flow selection, forms, success view
+  globals.css         # Styles
+  api/auth/token/     # API routes: POST for client credentials, ROPC, auth code, PKCE
+  components/         # Intro, credential forms, success view, copyable field, etc.
+  lib/                # Types, constants, token request helper, interactions hook
 ```
-
-More pages and SDK usage examples will be added here.

@@ -1,19 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { CortiAuth } from "@corti/sdk";
-import type { AuthCodeFormState, FormState, PkceFormState, RopcFormState, TokenResponse } from "@/app/lib/types";
-import { initialAuthCodeForm, initialForm, initialPkceForm, initialRopcForm } from "@/app/lib/constants";
-import { useInteractionsList } from "@/app/lib/useInteractionsList";
-import { WarningBanner } from "@/app/components/WarningBanner";
-import { BackButton } from "@/app/components/BackButton";
-import { IntroView } from "@/app/components/IntroView";
-import { ClientCredentialsForm } from "@/app/components/ClientCredentialsForm";
-import { RopcCredentialsForm } from "@/app/components/RopcCredentialsForm";
+import type { SubmitEvent } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AuthCodeCredentialsForm } from "@/app/components/AuthCodeCredentialsForm";
-import { PkceCredentialsForm } from "@/app/components/PkceCredentialsForm";
 import { AuthCodeReceivedView } from "@/app/components/AuthCodeReceivedView";
+import { BackButton } from "@/app/components/BackButton";
+import { ClientCredentialsForm } from "@/app/components/ClientCredentialsForm";
+import { IntroView } from "@/app/components/IntroView";
+import { PkceCredentialsForm } from "@/app/components/PkceCredentialsForm";
+import { RopcCredentialsForm } from "@/app/components/RopcCredentialsForm";
 import { SuccessView } from "@/app/components/SuccessView";
+import { WarningBanner } from "@/app/components/WarningBanner";
+import {
+  initialAuthCodeForm,
+  initialForm,
+  initialPkceForm,
+  initialRopcForm,
+} from "@/app/lib/constants";
+import { requestToken } from "@/app/lib/tokenRequest";
+import type {
+  AuthCodeFormState,
+  FormState,
+  PkceFormState,
+  RopcFormState,
+  TokenResponse,
+} from "@/app/lib/types";
+import { useInteractionsList } from "@/app/lib/useInteractionsList";
 
 const AUTH_CODE_SESSION_KEY = "authcode_form";
 const PKCE_SESSION_KEY = "pkce_form";
@@ -36,57 +49,53 @@ export default function Home() {
     tenant: string;
   } | null>(null);
 
-  const { list: interactionsList, loading: interactionsLoading, error: interactionsError } =
-    useInteractionsList(
-      token?.accessToken ?? null,
-      tokenEnvTenant?.environment ?? "",
-      tokenEnvTenant?.tenant ?? ""
-    );
+  const {
+    list: interactionsList,
+    loading: interactionsLoading,
+    error: interactionsError,
+  } = useInteractionsList(
+    token?.accessToken ?? null,
+    tokenEnvTenant?.environment ?? "",
+    tokenEnvTenant?.tenant ?? "",
+  );
 
-  // On mount: detect auth code or PKCE redirect (code in URL params) — disambiguate via sessionStorage.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     if (!code) return;
 
-    // Clean up the URL so the code param is removed
     window.history.replaceState({}, "", window.location.pathname);
 
-    // Check for PKCE form first (PKCE has no clientSecret)
     const pkceRaw = sessionStorage.getItem(PKCE_SESSION_KEY);
     if (pkceRaw) {
-      let saved: PkceFormState;
       try {
-        saved = JSON.parse(pkceRaw) as PkceFormState;
+        const saved = JSON.parse(pkceRaw) as PkceFormState;
+        sessionStorage.removeItem(PKCE_SESSION_KEY);
+        setFlow("pkce");
+        setPkceForm(saved);
+        setPkceReceivedCode(code);
       } catch {
-        return;
+        // ignore invalid stored state
       }
-      sessionStorage.removeItem(PKCE_SESSION_KEY);
-      setFlow("pkce");
-      setPkceForm(saved);
-      setPkceReceivedCode(code);
       return;
     }
 
-    // Fallback: auth code flow
     const authCodeRaw = sessionStorage.getItem(AUTH_CODE_SESSION_KEY);
     if (!authCodeRaw) return;
 
-    let saved: AuthCodeFormState;
     try {
-      saved = JSON.parse(authCodeRaw) as AuthCodeFormState;
+      const saved = JSON.parse(authCodeRaw) as AuthCodeFormState;
+      sessionStorage.removeItem(AUTH_CODE_SESSION_KEY);
+      setFlow("authCode");
+      setAuthCodeForm(saved);
+      setReceivedCode(code);
     } catch {
-      return;
+      // ignore invalid stored state
     }
-
-    sessionStorage.removeItem(AUTH_CODE_SESSION_KEY);
-    setFlow("authCode");
-    setAuthCodeForm(saved);
-    setReceivedCode(code);
   }, []);
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: SubmitEvent) => {
       e.preventDefault();
       const clientId = form.clientId.trim();
       const clientSecret = form.clientSecret.trim();
@@ -98,30 +107,26 @@ export default function Home() {
       }
       setTokenError(null);
       setTokenLoading(true);
-      try {
-        const res = await fetch("/api/auth/token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clientId, clientSecret, environment, tenant }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setTokenError(data?.error ?? `Request failed (${res.status})`);
-          return;
-        }
-        setToken(data as TokenResponse);
-        setTokenEnvTenant({ environment, tenant });
-      } catch (e) {
-        setTokenError(e instanceof Error ? e.message : "Failed to get token");
-      } finally {
-        setTokenLoading(false);
+      const result = await requestToken(
+        "/api/auth/token",
+        { clientId, clientSecret, environment, tenant },
+        environment,
+        tenant,
+        "Failed to get token",
+      );
+      setTokenLoading(false);
+      if (result.ok) {
+        setToken(result.data);
+        setTokenEnvTenant({ environment: result.environment, tenant: result.tenant });
+      } else {
+        setTokenError(result.error);
       }
     },
-    [form]
+    [form],
   );
 
   const handleRopcSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: SubmitEvent) => {
       e.preventDefault();
       const clientId = ropcForm.clientId.trim();
       const environment = ropcForm.environment.trim();
@@ -134,30 +139,26 @@ export default function Home() {
       }
       setTokenError(null);
       setTokenLoading(true);
-      try {
-        const res = await fetch("/api/auth/token/ropc", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clientId, environment, tenant, username, password }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setTokenError(data?.error ?? `Request failed (${res.status})`);
-          return;
-        }
-        setToken(data as TokenResponse);
-        setTokenEnvTenant({ environment, tenant });
-      } catch (e) {
-        setTokenError(e instanceof Error ? e.message : "Failed to get token");
-      } finally {
-        setTokenLoading(false);
+      const result = await requestToken(
+        "/api/auth/token/ropc",
+        { clientId, environment, tenant, username, password },
+        environment,
+        tenant,
+        "Failed to get token",
+      );
+      setTokenLoading(false);
+      if (result.ok) {
+        setToken(result.data);
+        setTokenEnvTenant({ environment: result.environment, tenant: result.tenant });
+      } else {
+        setTokenError(result.error);
       }
     },
-    [ropcForm]
+    [ropcForm],
   );
 
   const handleAuthCodeSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: SubmitEvent) => {
       e.preventDefault();
       const clientId = authCodeForm.clientId.trim();
       const clientSecret = authCodeForm.clientSecret.trim();
@@ -169,22 +170,18 @@ export default function Home() {
         return;
       }
       setTokenError(null);
-
-      // Persist form state before the redirect so we can exchange the code on return.
       sessionStorage.setItem(
         AUTH_CODE_SESSION_KEY,
-        JSON.stringify({ clientId, clientSecret, environment, tenant, redirectUri })
+        JSON.stringify({ clientId, clientSecret, environment, tenant, redirectUri }),
       );
-
-      // authorizeUrl sets window.location.href automatically when called in the browser.
       const cortiAuth = new CortiAuth({ tenantName: tenant, environment });
       await cortiAuth.authorizeUrl({ clientId, redirectUri });
     },
-    [authCodeForm]
+    [authCodeForm],
   );
 
   const handlePkceSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: SubmitEvent) => {
       e.preventDefault();
       const clientId = pkceForm.clientId.trim();
       const environment = pkceForm.environment.trim();
@@ -195,83 +192,74 @@ export default function Home() {
         return;
       }
       setTokenError(null);
-
-      // Persist form state before the redirect so we can exchange the code on return.
       sessionStorage.setItem(
         PKCE_SESSION_KEY,
-        JSON.stringify({ clientId, environment, tenant, redirectUri })
+        JSON.stringify({ clientId, environment, tenant, redirectUri }),
       );
-
-      // authorizePkceUrl generates a code verifier, saves it to localStorage, computes the challenge,
-      // builds the URL, and redirects the browser automatically.
       const cortiAuth = new CortiAuth({ tenantName: tenant, environment });
       await cortiAuth.authorizePkceUrl({ clientId, redirectUri });
     },
-    [pkceForm]
+    [pkceForm],
   );
 
   const handlePkceProceed = useCallback(async () => {
-    if (!pkceReceivedCode) return;
+    if (!pkceReceivedCode) {
+      return;
+    }
     setTokenError(null);
     setTokenLoading(true);
-    try {
-      const codeVerifier = CortiAuth.getCodeVerifier();
-      const res = await fetch("/api/auth/token/pkce", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientId: pkceForm.clientId,
-          environment: pkceForm.environment,
-          tenant: pkceForm.tenant,
-          code: pkceReceivedCode,
-          redirectUri: pkceForm.redirectUri,
-          codeVerifier,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setTokenError(data?.error ?? `Request failed (${res.status})`);
-        return;
-      }
+    const codeVerifier = CortiAuth.getCodeVerifier();
+    const result = await requestToken(
+      "/api/auth/token/pkce",
+      {
+        clientId: pkceForm.clientId,
+        environment: pkceForm.environment,
+        tenant: pkceForm.tenant,
+        code: pkceReceivedCode,
+        redirectUri: pkceForm.redirectUri,
+        codeVerifier,
+      },
+      pkceForm.environment,
+      pkceForm.tenant,
+      "Failed to exchange PKCE authorization code",
+    );
+    setTokenLoading(false);
+    if (result.ok) {
       setPkceReceivedCode(null);
-      setToken(data as TokenResponse);
-      setTokenEnvTenant({ environment: pkceForm.environment, tenant: pkceForm.tenant });
-    } catch (e) {
-      setTokenError(e instanceof Error ? e.message : "Failed to exchange PKCE authorization code");
-    } finally {
-      setTokenLoading(false);
+      setToken(result.data);
+      setTokenEnvTenant({ environment: result.environment, tenant: result.tenant });
+    } else {
+      setTokenError(result.error);
     }
   }, [pkceReceivedCode, pkceForm]);
 
   const handleAuthCodeProceed = useCallback(async () => {
-    if (!receivedCode) return;
+    if (!receivedCode) {
+      return;
+    }
     setTokenError(null);
     setTokenLoading(true);
-    try {
-      const res = await fetch("/api/auth/token/authcode", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientId: authCodeForm.clientId,
-          clientSecret: authCodeForm.clientSecret,
-          environment: authCodeForm.environment,
-          tenant: authCodeForm.tenant,
-          code: receivedCode,
-          redirectUri: authCodeForm.redirectUri,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setTokenError(data?.error ?? `Request failed (${res.status})`);
-        return;
-      }
+    const result = await requestToken(
+      "/api/auth/token/authcode",
+      {
+        clientId: authCodeForm.clientId,
+        clientSecret: authCodeForm.clientSecret,
+        environment: authCodeForm.environment,
+        tenant: authCodeForm.tenant,
+        code: receivedCode,
+        redirectUri: authCodeForm.redirectUri,
+      },
+      authCodeForm.environment,
+      authCodeForm.tenant,
+      "Failed to exchange authorization code",
+    );
+    setTokenLoading(false);
+    if (result.ok) {
       setReceivedCode(null);
-      setToken(data as TokenResponse);
-      setTokenEnvTenant({ environment: authCodeForm.environment, tenant: authCodeForm.tenant });
-    } catch (e) {
-      setTokenError(e instanceof Error ? e.message : "Failed to exchange authorization code");
-    } finally {
-      setTokenLoading(false);
+      setToken(result.data);
+      setTokenEnvTenant({ environment: result.environment, tenant: result.tenant });
+    } else {
+      setTokenError(result.error);
     }
   }, [receivedCode, authCodeForm]);
 
@@ -297,69 +285,65 @@ export default function Home() {
               <BackButton onClick={handleBack} />
             </div>
           )}
-          <h1 className="text-3xl font-bold mb-2">
-            Corti SDK — Auth examples
-          </h1>
+          <h1 className="text-3xl font-bold mb-2">Corti SDK — Auth examples</h1>
 
           {!token ? (
-            <>
-              {flow === null ? (
-                <IntroView
-                  onAuthenticateWithCC={() => setFlow("cc")}
-                  onAuthenticateWithROPC={() => setFlow("ropc")}
-                  onAuthenticateWithAuthCode={() => setFlow("authCode")}
-                  onAuthenticateWithPkce={() => setFlow("pkce")}
-                />
-              ) : flow === "cc" ? (
-                <ClientCredentialsForm
-                  form={form}
-                  setForm={setForm}
-                  onSubmit={handleSubmit}
-                  tokenError={tokenError}
-                  tokenLoading={tokenLoading}
-                />
-              ) : flow === "ropc" ? (
-                <RopcCredentialsForm
-                  form={ropcForm}
-                  setForm={setRopcForm}
-                  onSubmit={handleRopcSubmit}
-                  tokenError={tokenError}
-                  tokenLoading={tokenLoading}
-                />
-              ) : flow === "pkce" ? (
-                pkceReceivedCode ? (
-                  <AuthCodeReceivedView
-                    code={pkceReceivedCode}
-                    onProceed={handlePkceProceed}
-                    loading={tokenLoading}
-                    error={tokenError}
-                  />
-                ) : (
-                  <PkceCredentialsForm
-                    form={pkceForm}
-                    setForm={setPkceForm}
-                    onSubmit={handlePkceSubmit}
-                    tokenError={tokenError}
-                    tokenLoading={tokenLoading}
-                  />
-                )
-              ) : receivedCode ? (
+            flow === null ? (
+              <IntroView
+                onAuthenticateWithCC={() => setFlow("cc")}
+                onAuthenticateWithROPC={() => setFlow("ropc")}
+                onAuthenticateWithAuthCode={() => setFlow("authCode")}
+                onAuthenticateWithPkce={() => setFlow("pkce")}
+              />
+            ) : flow === "cc" ? (
+              <ClientCredentialsForm
+                form={form}
+                setForm={setForm}
+                onSubmit={handleSubmit}
+                tokenError={tokenError}
+                tokenLoading={tokenLoading}
+              />
+            ) : flow === "ropc" ? (
+              <RopcCredentialsForm
+                form={ropcForm}
+                setForm={setRopcForm}
+                onSubmit={handleRopcSubmit}
+                tokenError={tokenError}
+                tokenLoading={tokenLoading}
+              />
+            ) : flow === "pkce" ? (
+              pkceReceivedCode ? (
                 <AuthCodeReceivedView
-                  code={receivedCode}
-                  onProceed={handleAuthCodeProceed}
+                  code={pkceReceivedCode}
+                  onProceed={handlePkceProceed}
                   loading={tokenLoading}
                   error={tokenError}
                 />
               ) : (
-                <AuthCodeCredentialsForm
-                  form={authCodeForm}
-                  setForm={setAuthCodeForm}
-                  onSubmit={handleAuthCodeSubmit}
+                <PkceCredentialsForm
+                  form={pkceForm}
+                  setForm={setPkceForm}
+                  onSubmit={handlePkceSubmit}
                   tokenError={tokenError}
                   tokenLoading={tokenLoading}
                 />
-              )}
-            </>
+              )
+            ) : receivedCode ? (
+              <AuthCodeReceivedView
+                code={receivedCode}
+                onProceed={handleAuthCodeProceed}
+                loading={tokenLoading}
+                error={tokenError}
+              />
+            ) : (
+              <AuthCodeCredentialsForm
+                form={authCodeForm}
+                setForm={setAuthCodeForm}
+                onSubmit={handleAuthCodeSubmit}
+                tokenError={tokenError}
+                tokenLoading={tokenLoading}
+              />
+            )
           ) : (
             <SuccessView
               token={token}
