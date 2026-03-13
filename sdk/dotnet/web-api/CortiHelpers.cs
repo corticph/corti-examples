@@ -22,6 +22,26 @@ public sealed record RopcConfig(
     string Environment);
 
 /// <summary>
+/// Authorization code config: TenantName, dedicated ClientId, ClientSecret, RedirectUri, Environment.
+/// </summary>
+public sealed record AuthCodeConfig(
+    string TenantName,
+    string ClientId,
+    string ClientSecret,
+    string RedirectUri,
+    string Environment);
+
+/// <summary>
+/// PKCE config: TenantName, dedicated ClientId, RedirectUri, Environment (no ClientSecret).
+/// </summary>
+public sealed record PkceConfig(
+    string TenantName,
+    string ClientId,
+    string RedirectUri,
+    string Environment);
+
+
+/// <summary>
 /// Shared helpers for Corti SDK example endpoints.
 /// </summary>
 public static class CortiHelpers
@@ -121,6 +141,69 @@ public static class CortiHelpers
             ropcConfig.TenantName,
             ropcConfig.Environment,
             new CortiClientAuth.Ropc(ropcConfig.ClientId, ropcConfig.Username, ropcConfig.Password));
+        return true;
+    }
+
+    private static readonly IResult AuthCodeConfigError = Results.BadRequest(new
+    {
+        error = "Auth code credentials required. Set Corti:AuthCodeClientId, Corti:AuthCodeClientSecret, Corti:AuthCodeRedirectUri, and Corti:AuthCodeTenantName (or Corti:TenantName as fallback) in appsettings or environment.",
+    });
+
+    /// <summary>
+    /// Reads authorization code config from IConfiguration. Uses dedicated keys for all fields (separate from CC and ROPC clients).
+    /// Corti:AuthCodeTenantName is preferred; falls back to Corti:TenantName if not set.
+    /// </summary>
+    public static bool TryGetAuthCodeConfig(IConfiguration config, out AuthCodeConfig? authCodeConfig, out IResult errorResult)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        var tenantName = config["Corti:AuthCodeTenantName"] ?? config["Corti:TenantName"];
+        var clientId = config["Corti:AuthCodeClientId"];
+        var clientSecret = config["Corti:AuthCodeClientSecret"];
+        var redirectUri = config["Corti:AuthCodeRedirectUri"];
+
+        if (string.IsNullOrEmpty(tenantName) || string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret) || string.IsNullOrEmpty(redirectUri))
+        {
+            authCodeConfig = null;
+            errorResult = AuthCodeConfigError;
+            return false;
+        }
+
+        var environment = config["Corti:AuthCodeEnvironment"] ?? config["Corti:Environment"] ?? "eu";
+
+        authCodeConfig = new AuthCodeConfig(tenantName, clientId, clientSecret, redirectUri, environment);
+        errorResult = null!;
+        return true;
+    }
+
+    private static readonly IResult PkceConfigError = Results.BadRequest(new
+    {
+        error = "PKCE credentials required. Set Corti:PkceClientId, Corti:PkceRedirectUri, and Corti:PkceTenantName (or Corti:TenantName as fallback) in appsettings or environment.",
+    });
+
+    /// <summary>
+    /// Reads PKCE config from IConfiguration. Uses dedicated keys for all fields (no client secret).
+    /// Corti:PkceTenantName is preferred; falls back to Corti:TenantName if not set.
+    /// </summary>
+    public static bool TryGetPkceConfig(IConfiguration config, out PkceConfig? pkceConfig, out IResult errorResult)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        var tenantName = config["Corti:PkceTenantName"] ?? config["Corti:TenantName"];
+        var clientId = config["Corti:PkceClientId"];
+        var redirectUri = config["Corti:PkceRedirectUri"];
+
+        if (string.IsNullOrEmpty(tenantName) || string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(redirectUri))
+        {
+            pkceConfig = null;
+            errorResult = PkceConfigError;
+            return false;
+        }
+
+        var environment = config["Corti:PkceEnvironment"] ?? config["Corti:Environment"] ?? "eu";
+
+        pkceConfig = new PkceConfig(tenantName, clientId, redirectUri, environment);
+        errorResult = null!;
         return true;
     }
 

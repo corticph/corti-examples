@@ -1,451 +1,594 @@
 {
-	"info": {
-		"_postman_id": "4729f1c6-cd0a-4046-b930-57cda8c97df9",
-		"name": "Web Api",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "42424863"
-	},
-	"item": [
-		{
-			"name": "Interactions",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/interactions",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"interactions"
-					],
-					"query": [
-						{
-							"key": "sort",
-							"value": "",
-							"disabled": true
-						},
-						{
-							"key": "direction",
-							"value": "",
-							"disabled": true
-						},
-						{
-							"key": "pageSize",
-							"value": "3",
-							"disabled": true
-						},
-						{
-							"key": "index",
-							"value": "1",
-							"disabled": true
-						},
-						{
-							"key": "encounterStatus",
-							"value": "",
-							"disabled": true
-						},
-						{
-							"key": "patient",
-							"value": "",
-							"disabled": true
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Recordings",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/recordings",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"recordings"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Transcripts",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/transcripts",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"transcripts"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Facts",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/facts",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"facts"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Codes",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/codes",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"codes"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Documents",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/documents",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"documents"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Templates",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/templates",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"templates"
-					],
-					"query": [
-						{
-							"key": "org",
-							"value": "",
-							"disabled": true
-						},
-						{
-							"key": "lang",
-							"value": "",
-							"disabled": true
-						},
-						{
-							"key": "status",
-							"value": "",
-							"disabled": true
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Agents",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/agents",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"agents"
-					],
-					"query": [
-						{
-							"key": "limit",
-							"value": "10",
-							"disabled": true
-						},
-						{
-							"key": "offset",
-							"value": "0",
-							"disabled": true
-						},
-						{
-							"key": "ephemeral",
-							"value": "false",
-							"disabled": true
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Transcribe",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/transcribe",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"transcribe"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Stream",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/stream",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"stream"
-					],
-					"query": [
-						{
-							"key": "interactionId",
-							"value": "",
-							"disabled": true
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Token – client credentials (call API)",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/token/cc",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"token",
-						"cc"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Token – get access token",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/token",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"token"
-					],
-					"query": [
-						{
-							"key": "scopes",
-							"value": "openid",
-							"disabled": true
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Token – bearer (call API)",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/token/bearer",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"token",
-						"bearer"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Token – ROPC (get access token)",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/token/ropc",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"token",
-						"ropc"
-					],
-					"query": [
-						{
-							"key": "scopes",
-							"value": "openid",
-							"disabled": true
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Token – ROPC (call API)",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/token/ropc-client",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"token",
-						"ropc-client"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Token – ROPC refresh (get refreshed access token)",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/token/ropc-refresh",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"token",
-						"ropc-refresh"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Token – custom refresh (call API)",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/token/custom-refresh",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"token",
-						"custom-refresh"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Client variants – all auth options",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{host}}/client-variants",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"client-variants"
-					],
-					"query": []
-				}
-			},
-			"response": []
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"packages": {},
-				"requests": {},
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"packages": {},
-				"requests": {},
-				"exec": [
-					""
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "host",
-			"value": ""
-		}
-	]
+  "info": {
+    "_postman_id": "4729f1c6-cd0a-4046-b930-57cda8c97df9",
+    "name": "Web Api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "42424863"
+  },
+  "item": [
+    {
+      "name": "Interactions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/interactions",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "interactions"
+          ],
+          "query": [
+            {
+              "key": "sort",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "direction",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "pageSize",
+              "value": "3",
+              "disabled": true
+            },
+            {
+              "key": "index",
+              "value": "1",
+              "disabled": true
+            },
+            {
+              "key": "encounterStatus",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "patient",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Recordings",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/recordings",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "recordings"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Transcripts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/transcripts",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "transcripts"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Facts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/facts",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "facts"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Codes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/codes",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "codes"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Documents",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/documents",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "documents"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Templates",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/templates",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "templates"
+          ],
+          "query": [
+            {
+              "key": "org",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "lang",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "status",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Agents",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/agents",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "agents"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "10",
+              "disabled": true
+            },
+            {
+              "key": "offset",
+              "value": "0",
+              "disabled": true
+            },
+            {
+              "key": "ephemeral",
+              "value": "false",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Transcribe",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/transcribe",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "transcribe"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Stream",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/stream",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "stream"
+          ],
+          "query": [
+            {
+              "key": "interactionId",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – client credentials (call API)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/cc",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "cc"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – get access token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token"
+          ],
+          "query": [
+            {
+              "key": "scopes",
+              "value": "openid",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – bearer (call API)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/bearer",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "bearer"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – ROPC (get access token)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/ropc",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "ropc"
+          ],
+          "query": [
+            {
+              "key": "scopes",
+              "value": "openid",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – ROPC (call API)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/ropc-client",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "ropc-client"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – ROPC refresh (get refreshed access token)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/ropc-refresh",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "ropc-refresh"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – custom refresh (call API)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/custom-refresh",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "custom-refresh"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – auth code authorize (get authorization URL)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/auth-code-authorize",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "auth-code-authorize"
+          ],
+          "query": [
+            {
+              "key": "redirectUri",
+              "value": "",
+              "description": "Override the redirect URI from config (must match exactly what was registered in Keycloak)",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – auth code (exchange code for access token)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/auth-code?code=",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "auth-code"
+          ],
+          "query": [
+            {
+              "key": "code",
+              "value": "",
+              "description": "One-time authorization code from the Keycloak redirect"
+            },
+            {
+              "key": "redirectUri",
+              "value": "",
+              "description": "Override the redirect URI from config (must match exactly what was used in the authorize request)",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – PKCE authorize (get authorization URL)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/pkce-authorize",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "pkce-authorize"
+          ],
+          "query": [
+            {
+              "key": "codeChallenge",
+              "value": "",
+              "description": "S256 code challenge derived from the code verifier (required)"
+            },
+            {
+              "key": "redirectUri",
+              "value": "",
+              "description": "Override the redirect URI from config (must match exactly what was registered in Keycloak)",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Token – PKCE (exchange code for access token)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/token/pkce",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "token",
+            "pkce"
+          ],
+          "query": [
+            {
+              "key": "code",
+              "value": "",
+              "description": "One-time authorization code from the redirect"
+            },
+            {
+              "key": "codeVerifier",
+              "value": "",
+              "description": "PKCE code verifier that was used to generate the code challenge"
+            },
+            {
+              "key": "redirectUri",
+              "value": "",
+              "description": "Override the redirect URI from config",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Client variants – all auth options",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/client-variants",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "client-variants"
+          ],
+          "query": [
+            {
+              "key": "authCode",
+              "value": "",
+              "description": "One-time authorization code from a real redirect — required to test the auth-code-client variant",
+              "disabled": true
+            },
+            {
+              "key": "pkceCode",
+              "value": "",
+              "description": "One-time authorization code from a real PKCE redirect — required together with pkceVerifier to test the pkce-client variant",
+              "disabled": true
+            },
+            {
+              "key": "pkceVerifier",
+              "value": "",
+              "description": "PKCE code verifier that matches the code challenge used in the authorization request",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "host",
+      "value": ""
+    }
+  ]
 }

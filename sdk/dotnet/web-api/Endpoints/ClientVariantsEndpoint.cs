@@ -10,10 +10,12 @@ public static class ClientVariantsEndpoint
         app.MapGet("/client-variants", HandleClientVariants);
     }
 
-    private static async Task<IResult> HandleClientVariants(IConfiguration config)
+    private static async Task<IResult> HandleClientVariants(IConfiguration config, string? authCode = null, string? pkceCode = null, string? pkceVerifier = null)
     {
         var hasCc = CortiHelpers.TryGetCortiConfig(config, out var cc, out _);
         var hasRopc = CortiHelpers.TryGetRopcConfig(config, out var ropc, out _);
+        var hasAuthCodeConfig = CortiHelpers.TryGetAuthCodeConfig(config, out var ac, out _);
+        var hasPkceConfig = CortiHelpers.TryGetPkceConfig(config, out var pkce, out _);
         var results = new List<object>();
 
         async Task Run(string name, Func<Task<CortiClient>> factory, bool expectedError = false)
@@ -248,6 +250,47 @@ public static class ClientVariantsEndpoint
             results.Add(new { name = "refresh-fn-auto-derive", status = "skipped" });
             results.Add(new { name = "bearer-with-builtin-refresh", status = "skipped" });
         }
+
+        // auth-code-client: pass ?authCode=<code> from a real redirect to test this variant.
+        // The code is a one-time value from the OAuth redirect and cannot be stored in config.
+        if (hasAuthCodeConfig && !string.IsNullOrWhiteSpace(authCode))
+            await Run("auth-code-client", async () =>
+            {
+                await Task.CompletedTask;
+                return new CortiClient(
+                    ac!.TenantName,
+                    ac.Environment,
+                    new CortiClientAuth.AuthorizationCode(ac.ClientId, ac.ClientSecret, authCode, ac.RedirectUri));
+            });
+        else
+            results.Add(new
+            {
+                name = "auth-code-client",
+                status = "skipped",
+                message = hasAuthCodeConfig
+                    ? "Pass ?authCode=<code> from a fresh redirect to test this variant"
+                    : "Auth code config not set",
+            });
+
+        // pkce-client: pass ?pkceCode=<code>&pkceVerifier=<verifier> from a real PKCE redirect to test this variant.
+        if (hasPkceConfig && !string.IsNullOrWhiteSpace(pkceCode) && !string.IsNullOrWhiteSpace(pkceVerifier))
+            await Run("pkce-client", async () =>
+            {
+                await Task.CompletedTask;
+                return new CortiClient(
+                    pkce!.TenantName,
+                    pkce.Environment,
+                    new CortiClientAuth.Pkce(pkce.ClientId, pkceCode, pkce.RedirectUri, pkceVerifier));
+            });
+        else
+            results.Add(new
+            {
+                name = "pkce-client",
+                status = "skipped",
+                message = hasPkceConfig
+                    ? "Pass ?pkceCode=<code>&pkceVerifier=<verifier> from a fresh redirect to test this variant"
+                    : "PKCE config not set",
+            });
 
         return Results.Ok(new { variants = results });
     }

@@ -1,7 +1,7 @@
 import { CortiAuth, CortiClient, CortiEnvironment } from "@corti/sdk";
 import type { Application, Request, Response } from "express";
 import { asyncHandler } from "../lib/asyncHandler.js";
-import { getCortiConfig, getRopcConfig } from "../lib/corti.js";
+import { getAuthCodeConfig, getCortiConfig, getPkceConfig, getRopcConfig } from "../lib/corti.js";
 
 type VariantResult = { name: string; status: "ok" | "error" | "skipped"; message?: string; expectedError?: true };
 
@@ -9,9 +9,14 @@ export function registerClientVariants(app: Application): void {
   app.get("/client-variants", asyncHandler(clientVariants));
 }
 
-async function clientVariants(_req: Request, res: Response): Promise<void> {
+async function clientVariants(req: Request, res: Response): Promise<void> {
   const cc = getCortiConfig();
   const ropc = getRopcConfig();
+  const authCodeConfig = getAuthCodeConfig();
+  const pkceConfig = getPkceConfig();
+  const authCodeQueryCode = typeof req.query.authCode === "string" ? req.query.authCode.trim() : undefined;
+  const pkceQueryCode = typeof req.query.pkceCode === "string" ? req.query.pkceCode.trim() : undefined;
+  const pkceQueryVerifier = typeof req.query.pkceVerifier === "string" ? req.query.pkceVerifier.trim() : undefined;
   const results: VariantResult[] = [];
 
   async function run(
@@ -202,6 +207,51 @@ async function clientVariants(_req: Request, res: Response): Promise<void> {
       { name: "refresh-fn-auto-derive", status: "skipped" },
       { name: "bearer-with-builtin-refresh", status: "skipped" },
     );
+  }
+
+  // auth-code-client: pass ?authCode=<code> from a real redirect to test this variant.
+  // The code is a one-time value from the OAuth redirect and cannot be stored in env vars.
+  if (authCodeConfig && authCodeQueryCode) {
+    await run("auth-code-client", () => new CortiClient({
+      tenantName: authCodeConfig.tenantName,
+      environment: authCodeConfig.environment,
+      auth: {
+        clientId: authCodeConfig.clientId,
+        clientSecret: authCodeConfig.clientSecret,
+        code: authCodeQueryCode,
+        redirectUri: authCodeConfig.redirectUri,
+      },
+    }));
+  } else {
+    results.push({
+      name: "auth-code-client",
+      status: "skipped",
+      message: authCodeConfig
+        ? "Pass ?authCode=<code> from a fresh redirect to test this variant"
+        : "Auth code env vars not configured",
+    });
+  }
+
+  // pkce-client: pass ?pkceCode=<code>&pkceVerifier=<verifier> from a real redirect to test this variant.
+  if (pkceConfig && pkceQueryCode && pkceQueryVerifier) {
+    await run("pkce-client", () => new CortiClient({
+      tenantName: pkceConfig.tenantName,
+      environment: pkceConfig.environment,
+      auth: {
+        clientId: pkceConfig.clientId,
+        code: pkceQueryCode,
+        redirectUri: pkceConfig.redirectUri,
+        codeVerifier: pkceQueryVerifier,
+      },
+    }));
+  } else {
+    results.push({
+      name: "pkce-client",
+      status: "skipped",
+      message: pkceConfig
+        ? "Pass ?pkceCode=<code>&pkceVerifier=<verifier> from a fresh redirect to test this variant"
+        : "PKCE env vars not configured",
+    });
   }
 
   res.json({ variants: results });

@@ -45,6 +45,83 @@ export function getCortiConfig(): {
   };
 }
 
+/** PKCE: dedicated tenantName + clientId + redirectUri + environment (no secret). Uses CORTI_PKCE_* when set, falls back to shared CORTI_* variables. */
+export function getPkceConfig(): {
+  tenantName: string;
+  clientId: string;
+  redirectUri: string;
+  environment: string;
+} | null {
+  const tenantName =
+    process.env.CORTI_PKCE_TENANT_NAME ??
+    process.env.CORTI__PKCETENANTNAME ??
+    process.env.CORTI_TENANT_NAME ??
+    process.env.CORTI__TENANTNAME;
+  const clientId = process.env.CORTI_PKCE_CLIENT_ID ?? process.env.CORTI__PKCECLIENTID;
+  const redirectUri = process.env.CORTI_PKCE_REDIRECT_URI ?? process.env.CORTI__PKCEREDIRECTURI;
+  const environment =
+    process.env.CORTI_PKCE_ENVIRONMENT ??
+    process.env.CORTI__PKCEENVIRONMENT ??
+    cortiEnvironment;
+
+  if (!tenantName || !clientId || !redirectUri) {
+    return null;
+  }
+
+  return { tenantName, clientId, redirectUri, environment };
+}
+
+/** Send 400 when PKCE config (tenant, clientId, redirectUri) is missing. */
+export function sendPkceConfigError(res: Response): boolean {
+  const config = getPkceConfig();
+
+  if (config) {
+    return false;
+  }
+
+  res.status(400).json({
+    error:
+      "PKCE credentials required. Set CORTI_PKCE_CLIENT_ID, CORTI_PKCE_REDIRECT_URI, and CORTI_PKCE_TENANT_NAME (or CORTI_TENANT_NAME as fallback) in .env.local or environment.",
+  });
+
+  return true;
+}
+
+/** Authorization code: dedicated tenantName + clientId + clientSecret + redirectUri + environment. Uses CORTI_AUTH_CODE_* when set, falls back to shared CORTI_* variables. */
+export function getAuthCodeConfig(): {
+  tenantName: string;
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+  environment: string;
+} | null {
+  const tenantName =
+    process.env.CORTI_AUTH_CODE_TENANT_NAME ??
+    process.env.CORTI__AUTHCODETENANTNAME ??
+    process.env.CORTI_TENANT_NAME ??
+    process.env.CORTI__TENANTNAME;
+  const clientId = process.env.CORTI_AUTH_CODE_CLIENT_ID ?? process.env.CORTI__AUTHCODECLIENTID;
+  const clientSecret = process.env.CORTI_AUTH_CODE_CLIENT_SECRET ?? process.env.CORTI__AUTHCODECLIENTSECRET;
+  const redirectUri = process.env.CORTI_AUTH_CODE_REDIRECT_URI ?? process.env.CORTI__AUTHCODEREDIRECTURI;
+  const environment =
+    process.env.CORTI_AUTH_CODE_ENVIRONMENT ??
+    process.env.CORTI__AUTHCODEENVIRONMENT ??
+    cortiEnvironment;
+
+  if (!tenantName || !clientId || !clientSecret || !redirectUri) {
+    return null;
+  }
+
+  return {
+    tenantName,
+    clientId,
+    clientSecret,
+    redirectUri,
+    environment,
+  };
+}
+
+
 /** ROPC (resource owner password credentials): tenant + clientId + username + password. Uses CORTI_ROPC_CLIENT_ID when set, else CORTI_CLIENT_ID. */
 export function getRopcConfig(): {
   tenantName: string;
@@ -131,6 +208,22 @@ export function sendCortiConfigError(res: Response): boolean {
   res.status(400).json({
     error:
       "Corti credentials required. Set CORTI_TENANT_NAME, CORTI_CLIENT_ID, CORTI_CLIENT_SECRET (or CORTI__TENANTNAME, CORTI__CLIENTID, CORTI__CLIENTSECRET) in .env.local or environment.",
+  });
+
+  return true;
+}
+
+/** Send 400 when auth code config (tenant, clientId, clientSecret, redirectUri) is missing. */
+export function sendAuthCodeConfigError(res: Response): boolean {
+  const config = getAuthCodeConfig();
+
+  if (config) {
+    return false;
+  }
+
+  res.status(400).json({
+    error:
+      "Auth code credentials required. Set CORTI_AUTH_CODE_CLIENT_ID, CORTI_AUTH_CODE_CLIENT_SECRET, CORTI_AUTH_CODE_REDIRECT_URI, and CORTI_AUTH_CODE_TENANT_NAME (or CORTI_TENANT_NAME as fallback) in .env.local or environment.",
   });
 
   return true;
