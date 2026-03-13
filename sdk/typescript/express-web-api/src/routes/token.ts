@@ -2,8 +2,8 @@ import { CortiClient } from "@corti/sdk";
 import type { Application, Request, Response } from "express";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import {
-  cortiEnvironment,
   CortiAuth,
+  cortiEnvironment,
   cortiErrorResponse,
   createCortiAuth,
   createCortiClient,
@@ -276,8 +276,7 @@ async function tokenRopcClient(_req: Request, res: Response): Promise<void> {
   try {
     await client.facts.factGroupsList();
     res.json({
-      message:
-        "Corti client (ROPC auth) called Facts.FactGroupsList successfully.",
+      message: "Corti client (ROPC auth) called Facts.FactGroupsList successfully.",
     });
   } catch (e) {
     cortiErrorResponse(e, res);
@@ -339,7 +338,8 @@ async function tokenPkceAuthorize(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const codeChallenge = typeof req.query.codeChallenge === "string" ? req.query.codeChallenge.trim() : undefined;
+  const codeChallenge =
+    typeof req.query.codeChallenge === "string" ? req.query.codeChallenge.trim() : undefined;
   const redirectUri =
     (typeof req.query.redirectUri === "string" ? req.query.redirectUri.trim() : undefined) ??
     config.redirectUri;
@@ -355,7 +355,10 @@ async function tokenPkceAuthorize(req: Request, res: Response): Promise<void> {
       environment: config.environment,
     });
 
-    const url = await cortiAuth.authorizeUrl({ clientId: config.clientId, redirectUri, codeChallenge }, { skipRedirect: true });
+    const url = await cortiAuth.authorizeUrl(
+      { clientId: config.clientId, redirectUri, codeChallenge },
+      { skipRedirect: true },
+    );
     res.json({ url });
   } catch (e) {
     cortiErrorResponse(e, res);
@@ -380,7 +383,8 @@ async function tokenPkce(req: Request, res: Response): Promise<void> {
   }
 
   const code = typeof req.query.code === "string" ? req.query.code.trim() : undefined;
-  const codeVerifier = typeof req.query.codeVerifier === "string" ? req.query.codeVerifier.trim() : undefined;
+  const codeVerifier =
+    typeof req.query.codeVerifier === "string" ? req.query.codeVerifier.trim() : undefined;
   const redirectUri =
     (typeof req.query.redirectUri === "string" ? req.query.redirectUri.trim() : undefined) ??
     config.redirectUri;
@@ -401,7 +405,12 @@ async function tokenPkce(req: Request, res: Response): Promise<void> {
       environment: config.environment,
     });
 
-    const data = await cortiAuth.getPkceFlowToken({ clientId: config.clientId, code, redirectUri, codeVerifier });
+    const data = await cortiAuth.getPkceFlowToken({
+      clientId: config.clientId,
+      code,
+      redirectUri,
+      codeVerifier,
+    });
     res.json(data);
   } catch (e) {
     cortiErrorResponse(e, res);

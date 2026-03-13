@@ -60,9 +60,7 @@ export function getPkceConfig(): {
   const clientId = process.env.CORTI_PKCE_CLIENT_ID ?? process.env.CORTI__PKCECLIENTID;
   const redirectUri = process.env.CORTI_PKCE_REDIRECT_URI ?? process.env.CORTI__PKCEREDIRECTURI;
   const environment =
-    process.env.CORTI_PKCE_ENVIRONMENT ??
-    process.env.CORTI__PKCEENVIRONMENT ??
-    cortiEnvironment;
+    process.env.CORTI_PKCE_ENVIRONMENT ?? process.env.CORTI__PKCEENVIRONMENT ?? cortiEnvironment;
 
   if (!tenantName || !clientId || !redirectUri) {
     return null;
@@ -101,8 +99,10 @@ export function getAuthCodeConfig(): {
     process.env.CORTI_TENANT_NAME ??
     process.env.CORTI__TENANTNAME;
   const clientId = process.env.CORTI_AUTH_CODE_CLIENT_ID ?? process.env.CORTI__AUTHCODECLIENTID;
-  const clientSecret = process.env.CORTI_AUTH_CODE_CLIENT_SECRET ?? process.env.CORTI__AUTHCODECLIENTSECRET;
-  const redirectUri = process.env.CORTI_AUTH_CODE_REDIRECT_URI ?? process.env.CORTI__AUTHCODEREDIRECTURI;
+  const clientSecret =
+    process.env.CORTI_AUTH_CODE_CLIENT_SECRET ?? process.env.CORTI__AUTHCODECLIENTSECRET;
+  const redirectUri =
+    process.env.CORTI_AUTH_CODE_REDIRECT_URI ?? process.env.CORTI__AUTHCODEREDIRECTURI;
   const environment =
     process.env.CORTI_AUTH_CODE_ENVIRONMENT ??
     process.env.CORTI__AUTHCODEENVIRONMENT ??
@@ -120,7 +120,6 @@ export function getAuthCodeConfig(): {
     environment,
   };
 }
-
 
 /** ROPC (resource owner password credentials): tenant + clientId + username + password. Uses CORTI_ROPC_CLIENT_ID when set, else CORTI_CLIENT_ID. */
 export function getRopcConfig(): {

@@ -2,11 +2,7 @@ import * as fs from "node:fs";
 import { Corti } from "@corti/sdk";
 import type { Application, Request, Response } from "express";
 import { asyncHandler } from "../lib/asyncHandler.js";
-import {
-  cortiErrorResponse,
-  createCortiClient,
-  sendCortiConfigError,
-} from "../lib/corti.js";
+import { cortiErrorResponse, createCortiClient, sendCortiConfigError } from "../lib/corti.js";
 import { resolveSampleFilePath } from "../lib/sample.js";
 
 const CHUNK_SIZE = 4096;
