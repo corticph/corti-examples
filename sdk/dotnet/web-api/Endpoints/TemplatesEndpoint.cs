@@ -69,9 +69,7 @@ public static class TemplatesEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 }

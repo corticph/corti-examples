@@ -38,59 +38,43 @@ public static class ClientVariantsEndpoint
 
         // 1. CC — explicit tenant + env (string)
         if (hasCc)
-            await Run("cc-explicit", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    cc!.TenantName,
-                    cc.Environment,
-                    new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret));
-            });
+            await Run("cc-explicit", () => Task.FromResult(new CortiClient(
+                cc!.TenantName,
+                cc.Environment,
+                new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret))));
         else
             results.Add(new { name = "cc-explicit", status = "skipped" });
 
         // 2. ROPC — explicit tenant + env
         if (hasRopc)
-            await Run("ropc-explicit", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    ropc!.TenantName,
-                    ropc.Environment,
-                    new CortiClientAuth.Ropc(ropc.ClientId, ropc.Username, ropc.Password));
-            });
+            await Run("ropc-explicit", () => Task.FromResult(new CortiClient(
+                ropc!.TenantName,
+                ropc.Environment,
+                new CortiClientAuth.Ropc(ropc.ClientId, ropc.Username, ropc.Password))));
         else
             results.Add(new { name = "ropc-explicit", status = "skipped" });
 
         // 3. CC — environment as library constant (CortiClientEnvironment.Eu)
         if (hasCc)
-            await Run("cc-env-library", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    cc!.TenantName,
-                    CortiClientEnvironment.Us,
-                    new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret));
-            });
+            await Run("cc-env-library", () => Task.FromResult(new CortiClient(
+                cc!.TenantName,
+                CortiClientEnvironment.Us,
+                new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret))));
         else
             results.Add(new { name = "cc-env-library", status = "skipped" });
 
         // 4. CC — custom environment URLs object (CortiClientEnvironment with explicit URLs)
         if (hasCc)
-            await Run("cc-env-custom-urls", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    cc!.TenantName,
-                    new CortiClientEnvironment
-                    {
-                        Base = $"https://api.{cc.Environment}.corti.app/v2",
-                        Wss = $"wss://api.{cc.Environment}.corti.app/audio-bridge/v2",
-                        Login = $"https://auth.{cc.Environment}.corti.app/realms",
-                        Agents = $"https://api.{cc.Environment}.corti.app",
-                    },
-                    new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret));
-            });
+            await Run("cc-env-custom-urls", () => Task.FromResult(new CortiClient(
+                cc!.TenantName,
+                new CortiClientEnvironment
+                {
+                    Base = $"https://api.{cc.Environment}.corti.app/v2",
+                    Wss = $"wss://api.{cc.Environment}.corti.app/audio-bridge/v2",
+                    Login = $"https://auth.{cc.Environment}.corti.app/realms",
+                    Agents = $"https://api.{cc.Environment}.corti.app",
+                },
+                new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret))));
         else
             results.Add(new { name = "cc-env-custom-urls", status = "skipped" });
 
@@ -99,17 +83,13 @@ public static class ClientVariantsEndpoint
         //    does not require credentials at construction time), but every request will be rejected by the
         //    server because no Authorization header is sent.
         if (hasCc)
-            await Run("env-custom-urls-no-auth", async () =>
+            await Run("env-custom-urls-no-auth", () => Task.FromResult(new CortiClient(new CortiClientEnvironment
             {
-                await Task.CompletedTask;
-                return new CortiClient(new CortiClientEnvironment
-                {
-                    Base = $"https://api.{cc!.Environment}.corti.app/v2",
-                    Wss = $"wss://api.{cc.Environment}.corti.app/audio-bridge/v2",
-                    Login = $"https://auth.{cc.Environment}.corti.app/realms",
-                    Agents = $"https://api.{cc.Environment}.corti.app",
-                });
-            }, expectedError: true);
+                Base = $"https://api.{cc!.Environment}.corti.app/v2",
+                Wss = $"wss://api.{cc.Environment}.corti.app/audio-bridge/v2",
+                Login = $"https://auth.{cc.Environment}.corti.app/realms",
+                Agents = $"https://api.{cc.Environment}.corti.app",
+            })), expectedError: true);
         else
             results.Add(new { name = "env-custom-urls-no-auth", status = "skipped" });
 
@@ -128,59 +108,43 @@ public static class ClientVariantsEndpoint
             var accessToken = tokenResponse.AccessToken ?? string.Empty;
 
             // 6. Bearer — explicit tenant + env
-            await Run("bearer-explicit", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    cc.TenantName,
-                    cc.Environment,
-                    new CortiClientAuth.Bearer(accessToken));
-            });
+            await Run("bearer-explicit", () => Task.FromResult(new CortiClient(
+                cc.TenantName,
+                cc.Environment,
+                new CortiClientAuth.Bearer(accessToken))));
 
             // 7. Bearer — auto-derive tenant + env from JWT
-            await Run("bearer-auto-derive", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(new CortiClientAuth.Bearer(accessToken));
-            });
+            await Run("bearer-auto-derive", () => Task.FromResult(new CortiClient(new CortiClientAuth.Bearer(accessToken))));
 
             // 8. Bearer — explicit + custom refreshAccessToken (AccessToken is primary; fn called on expiry)
-            await Run("bearer-with-refresh-fn", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    cc.TenantName,
-                    cc.Environment,
-                    new CortiClientAuth.Bearer(
-                        AccessToken: accessToken,
-                        RefreshAccessToken: async (_, ct) =>
-                        {
-                            var r = await authClient.GetTokenAsync(
-                                new OAuthTokenRequest { ClientId = cc.ClientId, ClientSecret = cc.ClientSecret },
-                                cancellationToken: ct);
-                            return new CustomRefreshResult { AccessToken = r.AccessToken, ExpiresIn = r.ExpiresIn, TokenType = r.TokenType };
-                        }));
-            });
+            await Run("bearer-with-refresh-fn", () => Task.FromResult(new CortiClient(
+                cc.TenantName,
+                cc.Environment,
+                new CortiClientAuth.Bearer(
+                    AccessToken: accessToken,
+                    RefreshAccessToken: async (_, ct) =>
+                    {
+                        var r = await authClient.GetTokenAsync(
+                            new OAuthTokenRequest { ClientId = cc.ClientId, ClientSecret = cc.ClientSecret },
+                            cancellationToken: ct);
+                        return new CustomRefreshResult { AccessToken = r.AccessToken, ExpiresIn = r.ExpiresIn, TokenType = r.TokenType };
+                    }))));
 
             // 9. BearerCustomRefresh — refreshAccessToken as primary, seeded with initial accessToken
             //    The seeded AccessToken/ExpiresIn prevent an immediate refresh call on the first API request.
-            await Run("bearer-custom-refresh-seeded", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    cc.TenantName,
-                    cc.Environment,
-                    new CortiClientAuth.BearerCustomRefresh(
-                        RefreshAccessToken: async (_, ct) =>
-                        {
-                            var r = await authClient.GetTokenAsync(
-                                new OAuthTokenRequest { ClientId = cc.ClientId, ClientSecret = cc.ClientSecret },
-                                cancellationToken: ct);
-                            return new CustomRefreshResult { AccessToken = r.AccessToken, ExpiresIn = r.ExpiresIn, TokenType = r.TokenType };
-                        },
-                        AccessToken: accessToken,
-                        ExpiresIn: tokenResponse.ExpiresIn));
-            });
+            await Run("bearer-custom-refresh-seeded", () => Task.FromResult(new CortiClient(
+                cc.TenantName,
+                cc.Environment,
+                new CortiClientAuth.BearerCustomRefresh(
+                    RefreshAccessToken: async (_, ct) =>
+                    {
+                        var r = await authClient.GetTokenAsync(
+                            new OAuthTokenRequest { ClientId = cc.ClientId, ClientSecret = cc.ClientSecret },
+                            cancellationToken: ct);
+                        return new CustomRefreshResult { AccessToken = r.AccessToken, ExpiresIn = r.ExpiresIn, TokenType = r.TokenType };
+                    },
+                    AccessToken: accessToken,
+                    ExpiresIn: tokenResponse.ExpiresIn))));
         }
         else
         {
@@ -207,40 +171,28 @@ public static class ClientVariantsEndpoint
             };
 
             // 10. BearerCustomRefresh — explicit tenant + env
-            await Run("refresh-fn-explicit", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    ropc.TenantName,
-                    ropc.Environment,
-                    new CortiClientAuth.BearerCustomRefresh(RefreshAccessToken: getRopcToken));
-            });
+            await Run("refresh-fn-explicit", () => Task.FromResult(new CortiClient(
+                ropc.TenantName,
+                ropc.Environment,
+                new CortiClientAuth.BearerCustomRefresh(RefreshAccessToken: getRopcToken))));
 
             // 11. BearerCustomRefresh — auto-derive tenant + env from JWT
-            await Run("refresh-fn-auto-derive", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(new CortiClientAuth.BearerCustomRefresh(RefreshAccessToken: getRopcToken));
-            });
+            await Run("refresh-fn-auto-derive", () => Task.FromResult(new CortiClient(new CortiClientAuth.BearerCustomRefresh(RefreshAccessToken: getRopcToken))));
 
             // 12. Bearer with built-in refresh (AccessToken + ClientId + RefreshToken — SDK calls refresh_token grant on expiry)
             //     ROPC is used here because client_credentials flows don't return a refresh token.
             var ropcTokenForRefresh = await ropcAuth.GetTokenAsync(
                 new OAuthRopcTokenRequest { ClientId = ropc.ClientId, Username = ropc.Username, Password = ropc.Password });
             if (ropcTokenForRefresh.RefreshToken != null)
-                await Run("bearer-with-builtin-refresh", async () =>
-                {
-                    await Task.CompletedTask;
-                    return new CortiClient(
-                        ropc.TenantName,
-                        ropc.Environment,
-                        new CortiClientAuth.Bearer(
-                            AccessToken: ropcTokenForRefresh.AccessToken ?? string.Empty,
-                            ClientId: ropc.ClientId,
-                            RefreshToken: ropcTokenForRefresh.RefreshToken,
-                            ExpiresIn: ropcTokenForRefresh.ExpiresIn,
-                            RefreshExpiresIn: ropcTokenForRefresh.RefreshExpiresIn));
-                });
+                await Run("bearer-with-builtin-refresh", () => Task.FromResult(new CortiClient(
+                    ropc.TenantName,
+                    ropc.Environment,
+                    new CortiClientAuth.Bearer(
+                        AccessToken: ropcTokenForRefresh.AccessToken ?? string.Empty,
+                        ClientId: ropc.ClientId,
+                        RefreshToken: ropcTokenForRefresh.RefreshToken,
+                        ExpiresIn: ropcTokenForRefresh.ExpiresIn,
+                        RefreshExpiresIn: ropcTokenForRefresh.RefreshExpiresIn))));
             else
                 results.Add(new { name = "bearer-with-builtin-refresh", status = "skipped", message = "ROPC response did not include a refresh token" });
         }
@@ -254,14 +206,10 @@ public static class ClientVariantsEndpoint
         // auth-code-client: pass ?authCode=<code> from a real redirect to test this variant.
         // The code is a one-time value from the OAuth redirect and cannot be stored in config.
         if (hasAuthCodeConfig && !string.IsNullOrWhiteSpace(authCode))
-            await Run("auth-code-client", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    ac!.TenantName,
-                    ac.Environment,
-                    new CortiClientAuth.AuthorizationCode(ac.ClientId, ac.ClientSecret, authCode, ac.RedirectUri));
-            });
+            await Run("auth-code-client", () => Task.FromResult(new CortiClient(
+                ac!.TenantName,
+                ac.Environment,
+                new CortiClientAuth.AuthorizationCode(ac.ClientId, ac.ClientSecret, authCode!, ac.RedirectUri))));
         else
             results.Add(new
             {
@@ -274,14 +222,10 @@ public static class ClientVariantsEndpoint
 
         // pkce-client: pass ?pkceCode=<code>&pkceVerifier=<verifier> from a real PKCE redirect to test this variant.
         if (hasPkceConfig && !string.IsNullOrWhiteSpace(pkceCode) && !string.IsNullOrWhiteSpace(pkceVerifier))
-            await Run("pkce-client", async () =>
-            {
-                await Task.CompletedTask;
-                return new CortiClient(
-                    pkce!.TenantName,
-                    pkce.Environment,
-                    new CortiClientAuth.Pkce(pkce.ClientId, pkceCode, pkce.RedirectUri, pkceVerifier));
-            });
+            await Run("pkce-client", () => Task.FromResult(new CortiClient(
+                pkce!.TenantName,
+                pkce.Environment,
+                new CortiClientAuth.Pkce(pkce.ClientId, pkceCode!, pkce.RedirectUri, pkceVerifier!))));
         else
             results.Add(new
             {

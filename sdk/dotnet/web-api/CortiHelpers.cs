@@ -272,4 +272,15 @@ public static class CortiHelpers
         };
         return status is { } s ? new[] { s } : null;
     }
+
+    /// <summary>
+    /// Returns an IResult for Corti API errors (status code and body from the exception).
+    /// </summary>
+    public static IResult CortiApiErrorResult(CortiClientApiException ex)
+    {
+        ArgumentNullException.ThrowIfNull(ex);
+        return Results.Json(
+            new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
+            statusCode: (int)ex.StatusCode);
+    }
 }

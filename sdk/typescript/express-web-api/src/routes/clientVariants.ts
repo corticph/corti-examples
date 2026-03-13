@@ -76,7 +76,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
     results.push({ name: "ropc-explicit", status: "skipped" });
   }
 
-  // 3. CC — environment as library constant (CortiEnvironment.Eu)
+  // 3. CC — environment as library constant (CortiEnvironment.Us)
   if (cc) {
     await run(
       "cc-env-library",
@@ -254,7 +254,8 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       username: ropc.username,
       password: ropc.password,
     });
-    if (ropcToken.refreshToken) {
+    const refreshToken = ropcToken.refreshToken;
+    if (refreshToken) {
       await run(
         "bearer-with-builtin-refresh",
         () =>
@@ -264,7 +265,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
             auth: {
               accessToken: ropcToken.accessToken ?? "",
               clientId: ropc.clientId,
-              refreshToken: ropcToken.refreshToken!,
+              refreshToken,
               ...(ropcToken.expiresIn != null ? { expiresIn: ropcToken.expiresIn } : {}),
               ...(ropcToken.refreshExpiresIn != null
                 ? { refreshExpiresIn: ropcToken.refreshExpiresIn }

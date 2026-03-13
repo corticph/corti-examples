@@ -8,7 +8,7 @@ public static class TokenEndpoint
     public static void MapTokenEndpoint(this WebApplication app)
     {
         app.MapGet("/token", HandleGetToken);
-        app.MapGet("/token/cc", Handle);
+        app.MapGet("/token/cc", HandleTokenCc);
         app.MapGet("/token/bearer", HandleBearer);
         app.MapGet("/token/ropc", HandleGetTokenRopc);
         app.MapGet("/token/ropc-client", HandleRopcClient);
@@ -53,16 +53,14 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
     /// <summary>
     /// Create a Corti client with client credentials (from config/env) and call a simple API with no parameters — Facts.FactGroupsListAsync().
     /// </summary>
-    private static async Task<IResult> Handle(IConfiguration config)
+    private static async Task<IResult> HandleTokenCc(IConfiguration config)
     {
         if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
         {
@@ -76,9 +74,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
@@ -111,9 +107,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
@@ -155,9 +149,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
@@ -202,9 +194,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
@@ -255,9 +245,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
@@ -278,9 +266,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
@@ -310,9 +296,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
@@ -353,9 +337,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
@@ -391,9 +373,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 
@@ -439,9 +419,7 @@ public static class TokenEndpoint
         }
         catch (CortiClientApiException ex)
         {
-            return Results.Json(
-                new { error = ex.Message, statusCode = ex.StatusCode, body = ex.Body },
-                statusCode: (int)ex.StatusCode);
+            return CortiHelpers.CortiApiErrorResult(ex);
         }
     }
 }
