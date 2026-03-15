@@ -2,18 +2,34 @@ import { CortiClient } from "@corti/sdk";
 import type { Application, Request, Response } from "express";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import {
+  CortiAuth,
   cortiEnvironment,
   cortiErrorResponse,
   createCortiAuth,
   createCortiClient,
+  createCortiClientRopc,
+  getAuthCodeConfig,
   getCortiConfig,
+  getPkceConfig,
+  getRopcConfig,
+  sendAuthCodeConfigError,
   sendCortiConfigError,
+  sendPkceConfigError,
+  sendRopcConfigError,
 } from "../lib/corti.js";
 
 export function registerToken(app: Application): void {
   app.get("/token", asyncHandler(getToken));
   app.get("/token/cc", asyncHandler(tokenCc));
   app.get("/token/bearer", asyncHandler(tokenBearer));
+  app.get("/token/ropc", asyncHandler(tokenRopc));
+  app.get("/token/ropc-client", asyncHandler(tokenRopcClient));
+  app.get("/token/ropc-refresh", asyncHandler(tokenRopcRefresh));
+  app.get("/token/custom-refresh", asyncHandler(customRefresh));
+  app.get("/token/auth-code-authorize", asyncHandler(tokenAuthCodeAuthorize));
+  app.get("/token/auth-code", asyncHandler(tokenAuthCode));
+  app.get("/token/pkce-authorize", asyncHandler(tokenPkceAuthorize));
+  app.get("/token/pkce", asyncHandler(tokenPkce));
 }
 
 async function getToken(req: Request, res: Response): Promise<void> {
@@ -117,6 +133,331 @@ async function tokenBearer(_req: Request, res: Response): Promise<void> {
     res.json({
       message: "Corti client (Bearer token from CC) called Facts.FactGroupsList successfully.",
     });
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+async function tokenRopc(req: Request, res: Response): Promise<void> {
+  if (sendRopcConfigError(res)) {
+    return;
+  }
+
+  const config = getRopcConfig();
+
+  if (!config) {
+    res.status(400).json({ error: "ROPC credentials required." });
+    return;
+  }
+
+  try {
+    const cortiAuth = new CortiAuth({
+      tenantName: config.tenantName,
+      environment: config.environment,
+    });
+    const scopesParam = typeof req.query.scopes === "string" ? req.query.scopes : undefined;
+    const scopes = scopesParam
+      ? scopesParam
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : undefined;
+
+    const data = await cortiAuth.getRopcFlowToken({
+      clientId: config.clientId,
+      username: config.username,
+      password: config.password,
+      ...(scopes?.length ? { scopes } : {}),
+    });
+
+    res.json(data);
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+async function tokenRopcRefresh(_req: Request, res: Response): Promise<void> {
+  if (sendRopcConfigError(res)) {
+    return;
+  }
+
+  const config = getRopcConfig();
+
+  if (!config) {
+    res.status(400).json({ error: "ROPC credentials required." });
+    return;
+  }
+
+  try {
+    const cortiAuth = new CortiAuth({
+      tenantName: config.tenantName,
+      environment: config.environment,
+    });
+
+    const ropcData = await cortiAuth.getRopcFlowToken({
+      clientId: config.clientId,
+      username: config.username,
+      password: config.password,
+    });
+
+    if (!ropcData.refreshToken) {
+      res.status(400).json({ error: "ROPC response did not include a refresh token." });
+      return;
+    }
+
+    const refreshData = await cortiAuth.refreshToken({
+      clientId: config.clientId,
+      refreshToken: ropcData.refreshToken,
+    });
+
+    res.json(refreshData);
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+/**
+ * Create a CortiClient with only a custom refreshAccessToken function (no initial token).
+ * The callback performs an ROPC flow to obtain a token — demonstrating that any arbitrary
+ * token source can be wired in. The client calls the function on the first API request.
+ */
+async function customRefresh(_req: Request, res: Response): Promise<void> {
+  if (sendRopcConfigError(res)) {
+    return;
+  }
+
+  const config = getRopcConfig();
+
+  if (!config) {
+    res.status(400).json({ error: "ROPC credentials required." });
+    return;
+  }
+
+  try {
+    const cortiAuth = new CortiAuth({
+      tenantName: config.tenantName,
+      environment: config.environment,
+    });
+
+    const client = new CortiClient({
+      tenantName: config.tenantName,
+      environment: cortiEnvironment,
+      auth: {
+        refreshAccessToken: () =>
+          cortiAuth.getRopcFlowToken({
+            clientId: config.clientId,
+            username: config.username,
+            password: config.password,
+          }),
+      },
+    });
+
+    await client.facts.factGroupsList();
+    res.json({
+      message: "Corti client (custom refreshAccessToken) called Facts.FactGroupsList successfully.",
+    });
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+async function tokenRopcClient(_req: Request, res: Response): Promise<void> {
+  if (sendRopcConfigError(res)) {
+    return;
+  }
+
+  const { client } = createCortiClientRopc();
+
+  if (!client) {
+    res.status(400).json({ error: "ROPC credentials required." });
+    return;
+  }
+
+  try {
+    await client.facts.factGroupsList();
+    res.json({
+      message: "Corti client (ROPC auth) called Facts.FactGroupsList successfully.",
+    });
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+/**
+ * Build and return the Keycloak authorization URL for the authorization code flow.
+ * The client should redirect the user to this URL to initiate login.
+ */
+async function tokenAuthCodeAuthorize(req: Request, res: Response): Promise<void> {
+  if (sendAuthCodeConfigError(res)) {
+    return;
+  }
+
+  const config = getAuthCodeConfig();
+
+  if (!config) {
+    res.status(400).json({ error: "Auth code credentials required." });
+    return;
+  }
+
+  const redirectUri =
+    (typeof req.query.redirectUri === "string" ? req.query.redirectUri.trim() : undefined) ??
+    config.redirectUri;
+
+  try {
+    const cortiAuth = new CortiAuth({
+      tenantName: config.tenantName,
+      environment: config.environment,
+    });
+
+    const url = await cortiAuth.authorizeUrl({
+      clientId: config.clientId,
+      redirectUri,
+    });
+
+    res.json({ url });
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+/**
+ * Build and return the Keycloak authorization URL for the PKCE flow.
+ * The client should redirect the user to this URL.
+ * Required query param: codeChallenge (S256 — generated by the client from the code verifier).
+ * Optional query param: redirectUri (overrides config default).
+ */
+async function tokenPkceAuthorize(req: Request, res: Response): Promise<void> {
+  if (sendPkceConfigError(res)) {
+    return;
+  }
+
+  const config = getPkceConfig();
+
+  if (!config) {
+    res.status(400).json({ error: "PKCE credentials required." });
+    return;
+  }
+
+  const codeChallenge =
+    typeof req.query.codeChallenge === "string" ? req.query.codeChallenge.trim() : undefined;
+  const redirectUri =
+    (typeof req.query.redirectUri === "string" ? req.query.redirectUri.trim() : undefined) ??
+    config.redirectUri;
+
+  if (!codeChallenge) {
+    res.status(400).json({ error: "Missing required query parameter: codeChallenge" });
+    return;
+  }
+
+  try {
+    const cortiAuth = new CortiAuth({
+      tenantName: config.tenantName,
+      environment: config.environment,
+    });
+
+    const url = await cortiAuth.authorizeUrl(
+      { clientId: config.clientId, redirectUri, codeChallenge },
+      { skipRedirect: true },
+    );
+    res.json({ url });
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+/**
+ * Exchange a PKCE authorization code for an access token (authorization_code + code_verifier grant).
+ * Required query params: code, codeVerifier.
+ * Optional query param: redirectUri (overrides config default).
+ */
+async function tokenPkce(req: Request, res: Response): Promise<void> {
+  if (sendPkceConfigError(res)) {
+    return;
+  }
+
+  const config = getPkceConfig();
+
+  if (!config) {
+    res.status(400).json({ error: "PKCE credentials required." });
+    return;
+  }
+
+  const code = typeof req.query.code === "string" ? req.query.code.trim() : undefined;
+  const codeVerifier =
+    typeof req.query.codeVerifier === "string" ? req.query.codeVerifier.trim() : undefined;
+  const redirectUri =
+    (typeof req.query.redirectUri === "string" ? req.query.redirectUri.trim() : undefined) ??
+    config.redirectUri;
+
+  if (!code) {
+    res.status(400).json({ error: "Missing required query parameter: code" });
+    return;
+  }
+
+  if (!codeVerifier) {
+    res.status(400).json({ error: "Missing required query parameter: codeVerifier" });
+    return;
+  }
+
+  try {
+    const cortiAuth = new CortiAuth({
+      tenantName: config.tenantName,
+      environment: config.environment,
+    });
+
+    const data = await cortiAuth.getPkceFlowToken({
+      clientId: config.clientId,
+      code,
+      redirectUri,
+      codeVerifier,
+    });
+    res.json(data);
+  } catch (e) {
+    cortiErrorResponse(e, res);
+  }
+}
+
+/**
+ * Exchange an authorization code for an access token (authorization_code grant).
+ * Required query param: code (the one-time code from the redirect).
+ * Optional query param: redirectUri (overrides config default).
+ */
+async function tokenAuthCode(req: Request, res: Response): Promise<void> {
+  if (sendAuthCodeConfigError(res)) {
+    return;
+  }
+
+  const config = getAuthCodeConfig();
+
+  if (!config) {
+    res.status(400).json({ error: "Auth code credentials required." });
+    return;
+  }
+
+  const code = typeof req.query.code === "string" ? req.query.code.trim() : undefined;
+  const redirectUri =
+    (typeof req.query.redirectUri === "string" ? req.query.redirectUri.trim() : undefined) ??
+    config.redirectUri;
+
+  if (!code) {
+    res.status(400).json({ error: "Missing required query parameter: code" });
+    return;
+  }
+
+  try {
+    const cortiAuth = new CortiAuth({
+      tenantName: config.tenantName,
+      environment: config.environment,
+    });
+
+    const data = await cortiAuth.getCodeFlowToken({
+      clientId: config.clientId,
+      clientSecret: config.clientSecret,
+      redirectUri,
+      code,
+    });
+
+    res.json(data);
   } catch (e) {
     cortiErrorResponse(e, res);
   }

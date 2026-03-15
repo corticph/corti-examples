@@ -2,13 +2,7 @@ import * as fs from "node:fs";
 import { Corti } from "@corti/sdk";
 import type { Application, Request, Response } from "express";
 import { asyncHandler } from "../lib/asyncHandler.js";
-import {
-  cortiErrorResponse,
-  createCortiAuth,
-  createCortiClient,
-  getCortiConfig,
-  sendCortiConfigError,
-} from "../lib/corti.js";
+import { cortiErrorResponse, createCortiClient, sendCortiConfigError } from "../lib/corti.js";
 import { resolveSampleFilePath } from "../lib/sample.js";
 
 const CHUNK_SIZE = 4096;
@@ -22,14 +16,6 @@ async function handle(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const config = getCortiConfig();
-
-  if (!config) {
-    res.status(400).json({ error: "Corti credentials required." });
-
-    return;
-  }
-
   const { client } = createCortiClient();
 
   if (!client) {
@@ -37,29 +23,6 @@ async function handle(req: Request, res: Response): Promise<void> {
 
     return;
   }
-
-  const cortiAuth = createCortiAuth();
-
-  if (!cortiAuth) {
-    res.status(400).json({ error: "Corti credentials required." });
-
-    return;
-  }
-
-  const tokenBody = await cortiAuth.getToken({
-    clientId: config.clientId,
-    clientSecret: config.clientSecret,
-  });
-
-  const accessToken = tokenBody.accessToken;
-
-  if (!accessToken) {
-    res.status(400).json({ error: "Could not obtain access token." });
-
-    return;
-  }
-
-  const bearerToken = accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`;
 
   let interactionId =
     typeof req.query.interactionId === "string" ? req.query.interactionId.trim() : null;
@@ -99,11 +62,7 @@ async function handle(req: Request, res: Response): Promise<void> {
   }
 
   try {
-    const socket = await client.stream.connect({
-      id: interactionId,
-      tenantName: config.tenantName,
-      token: bearerToken,
-    });
+    const socket = await client.stream.connect({ id: interactionId });
 
     const messages: unknown[] = [];
     let configAcceptedResolve: () => void;

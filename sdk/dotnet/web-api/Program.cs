@@ -19,6 +19,7 @@ if (urls.Contains("https", StringComparison.OrdinalIgnoreCase))
     app.UseHttpsRedirection();
 
 app.MapTokenEndpoint();
+app.MapClientVariantsEndpoint();
 app.MapInteractionsEndpoint();
 app.MapRecordingsEndpoint();
 app.MapTranscriptsEndpoint();
@@ -27,8 +28,7 @@ app.MapCodesEndpoint();
 app.MapTemplatesEndpoint();
 app.MapAgentsEndpoint();
 app.MapDocumentsEndpoint();
-// Stream and Transcribe endpoints not currently exposed; endpoint code kept in StreamEndpoint.cs / TranscribeEndpoint.cs for when they work.
-// app.MapTranscribeEndpoint();
-// app.MapStreamEndpoint();
+app.MapTranscribeEndpoint();
+app.MapStreamEndpoint();
 
 app.Run();

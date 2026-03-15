@@ -1,5 +1,6 @@
 import type { Application } from "express";
 import { registerAgents } from "./agents.js";
+import { registerClientVariants } from "./clientVariants.js";
 import { registerCodes } from "./codes.js";
 import { registerDocuments } from "./documents.js";
 import { registerFacts } from "./facts.js";
@@ -13,6 +14,7 @@ import { registerTranscripts } from "./transcripts.js";
 
 export function registerRoutes(app: Application): void {
   registerToken(app);
+  registerClientVariants(app);
   registerInteractions(app);
   registerRecordings(app);
   registerTranscripts(app);
