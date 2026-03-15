@@ -74,7 +74,7 @@ This starts both the TypeScript compiler in watch mode and the server. Opens on 
 
 ### Build
 
-- **[tsconfig.json](tsconfig.json)** - TypeScript configuration for ES2022 target
+- **[tsconfig.json](tsconfig.json)** - TypeScript configuration for ES2020 target
 - **`npm run dev`** - Runs `tsc --watch` (client) and `tsx watch` (server) concurrently
 - **`npm run build`** - One-time compilation of TypeScript to JavaScript (for production)
 

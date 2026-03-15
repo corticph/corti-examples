@@ -10,6 +10,9 @@ const app = express();
 const PORT = 3000;
 
 // Enable CORS for Vite dev server
+// Note: Vite defaults to port 5173. If that port is in use, Vite will pick
+// the next available port (e.g. 5174) and all API calls will fail with CORS
+// errors. Update this origin to match the port shown in Vite's startup output.
 app.use(
   cors({
     origin: ["http://localhost:5173"],

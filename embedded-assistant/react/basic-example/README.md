@@ -12,8 +12,9 @@ Minimal React example showing how to integrate the Corti Embedded Assistant.
 ## What This Example Doesn't Cover
 
 - Customisation
-- Event handling
+- Advanced event handling
 - Production error handling patterns
+- State management
 
 ## Quick Start
 

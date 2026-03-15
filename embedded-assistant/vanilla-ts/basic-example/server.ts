@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { config } from "dotenv";
@@ -7,6 +10,7 @@ config();
 
 const app = express();
 const PORT = 3000;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(
   cors({
@@ -20,9 +24,6 @@ const auth = new CortiAuth({
   tenantName: process.env.CORTI_TENANT_NAME!,
 });
 
-import fs from "fs";
-import path from "path";
-
 // Serve static files except for root
 app.use(express.static("public"));
 
@@ -33,8 +34,6 @@ app.use(
 );
 
 // Serve index.html at root and inject baseUrl
-import { fileURLToPath } from "url";
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.get("/", (req: Request, res: Response) => {
   const environment = process.env.CORTI_ENVIRONMENT!;

@@ -18,8 +18,7 @@ export function EmbeddedAssistant({
   const cortiRef = useRef<CortiEmbeddedReactRef>(null);
   const api = useCortiEmbeddedApi(cortiRef);
 
-  // TEMPORARY: onReady fires multiple times (library issue)
-  // This ref prevents duplicate initialization until fixed
+  // Guard against onReady firing more than once (e.g. React StrictMode double-invocation)
   const hasInitialized = useRef(false);
 
   const [status, setStatus] = useState<Status>({

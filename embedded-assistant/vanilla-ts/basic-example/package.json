@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "concurrently \"npm:dev:*\"",
     "dev:client": "tsc --watch",
-    "dev:server": "tsx watch --clear-screen=false server.ts"
+    "dev:server": "tsx watch --clear-screen=false server.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "@corti/embedded-web": "^0.1.1",
