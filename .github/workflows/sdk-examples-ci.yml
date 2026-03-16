@@ -1,0 +1,82 @@
+# Format check and build for SDK examples (runs only on PRs)
+# Each job runs only when files in its path were changed.
+name: SDK Examples CI
+
+on:
+  pull_request:
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      dotnet: ${{ steps.filter.outputs.dotnet }}
+      express: ${{ steps.filter.outputs.express }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            dotnet:
+              - 'sdk/dotnet/web-api/**'
+              - '.github/workflows/sdk-examples-ci.yml'
+            express:
+              - 'sdk/typescript/express-web-api/**'
+              - '.github/workflows/sdk-examples-ci.yml'
+
+  dotnet:
+    name: C# format & build
+    needs: changes
+    if: needs.changes.outputs.dotnet == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk/dotnet/web-api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Format check
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+  express-web-api:
+    name: Express Web API lint & build
+    needs: changes
+    if: needs.changes.outputs.express == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk/typescript/express-web-api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: sdk/typescript/express-web-api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (Biome)
+        run: npm run lint
+
+      - name: Build
+        run: npm run build

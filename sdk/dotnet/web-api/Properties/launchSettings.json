@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5275",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CORTI__TENANTNAME": "",
+        "CORTI__CLIENTID": "",
+        "CORTI__CLIENTSECRET": "",
+        "CORTI__ENVIRONMENT": "us"
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7091;http://localhost:5275",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CORTI__TENANTNAME": "",
+        "CORTI__CLIENTID": "",
+        "CORTI__CLIENTSECRET": "",
+        "CORTI__ENVIRONMENT": "us"
+      }
+    }
+  }
+}

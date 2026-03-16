@@ -1,51 +1,24 @@
-# Corti SDK Hackathon Examples
+# Corti Example Applications
 
-This repository provides minimal, working examples of how to use the alpha version of `@corti/sdk` in a Next.js app. It
-is designed for hackathon participants and developers who want to quickly try out simple operations and authentication
-flows with the Corti SDK. The code is intentionally basic, focusing on simply working rather than production
-readiness and actual workflows.
+This repository contains example applications for Corti products, organized by product and then by language or framework. Each example is a self-contained project with its own README.
 
-## Getting Started
+## Prerequisites
 
-1. **Obtain Credentials**
-    - Go to the Corti self-service portal and generate the required credentials for the SDK and API usage.
+- A **Corti account** and API credentials from [Corti Console](https://console.corti.app). Each example’s README lists which credentials (tenant name, client ID, client secret, etc.) to set.
 
-2. **Create Environment File**
-    - In the project root, create a file named `.env.local`.
-    - Copy the contents of `.env.example` and fill in the required values.
+## Structure
 
-3. **Install Dependencies**
-   ```bash
-   npm install
-   ```
+| Product            | Language/Framework | Example                                                                          | Description                                                                                          |
+| ------------------ | ------------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| SDK                | TypeScript         | [express-web-api](sdk/typescript/express-web-api/)                                | Express REST API: token (client credentials, ROPC, auth code, PKCE), interactions, recordings, transcripts, facts, codes, templates, agents, documents, stream and transcribe WebSockets. |
+| SDK                | TypeScript         | [next-auth-examples](sdk/typescript/next-auth-examples/)                          | Next.js app with four auth flows (client credentials, ROPC, authorization code, PKCE). Forms for credentials; success view shows token and interactions. |
+| SDK                | .NET               | [web-api](sdk/dotnet/web-api/)                                                   | ASP.NET Core web API: same scope as Express (token flows, interactions, recordings, transcripts, facts, codes, templates, agents, documents, stream, transcribe). Uses [Corti.Sdk](https://www.nuget.org/packages/Corti.Sdk). |
+| Embedded Assistant | React              | [basic-example](embedded-assistant/embedded-assistant/react/basic-example/)      | Basic React example for Embedded Assistant.                                                          |
+| Embedded Assistant | Vanilla TypeScript | [basic-example](embedded-assistant/embedded-assistant/vanilla-ts/basic-example/) | Basic Vanilla TypeScript example for Embedded Assistant.                                             |
 
-4. **Run the Development Server**
-   ```bash
-   npm run dev
-   ```
-   The app will be available at [http://localhost:3000](http://localhost:3000).
+Additional products and languages/frameworks will be added as new top-level and subdirectories.
 
-## Project Structure & Where to Look
+## Getting started
 
-- **Frontend Auth Flows**: Two different authentication flows are implemented for the frontend. Check `src/app/page.tsx` and `src/common/AuthContext` for the implementation.
-- **Examples**:
-    - **Frontend**: Example pages are under `src/app/examples/` (e.g., `documents`, `facts`, `interactions`, etc.).
-    - **API**: Example API endpoints are under `src/app/api/examples/`.
-- **Auth Endpoints**: Endpoints used for frontend authentication examples are in `src/app/api/frontend-endpoints/`.
-
-## How Routing Works in Next.js
-
-This project uses the [App Router](https://nextjs.org/docs/app/building-your-application/routing) from Next.js, which means:
-
-- **Frontend Pages**: Each folder inside `src/app/examples/` corresponds to a route. For example:
-  - `src/app/examples/documents/page.tsx` is available at `/examples/documents`
-  - `src/app/examples/facts/page.tsx` is available at `/examples/facts`
-  - And so on for other examples
-- **API Endpoints**: Each file in `src/app/api/examples/` is available as an API route. For example:
-  - `src/app/api/examples/documents/route.ts` is available at `/api/examples/documents`
-  - `src/app/api/examples/facts/route.ts` is available at `/api/examples/facts`
-  - And so on for other API examples
-
-To launch a frontend example, first authenticate at the root URL (`http://localhost:3000/`) by clicking one of the authentication buttons. Once authenticated, you can navigate to any example page (e.g., `http://localhost:3000/examples/documents`). For API examples, you can navigate directly to the endpoints (e.g., `/api/examples/documents`).
-
-For more details, see the [Next.js Routing documentation](https://nextjs.org/docs/app/building-your-application/routing).
+1. Pick an example from the table above.
+2. Open that project’s directory and follow its README for prerequisites (Node, .NET, etc.), credentials (`.env` or appsettings), and how to run (`npm run dev`, `dotnet run`, etc.).
