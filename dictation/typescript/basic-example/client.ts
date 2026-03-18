@@ -109,7 +109,7 @@ export async function startSession(options: SessionOptions): Promise<ActiveSessi
   // Keep startAudio accessible to the message handler closure.
   startAudioCb = startAudio;
 
-  // -- Connect (once) -------------------------------------------------------
+  // -- Connect and configure (once) ----------------------------------------
   if (!socket) {
     const client = new CortiClient({
       environment,
@@ -162,25 +162,27 @@ export async function startSession(options: SessionOptions): Promise<ActiveSessi
           break;
       }
     });
+
+    await socket.waitForOpen();
+
+    socket.sendConfiguration({
+      type: "config",
+      configuration: {
+        primaryLanguage,
+        interimResults: true,
+        spokenPunctuation: true,
+        automaticPunctuation: true,
+        commands: [
+          { id: "next-section", phrases: ["next section", "go to next section"] },
+          { id: "new-paragraph", phrases: ["new paragraph"] },
+          { id: "delete-last", phrases: ["delete last", "delete that"] },
+        ],
+      },
+    });
+  } else {
+    // Socket already open — skip config and start audio directly.
+    await startAudio();
   }
-
-  // -- Send configuration ---------------------------------------------------
-  await socket.waitForOpen();
-
-  socket.sendConfiguration({
-    type: "config",
-    configuration: {
-      primaryLanguage,
-      interimResults: true,
-      spokenPunctuation: true,
-      automaticPunctuation: true,
-      commands: [
-        { id: "next-section", phrases: ["next section", "go to next section"] },
-        { id: "new-paragraph", phrases: ["new paragraph"] },
-        { id: "delete-last", phrases: ["delete last", "delete that"] },
-      ],
-    },
-  });
 
   // -- Return cleanup function ----------------------------------------------
   return {
