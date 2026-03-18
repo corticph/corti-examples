@@ -67,7 +67,7 @@ async function createInteraction() {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Helper: mint a scoped token with only the "stream" scope.
+// 3. Helper: mint a scoped token with only the "streams" scope.
 //    This token lets the client connect to the streaming WebSocket but
 //    cannot list interactions, create documents, or call any other REST
 //    endpoint — keeping the blast radius minimal if it leaks.
