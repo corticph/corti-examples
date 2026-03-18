@@ -5,7 +5,7 @@
  *   1. Creates a CortiClient with a stream-scoped access token.
  *   2. Connects to the Corti streaming WebSocket.
  *   3. Acquires audio depending on the selected mode.
- *   4. Streams audio to Corti in 200 ms chunks.
+ *   4. Streams audio to Corti in 250 ms chunks.
  *   5. Emits transcript and fact events via callbacks.
  *
  * This module has no DOM dependencies — all UI wiring lives in index.html.
@@ -54,7 +54,7 @@ export interface ActiveSession {
  * 1. Creates a CortiClient using the scoped access token from the server.
  * 2. Connects to the streaming WebSocket via client.stream.connect().
  * 3. Acquires the appropriate audio stream(s) depending on the mode.
- * 4. Pipes audio to Corti in 200 ms chunks via MediaRecorder.
+ * 4. Pipes audio to Corti in 250 ms chunks via MediaRecorder.
  * 5. Fires onTranscript / onFact callbacks for incoming events.
  *
  * @returns An object with an `endConsultation()` method for cleanup.

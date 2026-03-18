@@ -82,7 +82,7 @@ const auth = new CortiAuth({ environment: CortiEnvironment.Eu, tenantName: "YOUR
 const streamToken = await auth.getToken({
   clientId: "YOUR_CLIENT_ID",
   clientSecret: "YOUR_CLIENT_SECRET",
-  scopes: ["stream"],
+  scopes: ["streams"],
 });
 
 // Send interaction.id + streamToken.accessToken to the client
