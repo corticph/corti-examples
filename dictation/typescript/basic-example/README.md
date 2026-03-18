@@ -53,9 +53,9 @@ Opens on `http://localhost:3000`.
 ### Frontend
 
 - **[client.ts](client.ts)** — SDK integration (bundled by esbuild):
-  - `startSession(options)` — creates a `CortiClient`, connects the transcribe WebSocket, streams microphone audio
+  - `startSession(options)` — connects the transcribe WebSocket on first call and reuses it on subsequent calls; streams microphone audio
   - Fires `onReady`, `onTranscript`, and `onCommand` callbacks
-  - Returns a `{ stop() }` handle for cleanup
+  - Returns a `{ stop() }` handle that flushes remaining audio and resolves when the server confirms
 
 - **[index.html](index.html)** — UI:
   - Start / Stop / Clear buttons
@@ -77,22 +77,22 @@ const token = await new CortiAuth({ environment, tenantName }).getToken({
   clientId, clientSecret, scopes: ["transcribe"],
 });
 
-// Browser: connect and stream
+// Browser: connect once, send config, then start audio on CONFIG_ACCEPTED
 const socket = await client.transcribe.connect();
 await socket.waitForOpen();
 socket.sendConfiguration({ type: "config", configuration: { primaryLanguage: "en-US", ... } });
 
-// On CONFIG_ACCEPTED:
-const recorder = new MediaRecorder(micStream);
-recorder.ondataavailable = async (e) => socket.sendAudio(await e.data.arrayBuffer());
-recorder.start(250);
-
-// On "transcript" message:
 socket.on("message", (msg) => {
+  if (msg.type === "CONFIG_ACCEPTED") {
+    const recorder = new MediaRecorder(micStream);
+    recorder.ondataavailable = async (e) => socket.sendAudio(await e.data.arrayBuffer());
+    recorder.start(250);
+  }
   if (msg.type === "transcript") console.log(msg.data.isFinal, msg.data.text);
   if (msg.type === "command")    console.log(msg.data.id);
+  if (msg.type === "flushed")    console.log("all audio processed, socket still open");
 });
 
-// Stop:
-socket.sendEnd({ type: "end" });
+// Stop: flush remaining audio; socket stays open for reuse
+socket.sendFlush({ type: "flush" });
 ```
