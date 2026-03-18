@@ -69,6 +69,7 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 
 ### Dictation
 
-| Example                                                                    | Stack               | Description                                                                         |
-|----------------------------------------------------------------------------|---------------------|-------------------------------------------------------------------------------------|
-| [dictation/typescript/basic-example/](dictation/typescript/basic-example/) | TypeScript, Express | Microphone streaming via `/transcribe`; interim + final transcripts; voice commands |
+| Example                                                                              | Stack               | Description                                                                                  |
+|--------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------|
+| [dictation/typescript/basic-example/](dictation/typescript/basic-example/)           | TypeScript, Express | Microphone streaming via the Corti SDK; interim + final transcripts; voice commands          |
+| [dictation/typescript/web-component/](dictation/typescript/web-component/)           | TypeScript, Express | Four demos of `@corti/dictation-web`: basic, custom UI, styling, and token refresh           |
