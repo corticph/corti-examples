@@ -2,8 +2,8 @@
  * client.ts — Corti SDK dictation integration.
  *
  * Provides a single entry point — startSession() — that:
- *   1. Creates a CortiClient with a transcribe-scoped access token.
- *   2. Connects to the Corti transcription WebSocket.
+ *   1. Creates a CortiClient and connects to the transcription WebSocket once.
+ *   2. Reuses the same socket for subsequent sessions (flush/flushed keeps it open).
  *   3. Sends the transcription configuration.
  *   4. Once CONFIG_ACCEPTED, acquires the microphone and streams audio.
  *   5. Fires onTranscript / onCommand / onReady callbacks for incoming events.
@@ -38,17 +38,28 @@ export interface ActiveSession {
 }
 
 // ---------------------------------------------------------------------------
+// Module-level socket — reused across sessions
+// ---------------------------------------------------------------------------
+
+type TranscribeSocket = Awaited<ReturnType<CortiClient["transcribe"]["connect"]>>;
+
+let socket: TranscribeSocket | undefined;
+
+// Mutable per-session callbacks — updated on each startSession() call.
+let onTranscriptCb: SessionOptions["onTranscript"];
+let onCommandCb: SessionOptions["onCommand"];
+let onFlushedCb: (() => void) | undefined;
+let startAudioCb: (() => Promise<void>) | undefined;
+
+// ---------------------------------------------------------------------------
 // startSession
 // ---------------------------------------------------------------------------
 
 /**
  * Starts a dictation session.
  *
- * 1. Creates a CortiClient using the scoped access token from the server.
- * 2. Connects to the transcription WebSocket via client.transcribe.connect().
- * 3. Sends transcription configuration and waits for CONFIG_ACCEPTED.
- * 4. Acquires the microphone and streams audio in 250 ms chunks.
- * 5. Fires onTranscript / onCommand callbacks for incoming events.
+ * If the WebSocket is already open (e.g. after a previous stop()), it is
+ * reused — only a new config is sent. Otherwise a new connection is opened.
  *
  * @returns An object with a `stop()` method for graceful cleanup.
  */
@@ -63,64 +74,97 @@ export async function startSession(options: SessionOptions): Promise<ActiveSessi
     onCommand,
   } = options;
 
-  // -- 1. Create a client scoped to transcription only ----------------------
-  const client = new CortiClient({
-    environment,
-    tenantName,
-    auth: { accessToken },
-  });
+  // Update per-session callbacks.
+  onTranscriptCb = onTranscript;
+  onCommandCb = onCommand;
 
-  // -- 2. Connect to the Corti transcription WebSocket ----------------------
-  const socket = await client.transcribe.connect();
-
-  // -- 3. Wire up event handlers -------------------------------------------
   let micStream: MediaStream | undefined;
   let mediaRecorder: MediaRecorder | undefined;
-  let onFlushed: (() => void) | undefined;
 
-  socket.on("message", (message) => {
-    switch (message.type) {
-      case "CONFIG_ACCEPTED":
-        console.log("[dictation] Config accepted, session:", message.sessionId);
-        startAudio().catch((err) => console.error("[dictation] Failed to start audio:", err));
-        break;
-
-      case "CONFIG_DENIED":
-        console.error("[dictation] Config denied:", message.reason);
-        break;
-
-      case "CONFIG_TIMEOUT":
-        console.error("[dictation] Config timed out");
-        break;
-
-      case "transcript":
-        onTranscript?.(message.data);
-        break;
-
-      case "command":
-        onCommand?.(message.data);
-        break;
-
-      case "flushed":
-        console.log("[dictation] Flushed — all buffered audio processed");
-        onFlushed?.();
-        break;
-
-      case "usage":
-        console.log("[dictation] Usage:", message.credits, "credits");
-        break;
-
-      case "ended":
-        console.log("[dictation] Session ended by server");
-        break;
-
-      case "error":
-        console.error("[dictation] Server error:", message.error);
-        break;
+  async function startAudio() {
+    if (!navigator.mediaDevices) {
+      throw new Error("Media Devices API not supported in this browser");
     }
-  });
 
-  // -- 4. Send configuration -----------------------------------------------
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // Prefer WebM/Opus; fall back to browser default.
+    const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/ogg"]
+      .find((t) => MediaRecorder.isTypeSupported(t));
+
+    mediaRecorder = new MediaRecorder(micStream, mimeType ? { mimeType } : undefined);
+    console.log(`[dictation] MediaRecorder using: ${mediaRecorder.mimeType || "browser default"}`);
+
+    mediaRecorder.ondataavailable = async (event: BlobEvent) => {
+      if (event.data.size > 0) {
+        socket!.sendAudio(await event.data.arrayBuffer());
+      }
+    };
+
+    mediaRecorder.start(250);
+    console.log("[dictation] Recording started");
+    onReady?.();
+  }
+
+  // Keep startAudio accessible to the message handler closure.
+  startAudioCb = startAudio;
+
+  // -- Connect (once) -------------------------------------------------------
+  if (!socket) {
+    const client = new CortiClient({
+      environment,
+      tenantName,
+      auth: { accessToken },
+    });
+
+    socket = await client.transcribe.connect();
+
+    socket.on("message", (message) => {
+      switch (message.type) {
+        case "CONFIG_ACCEPTED":
+          console.log("[dictation] Config accepted, session:", message.sessionId);
+          startAudioCb?.().catch((err) => console.error("[dictation] Failed to start audio:", err));
+          break;
+
+        case "CONFIG_DENIED":
+          console.error("[dictation] Config denied:", message.reason);
+          break;
+
+        case "CONFIG_TIMEOUT":
+          console.error("[dictation] Config timed out");
+          break;
+
+        case "transcript":
+          onTranscriptCb?.(message.data);
+          break;
+
+        case "command":
+          onCommandCb?.(message.data);
+          break;
+
+        case "flushed":
+          console.log("[dictation] Flushed — all buffered audio processed");
+          onFlushedCb?.();
+          onFlushedCb = undefined;
+          break;
+
+        case "usage":
+          console.log("[dictation] Usage:", message.credits, "credits");
+          break;
+
+        case "ended":
+          console.log("[dictation] Session ended by server");
+          socket = undefined;
+          break;
+
+        case "error":
+          console.error("[dictation] Server error:", message.error);
+          break;
+      }
+    });
+  }
+
+  // -- Send configuration ---------------------------------------------------
   await socket.waitForOpen();
 
   socket.sendConfiguration({
@@ -138,36 +182,10 @@ export async function startSession(options: SessionOptions): Promise<ActiveSessi
     },
   });
 
-  // -- 5. Start audio (called once CONFIG_ACCEPTED is received) ------------
-  async function startAudio() {
-    if (!navigator.mediaDevices) {
-      throw new Error("Media Devices API not supported in this browser");
-    }
-
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    // Prefer WebM/Opus; fall back to browser default.
-    const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/ogg"]
-      .find((t) => MediaRecorder.isTypeSupported(t));
-
-    mediaRecorder = new MediaRecorder(micStream, mimeType ? { mimeType } : undefined);
-    console.log(`[dictation] MediaRecorder using: ${mediaRecorder.mimeType || "browser default"}`);
-
-    mediaRecorder.ondataavailable = async (event: BlobEvent) => {
-      if (event.data.size > 0) {
-        socket.sendAudio(await event.data.arrayBuffer());
-      }
-    };
-
-    mediaRecorder.start(250);
-    console.log("[dictation] Recording started");
-    onReady?.();
-  }
-
-  // -- 6. Return cleanup function ------------------------------------------
+  // -- Return cleanup function ----------------------------------------------
   return {
     stop: () => new Promise<void>((resolve) => {
-      onFlushed = resolve;
+      onFlushedCb = resolve;
 
       if (mediaRecorder && mediaRecorder.state !== "inactive") {
         mediaRecorder.requestData();
@@ -176,8 +194,8 @@ export async function startSession(options: SessionOptions): Promise<ActiveSessi
       micStream?.getAudioTracks().forEach((track) => track.stop());
 
       // Flush tells the server to process all remaining buffered audio.
-      // The socket stays open and can be reused after "flushed" is received.
-      socket.sendFlush({ type: "flush" });
+      // The socket stays open and can be reused for the next session.
+      socket!.sendFlush({ type: "flush" });
       console.log("[dictation] Flush sent — waiting for server confirmation");
     }),
   };
