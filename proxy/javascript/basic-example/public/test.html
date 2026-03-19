@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Corti Dictation Web Component - Proxy Example</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 40px; 
+                max-width: 800px;
+            }
+            #transcript { 
+                border: 1px solid #ccc; 
+                height: 300px; 
+                width: 100%;
+                overflow-y: scroll; 
+                padding: 10px; 
+                margin-bottom: 20px; 
+                background: #f9f9f9;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+            .info {
+                background: #e3f2fd;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+            }
+            .info code {
+                background: #fff;
+                padding: 2px 6px;
+                border-radius: 3px;
+            }
+            corti-dictation {
+                margin: 20px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Corti Dictation Web Component - Proxy Example</h1>
+        
+        <div class="info">
+            <p><strong>Proxy Server:</strong> <code id="proxyUrl">ws://localhost:3001/proxy</code></p>
+            <p><strong>Target:</strong> <code>Corti API (via SDK)</code></p>
+            <p>This example uses the <code>&lt;corti-dictation&gt;</code> web component which handles audio capture and streaming automatically.</p>
+        </div>
+
+        <corti-dictation id="dictation"></corti-dictation>
+
+        <div>
+            <label for="transcript"><strong>Transcript:</strong></label>
+            <textarea 
+                id="transcript" 
+                placeholder="Transcript will appear here as you speak..."
+                readonly
+            ></textarea>
+        </div>
+
+        <script type="module">
+            // Import the dictation web component from esm.sh CDN
+            import 'https://esm.sh/@corti/dictation-web@latest';
+
+            const dictationEl = document.getElementById('dictation');
+            const transcriptEl = document.getElementById('transcript');
+            
+            // Get the current port from the window location
+            const port = window.location.port || '3001';
+            // In production, this should be obtained securely (e.g., from your auth system)
+            const authToken = 'your-auth-token-here';
+            
+            const proxyUrl = `ws://localhost:${port}/proxy`;
+            document.getElementById('proxyUrl').textContent = `${proxyUrl}?proxy-auth-token=${authToken}`;
+
+            // Configure the dictation component to use our proxy with query parameters
+            dictationEl.socketProxy = {
+                url: proxyUrl,
+                queryParameters: {
+                    'proxy-auth-token': authToken
+                }
+            };
+
+            dictationEl.addEventListener('transcript', (e) => {
+                const transcriptData = e.detail.data;
+                
+                if (transcriptData.isFinal) {
+                    transcriptEl.value += transcriptData.text + ' ';
+                    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+                }
+            });
+
+            dictationEl.addEventListener('error', (e) => {
+                transcriptEl.value += '\n[Error: ' + (e.detail.message || 'Unknown error') + ']\n';
+            });
+        </script>
+    </body>
+</html>

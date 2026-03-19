@@ -30,6 +30,13 @@ speaks directly into the record. Supports real-time transcription with interim r
 commands for navigation and editing. Complements ambient workflows for specialties or situations where direct control is
 preferred.
 
+**[Proxy](#proxy)**
+
+Corti APIs should never be called directly from the browser — doing so would expose client
+credentials. Instead, route requests through a server-side proxy that authenticates with Corti on
+behalf of the client. The proxy is also the right place to enforce your own access control, add
+rate limiting, or inject logging.
+
 **[SDK](#sdk)**
 
 A reference showcase of the Corti
@@ -64,6 +71,14 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 | Example                                                                              | Stack               | Description                                                                                              |
 |--------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------------------|
 | [ambient-scribe/typescript/basic-example/](ambient-scribe/typescript/basic-example/) | TypeScript, Express | Single-mic or virtual consultation (doctor + patient channels); document generation from extracted facts |
+
+---
+
+### Proxy
+
+| Example                                                                              | Stack               | Description                                                                     |
+|--------------------------------------------------------------------------------------|---------------------|---------------------------------------------------------------------------------|
+| [proxy/javascript/basic-example/](proxy/javascript/basic-example/)                   | JavaScript, Express | WebSocket proxy — browser connects to proxy, proxy authenticates with Corti SDK |
 
 ---
 
