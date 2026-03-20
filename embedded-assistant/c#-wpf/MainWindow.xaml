@@ -1,0 +1,22 @@
+﻿<Window x:Class="CortiAssistantApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Corti Assistant" Height="800" Width="1200">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Button x:Name="AuthButton"
+                Grid.Row="0"
+                Content="Authenticate"
+                Click="AuthButton_Click"
+                Margin="10"
+                Padding="10,5"/>
+
+        <wv2:WebView2 x:Name="CortiWebView"
+                      Grid.Row="1"/>
+    </Grid>
+</Window>
