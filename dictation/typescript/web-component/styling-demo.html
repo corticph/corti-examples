@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Styling Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+    />
+    <style>
+      corti-dictation {
+        color-scheme: light;
+        --card-background: light-dark(#fbfcfc, #1c212c);
+      }
+
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav><a href="index.html">← Back to Demo Index</a></nav>
+      <h1>Styling Demo</h1>
+      <p>
+        This demo demonstrates how to style the Corti Dictation Web Component,
+        for example:
+      </p>
+      <ul>
+        <li>forcing theme (e.g. dark or light mode)</li>
+        <li>customizing the settings panel</li>
+        <li>adapting colors to your design system</li>
+      </ul>
+      <p>Refer to the <a href="https://github.com/corticph/dictation-web-sdk/blob/main/docs/styling.md">Styling Guide</a> for detailed instructions.</p>
+    </header>
+
+    <main>
+      <div class="theme-picker">
+        <label for="themeToggle">
+          <input type="checkbox" id="themeToggle" role="switch" />
+          Dark mode
+        </label>
+      </div>
+
+      <article id="componentPlaceholder" aria-busy="true">
+        <corti-dictation settingsEnabled=""></corti-dictation>
+      </article>
+
+      <!-- Textarea to display transcript text -->
+      <textarea
+        id="transcript"
+        rows="6"
+        placeholder="Transcript will appear here..."
+      ></textarea>
+    </main>
+
+    <script type="module">
+      import "https://esm.sh/@corti/dictation-web";
+
+      const dictation = document.querySelector("corti-dictation");
+      const componentPlaceholder = document.getElementById("componentPlaceholder");
+      const transcriptArea = document.getElementById("transcript");
+      const themeToggle = document.getElementById("themeToggle");
+
+      // Fetch a scoped transcribe token from the server.
+      const { accessToken } = await fetch("/api/token", { method: "POST" }).then(r => r.json());
+      dictation.accessToken = accessToken;
+      componentPlaceholder.setAttribute("aria-busy", "false");
+
+      // Theme management (default to system preference)
+      const applyTheme = (isDark) => {
+        const theme = isDark ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", theme);
+        themeToggle.checked = isDark;
+        dictation.style.colorScheme = theme;
+      };
+      const prefersDarkScheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(prefersDarkScheme);
+      themeToggle.addEventListener("change", (e) => applyTheme(e.target.checked));
+
+      // Update the textarea with transcript text when received
+      dictation.addEventListener("transcript", (e) => {
+        const { data } = e.detail;
+        if (data.isFinal) {
+          transcriptArea.value += data.text + " ";
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Basic Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+    />
+  </head>
+  <body>
+    <header>
+      <nav><a href="index.html">← Back to Demo Index</a></nav>
+      <h1>Basic Demo</h1>
+    </header>
+
+    <main>
+      <article id="componentPlaceholder" aria-busy="true">
+        <corti-dictation></corti-dictation>
+      </article>
+
+      <!-- Textarea to display transcript text -->
+      <textarea
+        id="transcript"
+        rows="6"
+        placeholder="Transcript will appear here..."
+      ></textarea>
+      <div id="commandOutput"></div>
+    </main>
+
+    <script type="module">
+      import "https://esm.sh/@corti/dictation-web";
+
+      const dictation = document.querySelector("corti-dictation");
+      const componentPlaceholder = document.getElementById("componentPlaceholder");
+      const transcriptArea = document.getElementById("transcript");
+      const commandOutput = document.getElementById("commandOutput");
+
+      // Fetch a scoped transcribe token from the server.
+      const { accessToken } = await fetch("/api/token", { method: "POST" }).then(r => r.json());
+      dictation.accessToken = accessToken;
+      componentPlaceholder.setAttribute("aria-busy", "false");
+
+      dictation.dictationConfig = {
+        primaryLanguage: "en",
+        spokenPunctuation: true,
+        automaticPunctuation: true,
+        commands: [
+          { id: "delete", phrases: ["delete that"] },
+          {
+            id: "insert_template",
+            phrases: [
+              "insert my {template_name} template",
+              "insert {template_name} template",
+            ],
+            variables: [
+              {
+                key: "template_name",
+                type: "enum",
+                enum: ["new", "existing"],
+              },
+            ],
+          },
+        ],
+      };
+
+      // Listen to events from the dictation component
+      dictation.addEventListener("recording-state-changed", (e) => {
+        console.log("Recording state:", e.detail.state);
+      });
+
+      dictation.addEventListener("recording-devices-changed", (e) => {
+        console.log("Recording Device Changed:", e.detail);
+      });
+
+      dictation.addEventListener("devices-changed", (e) => {
+        console.log("Device List Changed:", e.detail);
+      });
+
+      dictation.addEventListener("error", (e) => {
+        console.error(e.detail);
+      });
+
+      // Update the textarea with transcript text when received
+      dictation.addEventListener("transcript", (e) => {
+        const { data } = e.detail;
+        if (data.isFinal) {
+          transcriptArea.value += data.text + " ";
+        }
+      });
+
+      // Update the command output when command is received
+      dictation.addEventListener("command", (e) => {
+        const { data } = e.detail;
+        console.log("Command:", data);
+        if (data.id) {
+          commandOutput.innerHTML = `Command: ${data.id} (${JSON.stringify(
+            Object.entries(data.variables)
+          )})`;
+        }
+      });
+    </script>
+  </body>
+</html>

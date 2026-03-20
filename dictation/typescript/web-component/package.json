@@ -1,0 +1,22 @@
+{
+  "name": "corti-dictation-web-component-demos",
+  "version": "1.0.0",
+  "description": "Demos for the Corti Dictation Web Component (@corti/dictation-web)",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts"
+  },
+  "keywords": ["corti", "dictation", "web-component"],
+  "license": "MIT",
+  "dependencies": {
+    "@corti/sdk": "latest",
+    "dotenv": "^16.4.7",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6",
+    "tsx": "^4.19.2",
+    "typescript": "^5.3.3"
+  }
+}

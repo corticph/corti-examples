@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Corti AmbientScribe Demo</title>
+  <style>
+    body { font-family: sans-serif; max-width: 480px; margin: 2rem auto; }
+    fieldset { margin-bottom: 1rem; }
+    button { margin-right: 0.5rem; padding: 0.4rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>AmbientScribe</h1>
+
+  <!-- Mode toggle -->
+  <fieldset>
+    <legend>Mode</legend>
+    <label>
+      <input type="radio" name="mode" value="single" checked />
+      Single Microphone (diarization)
+    </label>
+    <br />
+    <label>
+      <input type="radio" name="mode" value="virtual" />
+      Virtual Consultation (doctor + patient)
+    </label>
+  </fieldset>
+
+  <!-- Remote source option (only relevant in virtual mode) -->
+  <fieldset id="remote-source-options" style="display:none">
+    <legend>Remote audio source</legend>
+    <label>
+      <input type="radio" name="remote-source" value="webrtc" checked />
+      WebRTC peer connection
+    </label>
+    <br />
+    <label>
+      <input type="radio" name="remote-source" value="display" />
+      Screen / tab capture (getDisplayMedia)
+    </label>
+  </fieldset>
+
+  <!-- Controls -->
+  <button id="start-consultation">Start Consultation</button>
+  <button id="end-consultation" disabled>End Consultation</button>
+  <button id="create-document" disabled>Create Document</button>
+
+  <p id="status-message"><em>Open the browser console to see transcripts and facts.</em></p>
+  <pre id="document-output" style="display:none; white-space:pre-wrap; background:#f5f5f5; padding:1rem; border-radius:4px; max-height:400px; overflow:auto;"></pre>
+
+  <!-- Bundled Corti integration (built by: npm run build:client) -->
+  <script src="./dist/client.js"></script>
+
+  <script>
+    // -----------------------------------------------------------------------
+    // UI handling — wires buttons to the Corti integration (client.ts)
+    // -----------------------------------------------------------------------
+
+    var session = null;
+    var currentInteractionId = null;
+
+    var startBtn = document.getElementById("start-consultation");
+    var endBtn = document.getElementById("end-consultation");
+    var createBtn = document.getElementById("create-document");
+    var statusMessage = document.getElementById("status-message");
+    var documentOutput = document.getElementById("document-output");
+
+    // Show/hide remote source options when the mode changes.
+    document.querySelectorAll('input[name="mode"]').forEach(function (radio) {
+      radio.addEventListener("change", function () {
+        document.getElementById("remote-source-options").style.display =
+          this.value === "virtual" ? "" : "none";
+      });
+    });
+
+    function setButtonStates(state) {
+      startBtn.disabled = state === "running";
+      endBtn.disabled = state !== "running";
+      createBtn.disabled = state !== "stopped";
+    }
+
+    // -- Start Consultation --------------------------------------------------
+    startBtn.addEventListener("click", async function () {
+      var modeInput = document.querySelector('input[name="mode"]:checked');
+      var mode = modeInput ? modeInput.value : "single";
+
+      var remoteInput = document.querySelector('input[name="remote-source"]:checked');
+      var remoteSource = remoteInput ? remoteInput.value : "webrtc";
+
+      try {
+        // Fetch interaction ID + scoped token from the server (see server.ts)
+        var response = await fetch("/api/start-session", { method: "POST" });
+        var data = await response.json();
+        currentInteractionId = data.interactionId;
+
+        // In virtual/webrtc mode you would pass a real RTCPeerConnection here.
+        // For this demo we pass undefined — replace with your WebRTC connection.
+        var peerConnection =
+          mode === "virtual" && remoteSource === "webrtc"
+            ? new RTCPeerConnection()
+            : undefined;
+
+        session = await AmbientScribe.startSession({
+          accessToken: data.accessToken,
+          interactionId: data.interactionId,
+          tenantName: data.tenantName,
+          environment: data.environment,
+          mode: mode,
+          remoteSource: remoteSource,
+          peerConnection: peerConnection,
+        });
+
+        setButtonStates("running");
+        console.log('Session started in "' + mode + '" mode');
+      } catch (err) {
+        console.error("Failed to start session:", err);
+      }
+    });
+
+    // -- End Consultation ----------------------------------------------------
+    endBtn.addEventListener("click", async function () {
+      // set a loading state
+      endBtn.disabled = true;
+      endBtn.innerHTML = "Ending...";
+      if (session) {
+        await session.endConsultation();
+        session = null;
+      }
+      endBtn.disabled = false;
+      endBtn.innerHTML = "End Consultation";
+      setButtonStates("stopped");
+    });
+
+    // -- Create Document -----------------------------------------------------
+    createBtn.addEventListener("click", async function () {
+      if (!currentInteractionId) {
+        console.error("No interaction ID — start a consultation first");
+        return;
+      }
+
+      createBtn.disabled = true;
+      statusMessage.innerHTML = "<em>Creating document\u2026</em>";
+      documentOutput.style.display = "none";
+
+      try {
+        var response = await fetch("/api/create-document", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ interactionId: currentInteractionId }),
+        });
+        var result = await response.json();
+
+        if (result.error) throw new Error(result.error);
+
+        console.log("Document created:", result.document);
+        statusMessage.innerHTML = "<em>Document created successfully.</em>";
+        documentOutput.textContent = JSON.stringify(result.document, null, 2);
+        documentOutput.style.display = "";
+      } catch (err) {
+        console.error("Failed to create document:", err);
+        statusMessage.innerHTML = "<em>Failed to create document \u2014 see console.</em>";
+        createBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

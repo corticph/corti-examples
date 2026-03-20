@@ -1,23 +1,90 @@
 # Corti Example Applications
 
-This repository contains example applications for Corti products, organized by product and then by language or framework. Each example is a self-contained project with its own README.
+Example applications for Corti products. Each project is self-contained with its own README and quick-start
+instructions.
 
-## Prerequisites
+**Prerequisites:** A Corti account and API credentials from [Corti Console](https://console.corti.app).
 
-- A **Corti account** and API credentials from [Corti Console](https://console.corti.app). Each example’s README lists which credentials (tenant name, client ID, client secret, etc.) to set.
+---
 
-## Structure
+## Use Cases
 
-| Product            | Language/Framework | Example                                                                          | Description                                                                                          |
-| ------------------ | ------------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| SDK                | TypeScript         | [express-web-api](sdk/typescript/express-web-api/)                                | Express REST API: token (client credentials, ROPC, auth code, PKCE), interactions, recordings, transcripts, facts, codes, templates, agents, documents, stream and transcribe WebSockets. |
-| SDK                | TypeScript         | [next-auth-examples](sdk/typescript/next-auth-examples/)                          | Next.js app with four auth flows (client credentials, ROPC, authorization code, PKCE). Forms for credentials; success view shows token and interactions. |
-| SDK                | .NET               | [web-api](sdk/dotnet/web-api/)                                                   | ASP.NET Core web API: same scope as Express (token flows, interactions, recordings, transcripts, facts, codes, templates, agents, documents, stream, transcribe). Uses [Corti.Sdk](https://www.nuget.org/packages/Corti.Sdk). |
-| Embedded Assistant | React              | [basic-example](embedded-assistant/react/basic-example/)      | Basic React example for Embedded Assistant.                                                          |
-| Embedded Assistant | Vanilla TypeScript | [basic-example](embedded-assistant/vanilla-ts/basic-example/) | Basic Vanilla TypeScript example for Embedded Assistant.                                             |
+**[Embedded Assistant](#embedded-assistant)**
 
-Additional products and languages/frameworks will be added as new top-level and subdirectories.
+A pre-built Corti [Web Component](https://www.npmjs.com/package/@corti/embedded-web) that can be embedded directly into
+any web application. The assistant manages the full clinical session experience — recording, transcription, fact review,
+and documentation — so the host application only needs to handle authentication and interaction lifecycle.
 
-## Getting started
+**[Ambient Scribe](#ambient-scribe)**
 
-Open the directory for the product, language, and project you want (e.g., [sdk/typescript/express-web-api/](sdk/typescript/express-web-api/) for the SDK Express web API, [sdk/dotnet/web-api/](sdk/dotnet/web-api/) for the SDK .NET web API, or [embedded-assistant/react/basic-example/](embedded-assistant/react/basic-example/) for the Embedded Assistant React example) and follow that project's README.
+Ambient scribing lets the system listen passively to a clinical encounter and automatically produce structured
+documentation without requiring the clinician to dictate or type. Audio is streamed in real time, clinical facts are
+extracted as the conversation unfolds, and a document is generated at the end. Can support both in-person (single
+microphone with diarization) and virtual consultation (doctor and patient on separate audio channels).
+
+**[Dictation](#dictation)**
+
+Dictation gives clinicians direct control over the content, wording, and structure of their documentation through
+speech. Unlike ambient scribing — where the system listens in the background — dictation is intentional: the provider
+speaks directly into the record. Supports real-time transcription with interim results, spoken punctuation, and voice
+commands for navigation and editing. Complements ambient workflows for specialties or situations where direct control is
+preferred.
+
+**[Proxy](#proxy)**
+
+Corti APIs should never be called directly from the browser — doing so would expose client
+credentials. Instead, route requests through a server-side proxy that authenticates with Corti on
+behalf of the client. The proxy is also the right place to enforce your own access control, add
+rate limiting, or inject logging.
+
+**[SDK](#sdk)**
+
+A reference showcase of the Corti
+SDKs ([@corti/sdk](https://www.npmjs.com/package/@corti/sdk) · [Corti.Sdk](https://www.nuget.org/packages/Corti.Sdk))
+covering every group of endpoints: auth flows, interactions, recordings, transcripts, facts, codes, templates, agents,
+documents, and WebSocket streaming. Not real applications — intended as a practical guide for developers integrating
+the SDK and as a validation tool when upgrading to a new SDK version.
+
+---
+
+### SDK
+
+| Example                                                                  | Stack               | Description                                                                                |
+|--------------------------------------------------------------------------|---------------------|--------------------------------------------------------------------------------------------|
+| [sdk/typescript/express-web-api/](sdk/typescript/express-web-api/)       | TypeScript, Express | REST API covering all SDK features                                                         |
+| [sdk/typescript/next-auth-examples/](sdk/typescript/next-auth-examples/) | TypeScript, Next.js | Standalone demos of all four Corti OAuth flows (client credentials, ROPC, auth code, PKCE) |
+| [sdk/dotnet/web-api/](sdk/dotnet/web-api/)                               | C#, ASP.NET Core    | Same scope as the Express example, in .NET                                                 |
+
+---
+
+### Embedded Assistant
+
+| Example                                                                                      | Stack                      | Description                                       |
+|----------------------------------------------------------------------------------------------|----------------------------|---------------------------------------------------|
+| [embedded-assistant/react/basic-example/](embedded-assistant/react/basic-example/)           | TypeScript, React 19, Vite | React integration using `@corti/embedded-react`   |
+| [embedded-assistant/vanilla-ts/basic-example/](embedded-assistant/vanilla-ts/basic-example/) | TypeScript                 | Web Component integration — no framework required |
+
+---
+
+### Ambient Scribe
+
+| Example                                                                              | Stack               | Description                                                                                              |
+|--------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------------------|
+| [ambient-scribe/typescript/basic-example/](ambient-scribe/typescript/basic-example/) | TypeScript, Express | Single-mic or virtual consultation (doctor + patient channels); document generation from extracted facts |
+
+---
+
+### Proxy
+
+| Example                                                                              | Stack               | Description                                                                     |
+|--------------------------------------------------------------------------------------|---------------------|---------------------------------------------------------------------------------|
+| [proxy/javascript/basic-example/](proxy/javascript/basic-example/)                   | JavaScript, Express | WebSocket proxy — browser connects to proxy, proxy authenticates with Corti SDK |
+
+---
+
+### Dictation
+
+| Example                                                                              | Stack               | Description                                                                                  |
+|--------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------|
+| [dictation/typescript/basic-example/](dictation/typescript/basic-example/)           | TypeScript, Express | Microphone streaming via the Corti SDK; interim + final transcripts; voice commands          |
+| [dictation/typescript/web-component/](dictation/typescript/web-component/)           | TypeScript, Express | Four demos of `@corti/dictation-web`: basic, custom UI, styling, and token refresh           |

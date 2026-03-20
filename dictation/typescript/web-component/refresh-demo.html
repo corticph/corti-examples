@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Automatic Token Refresh Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+    />
+  </head>
+  <body>
+    <header>
+      <nav><a href="index.html">← Back to Demo Index</a></nav>
+      <h1>Automatic Token Refresh Demo</h1>
+      <p>This demo demonstrates how to automatically refresh the access token when it is near expiration.</p>
+    </header>
+    <main>
+      <article id="componentPlaceholder">
+        <corti-dictation></corti-dictation>
+      </article>
+
+      <textarea
+        id="transcript"
+        placeholder="Transcript will appear here..."
+      ></textarea>
+    </main>
+
+    <script type="module">
+      import "https://esm.sh/@corti/dictation-web";
+
+      const dictation = document.querySelector("corti-dictation");
+      const componentPlaceholder = document.getElementById("componentPlaceholder");
+      const transcriptArea = document.getElementById("transcript");
+
+      // Fetch the initial token from the server.
+      const { accessToken } = await fetch("/api/token", { method: "POST" }).then(r => r.json());
+
+      // The server uses client credentials and issues fresh tokens on demand,
+      // so the same /api/token endpoint handles both initial issuance and refresh.
+      dictation.authConfig = {
+        accessToken,
+        refreshAccessToken: async () => {
+          return fetch("/api/token", { method: "POST" }).then(r => r.json());
+        },
+      };
+
+      // Update the textarea with transcript text when received
+      dictation.addEventListener("transcript", (e) => {
+        const { data } = e.detail;
+        if (data.isFinal) {
+          transcriptArea.value += data.text + " ";
+        }
+      });
+    </script>
+  </body>
+</html>

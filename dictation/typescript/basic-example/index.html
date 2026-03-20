@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Corti Dictation Demo</title>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 2rem auto; }
+    button { margin-right: 0.5rem; padding: 0.4rem 1rem; }
+    #status { margin-top: 0.75rem; font-size: 0.9em; color: #555; min-height: 1.2em; }
+    #transcript-container {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      min-height: 200px;
+      padding: 1rem;
+      margin-top: 1rem;
+      background: #fafafa;
+      line-height: 1.6;
+    }
+    #interim { color: #999; font-style: italic; }
+    .command-tag {
+      display: inline-block;
+      background: #e8f0fe;
+      border: 1px solid #aac;
+      border-radius: 3px;
+      padding: 0.1em 0.5em;
+      font-size: 0.8em;
+      font-style: normal;
+      color: #336;
+      margin: 0 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Corti Dictation</h1>
+
+  <div>
+    <button id="start-btn">Start Dictation</button>
+    <button id="stop-btn" disabled>Stop</button>
+    <button id="clear-btn">Clear</button>
+  </div>
+
+  <p id="status"><em>Ready. Click Start to begin dictating.</em></p>
+
+  <div id="transcript-container">
+    <span id="final"></span><span id="interim"></span>
+  </div>
+
+  <!-- Bundled Corti integration (built by: npm run build:client) -->
+  <script src="./dist/client.js"></script>
+
+  <script>
+    var session = null;
+    var finalText = "";
+
+    var startBtn = document.getElementById("start-btn");
+    var stopBtn  = document.getElementById("stop-btn");
+    var clearBtn = document.getElementById("clear-btn");
+    var statusEl = document.getElementById("status");
+    var finalEl  = document.getElementById("final");
+    var interimEl = document.getElementById("interim");
+
+    function setStatus(msg) {
+      statusEl.innerHTML = "<em>" + msg + "</em>";
+    }
+
+    // -- Start ---------------------------------------------------------------
+    startBtn.addEventListener("click", async function () {
+      startBtn.disabled = true;
+      setStatus("Starting session\u2026");
+
+      try {
+        var resp = await fetch("/api/start-session", { method: "POST" });
+        var data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        setStatus("Connecting to Corti\u2026");
+
+        session = await Dictation.startSession({
+          accessToken: data.accessToken,
+          tenantName:  data.tenantName,
+          environment: data.environment,
+
+          onReady: function () {
+            setStatus("Listening\u2026");
+            stopBtn.disabled = false;
+          },
+
+          onTranscript: function (t) {
+            if (t.isFinal) {
+              // Append final text (with a space separator after any existing text).
+              finalText += (finalText && !finalText.endsWith(" ") ? " " : "") + t.text;
+              finalEl.textContent = finalText;
+              interimEl.textContent = "";
+            } else {
+              interimEl.textContent = " " + t.text;
+            }
+          },
+
+          onCommand: function (cmd) {
+            // Insert a visual command tag into the transcript.
+            var tag = document.createElement("span");
+            tag.className = "command-tag";
+            tag.textContent = "\u2318 " + cmd.id;
+            finalEl.appendChild(tag);
+            finalEl.appendChild(document.createTextNode(" "));
+            finalText = finalEl.textContent;
+            interimEl.textContent = "";
+            setStatus("Command: " + cmd.id);
+          },
+        });
+
+      } catch (err) {
+        console.error("Failed to start session:", err);
+        setStatus("Error: " + err.message);
+        startBtn.disabled = false;
+      }
+    });
+
+    // -- Stop ----------------------------------------------------------------
+    stopBtn.addEventListener("click", async function () {
+      stopBtn.disabled = true;
+      setStatus("Flushing\u2026");
+      if (session) {
+        await session.stop();
+        session = null;
+      }
+      startBtn.disabled = false;
+      setStatus("Stopped.");
+    });
+
+    // -- Clear ---------------------------------------------------------------
+    clearBtn.addEventListener("click", function () {
+      finalText = "";
+      finalEl.textContent = "";
+      interimEl.textContent = "";
+    });
+  </script>
+</body>
+</html>
