@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <Target Name="ValidateWebAssets" BeforeTargets="Build">
+    <Error Condition="!Exists('WebAssets\dist\index.html')"
+           Text="Missing built WebAssets. Run 'npm install' and 'npm run build' in embedded-assistant/c-sharp-wpf/WebAssets before building the WPF app." />
+  </Target>
+
+  <Target Name="CopyWebAssets" AfterTargets="Build">
+    <ItemGroup>
+      <WebAssetFiles Include="WebAssets\dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(WebAssetFiles)" DestinationFiles="@(WebAssetFiles->'$(OutDir)WebAssets\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3856.49" />
+  </ItemGroup>
+
+</Project>
