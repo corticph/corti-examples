@@ -14,10 +14,12 @@ public static class TranscribeEndpoint
         IConfiguration config,
         IWebHostEnvironment env)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
+        if (!CortiHelpers.TryGetCortiConfig(config, out var cc, out var credentialError))
         {
             return credentialError;
         }
+
+        var client = new CortiClient(cc!.TenantName, cc.Environment, new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret));
 
         var samplePath = CortiHelpers.ResolveSampleFilePath(env.ContentRootPath, "trouble-breathing.mp3");
         if (samplePath is null)
@@ -30,7 +32,7 @@ public static class TranscribeEndpoint
 
         try
         {
-            var transcribeApi = await client!.CreateTranscribeApiAsync();
+            var transcribeApi = await client.CreateTranscribeApiAsync();
 
             var messages = new List<object>();
             var configAcceptedTcs = new TaskCompletionSource();
@@ -62,17 +64,16 @@ public static class TranscribeEndpoint
                 AddMessage(msg);
                 flushedTcs.TrySetResult();
             });
-            transcribeApi.TranscribeUsageMessage.Subscribe(msg => AddMessage(msg));
-            transcribeApi.TranscribeTranscriptMessage.Subscribe(msg => AddMessage(msg));
-            transcribeApi.TranscribeErrorMessage.Subscribe(msg => AddMessage(msg));
-            transcribeApi.TranscribeCommandMessage.Subscribe(msg => AddMessage(msg));
-            transcribeApi.TranscribeEndedMessage.Subscribe(msg => AddMessage(msg));
+            transcribeApi.TranscribeUsageMessage.Subscribe(AddMessage);
+            transcribeApi.TranscribeTranscriptMessage.Subscribe(AddMessage);
+            transcribeApi.TranscribeErrorMessage.Subscribe(AddMessage);
+            transcribeApi.TranscribeCommandMessage.Subscribe(AddMessage);
+            transcribeApi.TranscribeEndedMessage.Subscribe(AddMessage);
 
             await transcribeApi.ConnectAsync();
 
             await transcribeApi.Send(new TranscribeConfigMessage
             {
-                Type = TranscribeConfigMessageType.Config,
                 Configuration = new TranscribeConfig { PrimaryLanguage = "en" },
             });
             await configAcceptedTcs.Task;
@@ -92,7 +93,7 @@ public static class TranscribeEndpoint
                 }
             }
 
-            await transcribeApi.Send(new TranscribeFlushMessage { Type = TranscribeFlushMessageType.Flush });
+            await transcribeApi.Send(new TranscribeFlushMessage());
             await flushedTcs.Task;
 
             await transcribeApi.CloseAsync();

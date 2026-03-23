@@ -17,16 +17,18 @@ public static class StreamEndpoint
         IWebHostEnvironment env,
         string? interactionId)
     {
-        if (!CortiHelpers.TryCreateCortiClient(config, out var client, out var credentialError))
+        if (!CortiHelpers.TryGetCortiConfig(config, out var cc, out var credentialError))
         {
             return credentialError;
         }
+
+        var client = new CortiClient(cc!.TenantName, cc.Environment, new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret));
 
         var interactionIdToUse = interactionId?.Trim();
         if (string.IsNullOrEmpty(interactionIdToUse))
         {
             var id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-            var created = await client!.Interactions.CreateAsync(new InteractionsCreateRequest
+            var created = await client.Interactions.CreateAsync(new InteractionsCreateRequest
             {
                 Encounter = new InteractionsEncounterCreateRequest
                 {
@@ -54,7 +56,7 @@ public static class StreamEndpoint
 
         try
         {
-            var streamApi = await client!.CreateStreamApiAsync(interactionIdToUse!);
+            var streamApi = await client.CreateStreamApiAsync(interactionIdToUse!);
 
             var messages = new List<object>();
             var configAcceptedTcs = new TaskCompletionSource();
@@ -99,7 +101,6 @@ public static class StreamEndpoint
 
             await streamApi.Send(new StreamConfigMessage
             {
-                Type = StreamConfigMessageType.Config,
                 Configuration = new StreamConfig
                 {
                     Transcription = new StreamConfigTranscription
@@ -126,7 +127,7 @@ public static class StreamEndpoint
                 }
             }
 
-            await streamApi.Send(new StreamFlushMessage { Type = StreamFlushMessageType.Flush });
+            await streamApi.Send(new StreamFlushMessage());
             await flushedTcs.Task;
 
             await streamApi.CloseAsync();
