@@ -3,6 +3,7 @@
 This example shows how to host `@corti/embedded-web` inside a WPF application using WebView2.
 
 The flow mirrors the vanilla TypeScript example:
+
 - load the embedded assistant
 - authenticate with Corti
 - create an interaction
@@ -49,6 +50,8 @@ Run the WPF app:
 dotnet run
 ```
 
+The .NET build fails fast if `WebAssets/dist` has not been built yet.
+
 ## Expected Behavior
 
 After clicking `Authenticate`, the app should:
@@ -58,7 +61,8 @@ After clicking `Authenticate`, the app should:
 - create an interaction
 - navigate to the new session
 
-Microphone permission is granted by the WebView2 host when the embedded app requests it.
+The Authenticate button stays disabled until WebView2 is ready. Microphone permission is granted only for the trusted assistant origins used by the sample.
+DevTools are enabled only in Debug builds.
 
 ## Troubleshooting
 
@@ -66,6 +70,8 @@ Microphone permission is granted by the WebView2 host when the embedded app requ
   Create `.env` from `.env.example` in the project root.
 - Missing config keys:
   The app will fail fast and list the required keys.
+- Missing built frontend:
+  Run `npm install` and `npm run build` in `WebAssets` before running `dotnet run`.
 - Frontend changes not showing up:
   Rebuild `WebAssets` before running the WPF app.
 - Session crashes after navigation:

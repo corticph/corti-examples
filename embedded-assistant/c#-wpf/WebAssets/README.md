@@ -9,4 +9,4 @@ npm install
 npm run build
 ```
 
-The embedded web shell needs to be built before you run the C# applicatoin to ensure the buildartifacts are copied over.
+The embedded web shell needs to be built before you run the C# application to ensure the build artifacts are copied over.

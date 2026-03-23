@@ -8,6 +8,11 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <Target Name="ValidateWebAssets" BeforeTargets="Build">
+    <Error Condition="!Exists('WebAssets\dist\index.html')"
+           Text="Missing built WebAssets. Run 'npm install' and 'npm run build' in embedded-assistant/c#-wpf/WebAssets before building the WPF app." />
+  </Target>
+
   <Target Name="CopyWebAssets" AfterTargets="Build">
     <ItemGroup>
       <WebAssetFiles Include="WebAssets\dist\**\*" />

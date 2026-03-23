@@ -8,13 +8,22 @@ import type {
 } from "@corti/embedded-web/types";
 
 type CortiEmbeddedElement = HTMLElement & CortiEmbeddedAPI;
+type BootstrapMessage = AuthPayload & { baseUrl: string };
+type HostMessage =
+  | { type: "host.ready"; payload: null }
+  | { type: "session.started"; payload: string }
+  | { type: "error"; payload: string }
+  | { type: string; payload: unknown };
 
 declare global {
   interface Window {
-    initializeCorti: (config: AuthPayload & { baseUrl: string }) => Promise<void>;
     chrome?: {
       webview?: {
         postMessage: (message: string) => void;
+        addEventListener: (
+          type: "message",
+          listener: (event: MessageEvent<BootstrapMessage>) => void,
+        ) => void;
       };
     };
   }
@@ -33,9 +42,11 @@ if (!assistantElement) {
 
 const status = statusElement;
 const corti = assistantElement as CortiEmbeddedElement;
+let bootstrapConfig: BootstrapMessage | null = null;
+let hasStarted = false;
 
-const postHostMessage = (type: string, payload: string) => {
-  window.chrome?.webview?.postMessage(JSON.stringify({ type, payload }));
+const postHostMessage = (message: HostMessage) => {
+  window.chrome?.webview?.postMessage(JSON.stringify(message));
 };
 
 const setErrorState = (message: string) => {
@@ -46,7 +57,7 @@ const setErrorState = (message: string) => {
 
 const reportError = (message: string) => {
   setErrorState(message);
-  postHostMessage("error", message);
+  postHostMessage({ type: "error", payload: message });
 };
 
 window.addEventListener("error", event => {
@@ -58,14 +69,27 @@ window.addEventListener("unhandledrejection", event => {
   reportError(message);
 });
 
-window.initializeCorti = async function initializeCorti(config) {
+const startEmbeddedSession = () => {
+  if (hasStarted || bootstrapConfig === null) {
+    return;
+  }
+
+  hasStarted = true;
+  const config = bootstrapConfig;
   corti.setAttribute("baseURL", config.baseUrl);
   corti.setAttribute("visibility", "visible");
+};
 
-  const handleReady = async () => {
+corti.addEventListener("embedded.ready", () => {
+  void (async () => {
+    if (bootstrapConfig === null) {
+      reportError("Missing host bootstrap configuration");
+      return;
+    }
+
     try {
       status.textContent = "Authenticating...";
-      await corti.auth(config);
+      await corti.auth(bootstrapConfig);
 
       status.textContent = "Creating session...";
       const interactionPayload: CreateInteractionPayload = {
@@ -85,20 +109,30 @@ window.initializeCorti = async function initializeCorti(config) {
       status.textContent = "Ready";
       status.style.background = "#e8f5e9";
       status.style.color = "#2e7d32";
-      postHostMessage("session.started", interaction.id);
+      postHostMessage({ type: "session.started", payload: interaction.id });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       reportError(message);
     }
-  };
+  })();
+}, { once: true });
 
-  corti.addEventListener("embedded.ready", handleReady, { once: true });
-  corti.addEventListener("embedded-event", (event: any) => {
-    const detail = (event as CustomEvent<{ name: string; payload: unknown }>).detail;
-    postHostMessage(detail.name, JSON.stringify(detail.payload ?? null));
+corti.addEventListener("embedded-event", (event: Event) => {
+  const detail = (event as CustomEvent<{ name: string; payload: unknown }>).detail;
+  postHostMessage({
+    type: detail.name,
+    payload: detail.payload ?? null,
   });
-  corti.addEventListener("error", (event: any) => {
-    const detail = (event as CustomEvent<ErrorEventPayload>).detail;
-    reportError(detail.message);
-  });
-};
+});
+
+corti.addEventListener("error", (event: Event) => {
+  const detail = (event as CustomEvent<ErrorEventPayload>).detail;
+  reportError(detail.message);
+});
+
+window.chrome?.webview?.addEventListener("message", (event: MessageEvent<BootstrapMessage>) => {
+  bootstrapConfig = event.data;
+  startEmbeddedSession();
+});
+
+postHostMessage({ type: "host.ready", payload: null });

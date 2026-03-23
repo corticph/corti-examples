@@ -14,7 +14,8 @@
                 Content="Authenticate"
                 Click="AuthButton_Click"
                 Margin="10"
-                Padding="10,5"/>
+                Padding="10,5"
+                IsEnabled="False"/>
 
         <wv2:WebView2 x:Name="CortiWebView"
                       Grid.Row="1"/>
