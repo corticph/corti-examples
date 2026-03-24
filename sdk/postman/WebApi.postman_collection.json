@@ -232,6 +232,24 @@
       "response": []
     },
     {
+      "name": "Transcribe with config",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/transcribe-with-config",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "transcribe-with-config"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Stream",
       "request": {
         "method": "GET",
@@ -243,6 +261,30 @@
           ],
           "path": [
             "stream"
+          ],
+          "query": [
+            {
+              "key": "interactionId",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Stream with config",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/stream-with-config",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "stream-with-config"
           ],
           "query": [
             {
