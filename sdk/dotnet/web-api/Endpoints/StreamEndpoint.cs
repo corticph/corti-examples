@@ -59,7 +59,6 @@ public static class StreamEndpoint
             var streamApi = await client.CreateStreamApiAsync(interactionIdToUse!);
 
             var messages = new List<object>();
-            var configAcceptedTcs = new TaskCompletionSource();
             var flushedTcs = new TaskCompletionSource();
 
             void AddMessage(object msg)
@@ -69,6 +68,8 @@ public static class StreamEndpoint
                     messages.Add(msg);
                 }
             }
+
+            var configAcceptedTcs = new TaskCompletionSource();
 
             streamApi.StreamConfigStatusMessage.Subscribe((StreamConfigStatusMessage msg) =>
             {

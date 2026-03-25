@@ -35,7 +35,6 @@ public static class TranscribeEndpoint
             var transcribeApi = await client.CreateTranscribeApiAsync();
 
             var messages = new List<object>();
-            var configAcceptedTcs = new TaskCompletionSource();
             var flushedTcs = new TaskCompletionSource();
 
             void AddMessage(object msg)
@@ -45,6 +44,8 @@ public static class TranscribeEndpoint
                     messages.Add(msg);
                 }
             }
+
+            var configAcceptedTcs = new TaskCompletionSource();
 
             transcribeApi.TranscribeConfigStatusMessage.Subscribe((TranscribeConfigStatusMessage msg) =>
             {
