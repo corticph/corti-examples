@@ -355,7 +355,7 @@ async function tokenPkceAuthorize(req: Request, res: Response): Promise<void> {
       environment: config.environment,
     });
 
-    const url = await cortiAuth.authorizeUrl(
+    const url = await cortiAuth.authorizeURL(
       { clientId: config.clientId, redirectUri, codeChallenge },
       { skipRedirect: true },
     );
