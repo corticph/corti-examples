@@ -14,7 +14,7 @@
   <ItemGroup>
     <!-- Corti.Sdk: use local project if local.Corti.props sets CortiProjectPath, else NuGet (CI and default). -->
     <ProjectReference Include="$(CortiProjectPath)" Condition="'$(CortiProjectPath)' != ''" />
-    <PackageReference Include="Corti.Sdk" Version="latest" Condition="'$(CortiProjectPath)' == ''" />
+    <PackageReference Include="Corti.Sdk" Version="*" Condition="'$(CortiProjectPath)' == ''" />
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <Content Include="sample\trouble-breathing.mp3" CopyToOutputDirectory="PreserveNewest" Link="sample\trouble-breathing.mp3" />
   </ItemGroup>
