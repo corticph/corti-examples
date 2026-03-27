@@ -9,9 +9,11 @@ export function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
 }
 
-export async function parseJsonBody(request: Request): Promise<unknown | null> {
+export async function parseJsonBody(request: Request): Promise<Record<string, unknown> | null> {
   try {
-    return await request.json();
+    const body = await request.json();
+
+    return typeof body === "object" && body !== null ? (body as Record<string, unknown>) : null;
   } catch {
     return null;
   }

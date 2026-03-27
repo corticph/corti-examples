@@ -3,13 +3,13 @@ using CortiApiExamples;
 
 namespace CortiApiExamples.Endpoints;
 
-public static class StreamEndpoint
+public static class StreamWithConfigEndpoint
 {
     private const int ChunkSize = 4_096;
 
-    public static void MapStreamEndpoint(this WebApplication app)
+    public static void MapStreamWithConfigEndpoint(this WebApplication app)
     {
-        app.MapGet("/stream", Handle);
+        app.MapGet("/stream-with-config", Handle);
     }
 
     private static async Task<IResult> Handle(
@@ -69,24 +69,7 @@ public static class StreamEndpoint
                 }
             }
 
-            var configAcceptedTcs = new TaskCompletionSource();
-
-            streamApi.StreamConfigStatusMessage.Subscribe((StreamConfigStatusMessage msg) =>
-            {
-                AddMessage(msg);
-                if (msg.Type == StreamConfigStatusMessageType.ConfigAccepted)
-                {
-                    configAcceptedTcs.TrySetResult();
-                }
-                if (msg.Type == StreamConfigStatusMessageType.ConfigDenied ||
-                    msg.Type == StreamConfigStatusMessageType.ConfigTimeout ||
-                    msg.Type == StreamConfigStatusMessageType.ConfigMissing ||
-                    msg.Type == StreamConfigStatusMessageType.ConfigNotProvided ||
-                    msg.Type == StreamConfigStatusMessageType.ConfigAlreadyReceived)
-                {
-                    configAcceptedTcs.TrySetException(new InvalidOperationException($"Config not accepted: {msg.Type}"));
-                }
-            });
+            streamApi.StreamConfigStatusMessage.Subscribe(AddMessage);
             streamApi.StreamFlushedMessage.Subscribe((StreamFlushedMessage msg) =>
             {
                 AddMessage(msg);
@@ -98,21 +81,17 @@ public static class StreamEndpoint
             streamApi.StreamUsageMessage.Subscribe(AddMessage);
             streamApi.StreamErrorMessage.Subscribe(AddMessage);
 
-            await streamApi.ConnectAsync();
-
-            await streamApi.Send(new StreamConfigMessage
+            // ConnectAsync sends configuration and resolves only after CONFIG_ACCEPTED.
+            // It throws on CONFIG_DENIED / CONFIG_MISSING / CONFIG_TIMEOUT / CONFIG_NOT_PROVIDED.
+            await streamApi.ConnectAsync(new StreamConfig
             {
-                Configuration = new StreamConfig
+                Transcription = new StreamConfigTranscription
                 {
-                    Transcription = new StreamConfigTranscription
-                    {
-                        PrimaryLanguage = "en",
-                        Participants = new List<StreamConfigParticipant>(),
-                    },
-                    Mode = new StreamConfigMode { Type = StreamConfigModeType.Transcription },
+                    PrimaryLanguage = "en",
+                    Participants = new List<StreamConfigParticipant>(),
                 },
+                Mode = new StreamConfigMode { Type = StreamConfigModeType.Transcription },
             });
-            await configAcceptedTcs.Task;
 
             var chunkCount = 0;
             await using (var sampleStream = File.OpenRead(samplePath))
@@ -139,7 +118,7 @@ public static class StreamEndpoint
                 interactionId = interactionIdToUse,
                 messageCount = messages.Count,
                 messages,
-                message = "Stream WebSocket (SDK): config sent, audio sent by chunks, flush sent, flushed received.",
+                message = "Stream WebSocket (SDK, with config): configuration passed to ConnectAsync(), audio sent by chunks, flush sent, flushed received.",
             });
         }
         catch (Exception ex)

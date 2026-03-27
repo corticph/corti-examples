@@ -175,7 +175,7 @@ export default function Home() {
         JSON.stringify({ clientId, clientSecret, environment, tenant, redirectUri }),
       );
       const cortiAuth = new CortiAuth({ tenantName: tenant, environment });
-      await cortiAuth.authorizeUrl({ clientId, redirectUri });
+      await cortiAuth.authorizeURL({ clientId, redirectUri });
     },
     [authCodeForm],
   );

@@ -7,9 +7,11 @@ import { registerFacts } from "./facts.js";
 import { registerInteractions } from "./interactions.js";
 import { registerRecordings } from "./recordings.js";
 import { registerStream } from "./stream.js";
+import { registerStreamWithConfig } from "./streamWithConfig.js";
 import { registerTemplates } from "./templates.js";
 import { registerToken } from "./token.js";
 import { registerTranscribe } from "./transcribe.js";
+import { registerTranscribeWithConfig } from "./transcribeWithConfig.js";
 import { registerTranscripts } from "./transcripts.js";
 
 export function registerRoutes(app: Application): void {
@@ -24,5 +26,7 @@ export function registerRoutes(app: Application): void {
   registerAgents(app);
   registerDocuments(app);
   registerStream(app);
+  registerStreamWithConfig(app);
   registerTranscribe(app);
+  registerTranscribeWithConfig(app);
 }

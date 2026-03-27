@@ -3,11 +3,11 @@ using CortiApiExamples;
 
 namespace CortiApiExamples.Endpoints;
 
-public static class TranscribeEndpoint
+public static class TranscribeWithConfigEndpoint
 {
-    public static void MapTranscribeEndpoint(this WebApplication app)
+    public static void MapTranscribeWithConfigEndpoint(this WebApplication app)
     {
-        app.MapGet("/transcribe", Handle);
+        app.MapGet("/transcribe-with-config", Handle);
     }
 
     private static async Task<IResult> Handle(
@@ -45,21 +45,7 @@ public static class TranscribeEndpoint
                 }
             }
 
-            var configAcceptedTcs = new TaskCompletionSource();
-
-            transcribeApi.TranscribeConfigStatusMessage.Subscribe((TranscribeConfigStatusMessage msg) =>
-            {
-                AddMessage(msg);
-                if (msg.Type == TranscribeConfigStatusMessageType.ConfigAccepted)
-                {
-                    configAcceptedTcs.TrySetResult();
-                }
-                if (msg.Type == TranscribeConfigStatusMessageType.ConfigDenied ||
-                    msg.Type == TranscribeConfigStatusMessageType.ConfigTimeout)
-                {
-                    configAcceptedTcs.TrySetException(new InvalidOperationException($"Config not accepted: {msg.Type}"));
-                }
-            });
+            transcribeApi.TranscribeConfigStatusMessage.Subscribe(AddMessage);
             transcribeApi.TranscribeFlushedMessage.Subscribe((TranscribeFlushedMessage msg) =>
             {
                 AddMessage(msg);
@@ -71,13 +57,9 @@ public static class TranscribeEndpoint
             transcribeApi.TranscribeCommandMessage.Subscribe(AddMessage);
             transcribeApi.TranscribeEndedMessage.Subscribe(AddMessage);
 
-            await transcribeApi.ConnectAsync();
-
-            await transcribeApi.Send(new TranscribeConfigMessage
-            {
-                Configuration = new TranscribeConfig { PrimaryLanguage = "en" },
-            });
-            await configAcceptedTcs.Task;
+            // ConnectAsync sends configuration and resolves only after CONFIG_ACCEPTED.
+            // It throws on CONFIG_DENIED / CONFIG_TIMEOUT.
+            await transcribeApi.ConnectAsync(new TranscribeConfig { PrimaryLanguage = "en" });
 
             const int chunkSize = 4_096;
             var chunkCount = 0;
@@ -104,7 +86,7 @@ public static class TranscribeEndpoint
             {
                 messageCount = messages.Count,
                 messages,
-                message = "Transcribe WebSocket (SDK): config sent, audio sent by chunks, flush sent, flushed received.",
+                message = "Transcribe WebSocket (SDK, with config): configuration passed to ConnectAsync(), audio sent by chunks, flush sent, flushed received.",
             });
         }
         catch (Exception ex)

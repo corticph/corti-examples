@@ -21,14 +21,13 @@ async function handle(_req: Request, res: Response): Promise<void> {
   }
   try {
     const predictResponse = await client.codes.predict({
-      system: [Corti.CommonCodingSystemEnum.Icd10Cm, Corti.CommonCodingSystemEnum.Cpt],
+      system: [Corti.CommonCodingSystemEnum.Icd10CmOutpatient, Corti.CommonCodingSystemEnum.Cpt],
       context: [
         {
           type: "text",
           text: "Short arm splint applied in ED for pain control.",
         },
       ],
-      maxCandidates: 5,
     });
 
     res.json({
