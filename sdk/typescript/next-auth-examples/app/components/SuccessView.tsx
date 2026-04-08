@@ -9,6 +9,8 @@ type SuccessViewProps = {
   interactionsList: unknown[];
   interactionsLoading: boolean;
   interactionsError: string | null;
+  onRefreshToken?: () => void;
+  refreshTokenLoading: boolean;
 };
 
 function hasId(item: unknown): item is { id: unknown } {
@@ -34,9 +36,12 @@ export function SuccessView({
   interactionsList,
   interactionsLoading,
   interactionsError,
+  onRefreshToken,
+  refreshTokenLoading,
 }: SuccessViewProps) {
   const preview = interactionsList.slice(0, 5);
   const remaining = interactionsList.length - 5;
+  const refreshTokenDisabled = refreshTokenLoading || !token.refreshToken || !onRefreshToken;
 
   return (
     <div className="w-full max-w-md mx-auto space-y-6 text-left">
@@ -59,6 +64,17 @@ export function SuccessView({
           <> Refresh token valid for: {token.refreshExpiresIn} seconds.</>
         )}
       </p>
+
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={onRefreshToken}
+          disabled={refreshTokenDisabled}
+          className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+        >
+          {refreshTokenLoading ? "Refreshing…" : "Refresh Token"}
+        </button>
+      </div>
 
       <section className="border-t pt-6">
         <h2 className="text-lg font-semibold mb-2">Request to Corti API</h2>
