@@ -1,5 +1,8 @@
 import type { Application } from "express";
 import { registerAgents } from "./agents.js";
+import { registerAmbientAsyncEndToEnd } from "./ambientAsyncEndToEnd.js";
+import { registerAmbientAsyncFacts } from "./ambientAsyncFacts.js";
+import { registerAmbientRtStreams } from "./ambientRtStreams.js";
 import { registerClientVariants } from "./clientVariants.js";
 import { registerCodes } from "./codes.js";
 import { registerDocuments } from "./documents.js";
@@ -29,4 +32,7 @@ export function registerRoutes(app: Application): void {
   registerStreamWithConfig(app);
   registerTranscribe(app);
   registerTranscribeWithConfig(app);
+  registerAmbientAsyncEndToEnd(app);
+  registerAmbientAsyncFacts(app);
+  registerAmbientRtStreams(app);
 }
