@@ -64,7 +64,7 @@ This example shows how to:
 
 ## Prerequisites
 
-- **Node.js** 20 or higher
+- **Node.js** 20.9 or higher
 - **Corti account** with API credentials
   - Get credentials from [https://console.corti.app](https://console.corti.app)
   - You'll need: Tenant Name, Client ID, and Client Secret
