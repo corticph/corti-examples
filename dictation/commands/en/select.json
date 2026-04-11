@@ -23,10 +23,8 @@
         ]
       },
       {
-        "id": "select_that",
-        "phrases": [
-          "select {choice} {selection}"
-        ],
+        "id": "select_that",  
+        "phrases": ["select {choice} {selection}"],
         "variables": [
           {
             "key": "choice",
@@ -41,10 +39,8 @@
         ]
       },
       {
-        "id": "select_n",
-        "phrases": [
-          "select {choice} {n} words, select {choice} {n} word"
-        ],
+        "id": "select_number_of_words",
+        "phrases": ["select {choice} {number} words", "select {choice} {number} word"],
         "variables": [
           {
             "key": "choice",
@@ -52,22 +48,30 @@
             "enum": ["current", "first", "last", "previous", "prior", "next"]
           },
           {
-            "key": "n",
+            "key": "number",
             "type": "enum",
             "enum": ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
           }
         ]
       },
       {
-        "id": "select_text",
-        "phrases": [
-          "select {text}"
-        ],
+        "id": "select_number",
+        "phrases": ["select {choice} {number}", "select {choice} {ordinal}, pick {number}, pick {ordinal}"],
         "variables": [
           {
-            "key": "text",
-            "type": "wildcard",
-            "limit": "10"
+            "key": "choice",
+            "type": "enum",
+            "enum": ["choice", "option", "number", "item"]
+          },
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": ["one", "two", "three", "four", "five"]
+          },
+          {
+            "key": "ordinal",
+            "type": "enum",
+            "enum": ["first", "second", "third", "fourth", "fifth"]
           }
         ]
       }
