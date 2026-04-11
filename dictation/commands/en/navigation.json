@@ -2,6 +2,7 @@
     "commands": [
       {
         "id": "navigate_fields",
+        "_comment": "Use to navigate between fields in the current text area. Example: 'next field'",
         "phrases": ["{choice} {location}"],
         "variables": [
           {
@@ -18,7 +19,8 @@
       },
       {
         "id": "go_to",
-        "phrases": ["go to {choice} of {location}"],
+        "_comment": "Use to go to a specific location in the current text area. Example: 'go to end of document'",
+        "phrases": ["go to {choice} of {location}", "{choice} of {location}"],
         "variables": [
           {
             "key": "choice",
@@ -34,6 +36,7 @@
       },
       {
         "id": "insert_cursor",
+        "_comment": "Use to insert a cursor at a specific location in the current text area. Example: 'insert before current paragraph'",
         "phrases": ["insert {direction} {choice} {location}"],
         "variables": [
           {
@@ -45,27 +48,6 @@
             "key": "choice",
             "type": "enum",
             "enum": ["current", "first", "last", "previous", "prior", "next"]
-          },
-          {
-            "key": "location",
-            "type": "enum",
-            "enum": ["line", "word", "paragraph", "document"]
-          }
-        ]
-      },
-      {
-        "id": "insert_at_text",
-        "phrases": ["insert {direction} {word}"],
-        "variables": [
-          {
-            "key": "direction",
-            "type": "enum",
-            "enum": ["before", "after"]
-          },
-          {
-            "key": "word",
-            "type": "wildcard",
-            "limit": "1"
           },
           {
             "key": "location",

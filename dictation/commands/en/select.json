@@ -2,6 +2,7 @@
     "commands": [
       {
         "id": "select",
+        "_comment": "Use to select all text in current text area. Example: 'select all'",
         "phrases": ["select {selection}"],
         "variables": [
           {
@@ -13,6 +14,7 @@
       },
       {
         "id": "unselect",
+        "_comment": "Use to unselect text selection. Example: 'unselect text'",
         "phrases": ["unselect {selection}", "deselect {selection}", "clear selection"],
         "variables": [
           {
@@ -24,6 +26,7 @@
       },
       {
         "id": "select_that",  
+        "_comment": "Use to select a sentence in the current text area. Example: 'select current sentence'",
         "phrases": ["select {choice} {selection}"],
         "variables": [
           {
@@ -40,6 +43,7 @@
       },
       {
         "id": "select_number_of_words",
+        "_comment": "Use to select a number of words relative to cursor position within the current text area. Example: 'select next three words'",
         "phrases": ["select {choice} {number} words", "select {choice} {number} word"],
         "variables": [
           {
@@ -56,6 +60,7 @@
       },
       {
         "id": "select_number",
+        "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three'",
         "phrases": ["select {choice} {number}", "select {choice} {ordinal}, pick {number}, pick {ordinal}"],
         "variables": [
           {
