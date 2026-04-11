@@ -13,12 +13,12 @@
       },
       {
         "id": "unselect",
-        "phrases": ["unselect {selection}", "deselect {selection}"],
+        "phrases": ["unselect {selection}", "deselect {selection}", "clear selection"],
         "variables": [
           {
             "key": "selection",
             "type": "enum",
-            "enum": ["all", "that"]
+            "enum": ["all", "that", "text"]
           }
         ]
       },
@@ -39,6 +39,24 @@
             "enum": ["word", "sentence", "paragraph"]
           }
         ]
-      }
+      },
+      {
+        "id": "select_n",
+        "phrases": [
+          "select {choice} {n} words, select {choice} {n} word"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["current", "first", "last", "previous", "prior", "next"]
+          },
+          {
+            "key": "n",
+            "type": "enum",
+            "enum": ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+          }
+        ]
+    }
     ]
 }

@@ -1,5 +1,5 @@
 {
-    "commands":[
+    "commands": [
       {
         "id": "dictation_box",
         "phrases": ["{action} dictation box"],

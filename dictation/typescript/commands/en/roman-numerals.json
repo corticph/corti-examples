@@ -1,0 +1,15 @@
+{
+    "commands": [
+      {
+        "id": "roman_numeral",
+        "phrases": ["roman numeral {number}", "roman {number}"],
+        "variables": [
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"]
+          }
+        ]
+      }
+    ]
+}

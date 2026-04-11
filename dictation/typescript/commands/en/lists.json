@@ -1,0 +1,37 @@
+{
+    "commands": [
+      {
+        "id": "new_list",
+        "phrases": ["new list", "new {type} list", "insert list", "start list"],
+        "variables": [
+          {
+            "key": "type",
+            "type": "enum",
+            "enum": ["bullet", "bulleted", "number", "numbered", "unordered", "ordered"]
+          }
+        ]
+      },
+      {
+        "id": "next_item",
+        "phrases": ["next {item}", "{item} next"],
+        "variables": [
+          {
+            "key": "item",
+            "type": "enum",
+            "enum": ["item", "bullet", "number"]
+          }
+        ]
+      },
+      {
+        "id": "list_number",
+        "phrases": ["item {number}", "list item {number}", "list number {number}"],
+        "variables": [
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+          }
+        ]
+      }
+    ]
+}
