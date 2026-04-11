@@ -1,0 +1,34 @@
+{
+    "commands": [
+      {
+        "id": "insert_template",
+        "phrases": ["insert my {template_name} template", "insert {template_name} template"],
+        "variables": [
+          {
+            "key": "template_name",
+            "type": "enum",
+            "enum": ["soap", "radiology", "referral", "letter", "patient summary", "h and p", "outpatient note", "progress note", "nursing"]
+          }
+        ]
+      },
+      {
+        "id": "insert_exam",
+        "phrases": ["insert {type} exam"],
+        "variables": [
+          {
+            "key": "type",
+            "type": "enum",
+            "enum": ["normal", "male", "female", "brief", "comprehensive"]
+          }
+        ]
+      },
+      {
+        "id": "insert_attestation",
+        "phrases": ["insert attestation"]
+      },
+      {
+        "id": "insert_signature",
+        "phrases": ["insert signature", "sign the note"]
+      }
+    ]
+}
