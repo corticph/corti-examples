@@ -52,6 +52,27 @@
             "enum": ["line", "word", "paragraph", "document"]
           }
         ]
+      },
+      {
+        "id": "insert_at_text",
+        "phrases": ["insert {direction} {word}"],
+        "variables": [
+          {
+            "key": "direction",
+            "type": "enum",
+            "enum": ["before", "after"]
+          },
+          {
+            "key": "word",
+            "type": "wildcard",
+            "limit": "1"
+          },
+          {
+            "key": "location",
+            "type": "enum",
+            "enum": ["line", "word", "paragraph", "document"]
+          }
+        ]
       }
     ]
 }

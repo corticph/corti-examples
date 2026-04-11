@@ -57,6 +57,19 @@
             "enum": ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
           }
         ]
-    }
+      },
+      {
+        "id": "select_text",
+        "phrases": [
+          "select {text}"
+        ],
+        "variables": [
+          {
+            "key": "text",
+            "type": "wildcard",
+            "limit": "10"
+          }
+        ]
+      }
     ]
 }
