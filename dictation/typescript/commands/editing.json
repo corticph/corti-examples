@@ -1,0 +1,85 @@
+{
+    "commands":[
+      {
+        "id": "edit_that",
+        "phrases": ["{action} that"],
+        "variables": [
+          {
+            "key": "action",
+            "type": "enum",
+            "enum": ["delete", "scratch", "undo", "redo", "cut", "copy", "paste", "correct"]
+          }
+        ]
+      },
+      {
+        "id": "delete_selection",
+        "phrases": ["delete {choice} {location}"],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["current", "this", "last", "previous", "next"]
+          },
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["word", "sentence", "paragraph"]
+          }
+        ]
+      },
+      {
+        "id": "copy_selection",
+        "phrases": ["copy {choice} {location}"],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["current", "this", "last", "previous", "next"]
+          },
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["word", "sentence", "paragraph"]
+          }
+        ]
+      },
+      {
+        "id": "cut_selection",
+        "phrases": ["cut {choice} {location}"],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["current", "this", "last", "previous", "next"]
+          },
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["word", "sentence", "paragraph"]
+          }
+        ]
+      },
+      {
+        "id": "format_selection",
+        "phrases": ["format that {style}", "format {style}"],
+        "variables": [
+          {
+            "key": "style",
+            "type": "enum",
+            "enum": ["bold", "italic", "underline", "normal"]
+          }
+        ]
+      },
+      {
+        "id": "cap_that",
+        "phrases": ["cap that", "all caps {action}"],
+        "variables": [
+          {
+            "key": "action",
+            "type": "enum",
+            "enum": ["on", "off", "that"]
+          }
+        ]
+      }
+    ]
+}

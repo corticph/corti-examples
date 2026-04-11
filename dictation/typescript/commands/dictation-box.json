@@ -1,0 +1,19 @@
+{
+    "commands":[
+      {
+        "id": "dictation_box",
+        "phrases": ["{action} dictation box"],
+        "variables": [
+          {
+            "key": "action",
+            "type": "enum",
+            "enum": ["open", "close", "show", "hide", "anchor", "release"]
+          }
+        ]
+      },
+      {
+        "id": "transfer_text",
+        "phrases": ["transfer text"]
+      }
+    ]
+}

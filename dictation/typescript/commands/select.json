@@ -1,0 +1,44 @@
+{
+    "commands": [
+      {
+        "id": "select",
+        "phrases": ["select {selection}"],
+        "variables": [
+          {
+            "key": "selection",
+            "type": "enum",
+            "enum": ["all", "that"]
+          }
+        ]
+      },
+      {
+        "id": "unselect",
+        "phrases": ["unselect {selection}", "deselect {selection}"],
+        "variables": [
+          {
+            "key": "selection",
+            "type": "enum",
+            "enum": ["all", "that"]
+          }
+        ]
+      },
+      {
+        "id": "select_that",
+        "phrases": [
+          "select {choice} {selection}"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["current", "first", "last", "previous", "prior", "next"]
+          },
+          {
+            "key": "selection",
+            "type": "enum",
+            "enum": ["word", "sentence", "paragraph"]
+          }
+        ]
+      }
+    ]
+}
