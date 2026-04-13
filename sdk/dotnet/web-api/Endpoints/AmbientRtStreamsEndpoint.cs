@@ -58,7 +58,7 @@ public static class AmbientRtStreamsEndpoint
                 }
             );
 
-            await using var stream = await client.CreateStreamApiAsync(interaction.InteractionId);
+            var stream = await client.CreateStreamApiAsync(interaction.InteractionId);
 
             var messages = new List<object>();
             var endedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -123,8 +123,6 @@ public static class AmbientRtStreamsEndpoint
             await stream.Send(new StreamEndMessage());
             await endedTcs.Task;
 
-            await stream.CloseAsync();
-
             return Results.Ok(new
             {
                 interactionId = interaction.InteractionId,
@@ -139,4 +137,3 @@ public static class AmbientRtStreamsEndpoint
         }
     }
 }
-

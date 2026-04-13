@@ -1,6 +1,6 @@
 # Corti SDK Examples – .NET Web API
 
-A minimal **ASP.NET Core** API that demonstrates the [Corti.Sdk](https://www.nuget.org/packages/Corti.Sdk) package: token flows, interactions, recordings, transcripts, facts, codes, templates, agents, documents, and WebSocket **stream** and **transcribe** endpoints.
+A minimal **ASP.NET Core** API that demonstrates the [Corti.Sdk](https://www.nuget.org/packages/Corti.Sdk) package: token flows, interactions, recordings, transcripts, facts, codes, templates, agents, documents, **stream** and **transcribe** SDK WebSocket demos (two styles each), and **ambient** demos (async upload pipeline and real-time stream with facts mode).
 
 ## Why this example exists
 
@@ -8,7 +8,8 @@ This is a **server-side** reference API you can run locally. It shows how to:
 
 - **Authenticate** — Client credentials, ROPC, refresh token, authorization code, and PKCE token endpoints (optional scopes where applicable).
 - **Call Corti APIs** — Interactions (list, create, get, update, delete), recordings (list, upload sample, get, delete), transcripts (list, create from sample, get status, get, delete), facts (groups, list, create, update, batch, extract), codes (ICD-10-CM, CPT), templates, agents, documents.
-- **Stream and transcribe** — WebSocket endpoints for real-time audio.
+- **Stream and transcribe** — Each demo is a **GET** that runs the SDK client in-process against sample audio (`trouble-breathing.mp3` under `sample/`), then returns a JSON payload of captured WebSocket messages. Variants: config sent after `ConnectAsync()` vs. `ConnectAsync(config)`.
+- **Ambient** — `/ambient-async-end-to-end` and `/ambient-async-facts` exercise upload → transcript → document or facts extraction; `/ambient-rt-streams` exercises the real-time stream API in **facts** mode with chunked audio and `StreamEndMessage`.
 
 Credentials are read from configuration or environment; the app uses the SDK to call Corti and returns JSON (or file/stream) to you. A **Postman** collection in this repo is set up for this API: import `sdk/postman/WebApi.postman_collection.json` and `sdk/postman/environments/DotNet.postman_environment.json`, choose the **"Web API – .NET"** environment (`http://localhost:5275`), start this app, then run requests from the **Web Api** collection. See `sdk/postman/README.md` for setup.
 
@@ -79,8 +80,13 @@ The API listens on **port 8080** inside the container. Use `http://localhost:808
 | `/templates` | List templates, list sections, get by key (query: org, lang, status) |
 | `/agents` | List, create, get, card, registry experts, message send, get task/context, delete (query: limit, offset, ephemeral) |
 | `/documents` | List, create, get, update, delete document |
-| `/stream` | Stream WebSocket: create interaction (or use `?interactionId=`), send config + audio chunks + flush (query: optional `interactionId`) |
-| `/transcribe` | Transcribe WebSocket: send config + audio chunks + flush |
+| `/transcribe` | Dictation **transcribe** WebSocket: `ConnectAsync()`, then `TranscribeConfigMessage`, stream sample MP3 in chunks, flush; returns JSON with captured messages |
+| `/transcribe-with-config` | Same as `/transcribe` but `ConnectAsync(TranscribeConfig)` so configuration is supplied at connect |
+| `/stream` | Ambient **stream** WebSocket: optional `?interactionId=` (otherwise creates an interaction), `ConnectAsync()`, then `StreamConfigMessage` (transcription mode), chunks + flush; returns JSON |
+| `/stream-with-config` | Same as `/stream` but `ConnectAsync(StreamConfig)` so configuration is supplied at connect |
+| `/ambient-async-end-to-end` | Create interaction → upload sample recording → create transcript → create **SOAP** document from transcript; returns IDs, transcript, and document |
+| `/ambient-async-facts` | Create interaction → upload → transcript (with diarization) → **Facts.Extract** from concatenated transcript text |
+| `/ambient-rt-streams` | Create interaction → real-time **stream** client with **facts** mode + participants, stream sample audio in larger chunks, send `StreamEndMessage`, await ended; returns JSON message log |
 
 ---
 
@@ -90,7 +96,7 @@ Set Corti credentials in **appsettings.json**, **appsettings.Development.json**,
 
 ### Client credentials (main)
 
-Required for `/token`, `/token/cc`, `/token/bearer`, and most API endpoints (interactions, recordings, transcripts, facts, codes, templates, agents, documents, stream, transcribe):
+Required for `/token`, `/token/cc`, `/token/bearer`, and most API endpoints (interactions, recordings, transcripts, facts, codes, templates, agents, documents, `/transcribe`, `/transcribe-with-config`, `/stream`, `/stream-with-config`, `/ambient-async-end-to-end`, `/ambient-async-facts`, `/ambient-rt-streams`):
 
 | Key (appsettings) | Env variable | Description |
 |-------------------|--------------|-------------|
