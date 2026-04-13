@@ -30,6 +30,8 @@ speaks directly into the record. Supports real-time transcription with interim r
 commands for navigation and editing. Complements ambient workflows for specialties or situations where direct control is
 preferred.
 
+Command catalogs and configuration details are documented in [dictation/commands/README.md](dictation/commands/README.md).
+
 **[Proxy](#proxy)**
 
 Corti APIs should never be called directly from the browser — doing so would expose client
