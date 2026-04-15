@@ -14,8 +14,8 @@
  */
 
 import {
-	buildParams,
 	type CortiUIMessage,
+	convertToParams,
 	toUIMessageStream,
 } from "@corti/ai-sdk-adapter";
 import { createUIMessageStreamResponse } from "ai";
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
 		 * The buildParams function from the adapter converts the UI messages
 		 * into the format expected by the A2A protocol.
 		 */
-		const a2aParams = buildParams(messages as CortiUIMessage[]);
+		const a2aParams = convertToParams(messages as CortiUIMessage[]);
 
 		console.log(`[API] Sending message to A2A agent`);
 

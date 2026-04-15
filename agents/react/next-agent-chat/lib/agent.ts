@@ -12,6 +12,7 @@
  */
 
 import type { Client } from "@a2a-js/sdk/client";
+import { createA2AClientFactory } from "@corti/ai-sdk-adapter";
 import { CortiClient } from "@corti/sdk";
 
 // Validate required environment variables at startup
@@ -42,6 +43,8 @@ const cortiClient = new CortiClient({
 		clientSecret: process.env.CLIENT_SECRET,
 	},
 });
+
+const A2AClientFactory = createA2AClientFactory(cortiClient);
 
 /**
  * Agent initialization state
@@ -80,64 +83,20 @@ async function initializeAgent() {
 	console.log(`[Agent] Created agent with ID: ${agent.id}`);
 
 	/**
-	 * Get an access token from the Corti SDK
-	 *
-	 * The SDK handles token management and refresh automatically.
-	 * We just need to pass this token to the A2A client for authentication.
-	 */
-
-	const getToken = () => {
-		console.log("[Agent] Getting access token from Corti SDK");
-		return cortiClient.auth.getToken({
-			clientId: process.env.CLIENT_ID as string,
-			clientSecret: process.env.CLIENT_SECRET as string,
-		});
-	};
-
-	/**
-	 * Create authenticated fetch function
-	 *
-	 * This adds the Bearer token to all A2A requests.
-	 * The Corti SDK handles token refresh automatically.
-	 */
-	const authenticatedFetch = async (
-		input: RequestInfo | URL,
-		init?: RequestInit,
-	): Promise<Response> => {
-		const headers = new Headers(init?.headers);
-		headers.set("Authorization", `Bearer ${(await getToken()).accessToken}`);
-		headers.set("Tenant-Name", process.env.TENANT as string);
-
-		return fetch(input, {
-			...init,
-			headers,
-		});
-	};
-
-	/**
 	 * Initialize the A2A client with authenticated fetch
 	 *
 	 * We pass the authenticated fetch to both the transport factory and
 	 * the agent card resolver so all requests include the Bearer token.
 	 */
-	const { ClientFactory, DefaultAgentCardResolver, JsonRpcTransportFactory } =
-		await import("@a2a-js/sdk/client");
 
-	const factory = new ClientFactory({
-		transports: [
-			new JsonRpcTransportFactory({
-				fetchImpl: authenticatedFetch,
-			}),
-		],
-		cardResolver: new DefaultAgentCardResolver({
-			fetchImpl: authenticatedFetch,
-		}),
-	});
+	const cardUrl = await cortiClient.agents.getCardUrl(agent.id);
 
 	// Construct the agent card URL from the Corti environment
-	const cardUrl = `https://api.${environment}.corti.app/agents/${agent.id}/agent-card.json`;
 
-	const a2aClient = await factory.createFromUrl(cardUrl, "");
+	const a2aClient = await A2AClientFactory.createFromUrl(
+		cardUrl.toString(),
+		"",
+	);
 
 	console.log(
 		"[Agent] A2A client initialized successfully with authentication",

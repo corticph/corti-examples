@@ -13,10 +13,10 @@
   "dependencies": {
     "@a2a-js/sdk": "^0.3.0",
     "@ai-sdk/react": "^3.0.0",
-    "@corti/ai-sdk-adapter": "^0.1.0",
-    "@corti/sdk": "alpha",
+    "@corti/ai-sdk-adapter": "^0.3.0-beta-rc.1",
+    "@corti/sdk": "^1.0.0-rc.6",
     "ai": "^6.0.0",
-    "next": "16.1.6",
+    "next": "^16.2.3",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
