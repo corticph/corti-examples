@@ -80,15 +80,16 @@ async function handle(req: Request, res: Response): Promise<void> {
       messages.push(msg);
 
       const m = msg as { type?: string };
-      if (m.type === Corti.StreamConfigStatusMessageType.ConfigAccepted) {
+      if (
+        m.type === Corti.StreamConfigStatusMessageType.ConfigAccepted ||
+        m.type === Corti.StreamConfigStatusMessageType.ConfigAlreadyReceived
+      ) {
         configAcceptedResolve();
       }
       if (
         m.type === Corti.StreamConfigStatusMessageType.ConfigDenied ||
-        m.type === Corti.StreamConfigStatusMessageType.ConfigTimeout ||
         m.type === Corti.StreamConfigStatusMessageType.ConfigMissing ||
-        m.type === Corti.StreamConfigStatusMessageType.ConfigNotProvided ||
-        m.type === Corti.StreamConfigStatusMessageType.ConfigAlreadyReceived
+        m.type === Corti.StreamConfigStatusMessageType.ConfigNotProvided
       ) {
         configAcceptedReject(new Error(`Config not accepted: ${m.type}`));
       }

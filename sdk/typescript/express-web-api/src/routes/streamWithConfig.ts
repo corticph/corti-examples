@@ -63,7 +63,7 @@ async function handle(req: Request, res: Response): Promise<void> {
 
   try {
     // connect() sends configuration and resolves only after CONFIG_ACCEPTED.
-    // It rejects on CONFIG_DENIED / CONFIG_MISSING / CONFIG_TIMEOUT / CONFIG_NOT_PROVIDED.
+    // It rejects on CONFIG_DENIED / CONFIG_MISSING / CONFIG_NOT_PROVIDED.
     const socket = await client.stream.connect({
       id: interactionId,
       configuration: {

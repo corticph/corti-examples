@@ -58,7 +58,7 @@ public static class TranscribeWithConfigEndpoint
             transcribeApi.TranscribeEndedMessage.Subscribe(AddMessage);
 
             // ConnectAsync sends configuration and resolves only after CONFIG_ACCEPTED.
-            // It throws on CONFIG_DENIED / CONFIG_TIMEOUT.
+            // It throws on CONFIG_DENIED / CONFIG_TIMEOUT / CONFIG_MISSING.
             await transcribeApi.ConnectAsync(new TranscribeConfig { PrimaryLanguage = "en" });
 
             const int chunkSize = 4_096;

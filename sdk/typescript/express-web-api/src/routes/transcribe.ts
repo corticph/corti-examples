@@ -54,12 +54,16 @@ async function handle(_req: Request, res: Response): Promise<void> {
       messages.push(msg);
 
       const m = msg as { type?: string };
-      if (m.type === Corti.TranscribeConfigStatusMessageType.ConfigAccepted) {
+      if (
+        m.type === Corti.TranscribeConfigStatusMessageType.ConfigAccepted ||
+        m.type === "CONFIG_ALREADY_RECEIVED"
+      ) {
         configAcceptedResolve();
       }
       if (
         m.type === Corti.TranscribeConfigStatusMessageType.ConfigDenied ||
-        m.type === Corti.TranscribeConfigStatusMessageType.ConfigTimeout
+        m.type === Corti.TranscribeConfigStatusMessageType.ConfigTimeout ||
+        m.type === "CONFIG_MISSING"
       ) {
         configAcceptedReject(new Error(`Config not accepted: ${m.type}`));
       }

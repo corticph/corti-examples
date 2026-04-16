@@ -36,7 +36,7 @@ async function handle(_req: Request, res: Response): Promise<void> {
 
   try {
     // connect() sends configuration and resolves only after CONFIG_ACCEPTED.
-    // It rejects on CONFIG_DENIED / CONFIG_TIMEOUT.
+    // It rejects on CONFIG_DENIED / CONFIG_TIMEOUT / CONFIG_MISSING.
     const socket = await client.transcribe.connect({
       configuration: { primaryLanguage: "en" },
     });

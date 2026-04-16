@@ -74,15 +74,14 @@ public static class StreamEndpoint
             streamApi.StreamConfigStatusMessage.Subscribe((StreamConfigStatusMessage msg) =>
             {
                 AddMessage(msg);
-                if (msg.Type == StreamConfigStatusMessageType.ConfigAccepted)
+                if (msg.Type == StreamConfigStatusMessageType.ConfigAccepted ||
+                    msg.Type == StreamConfigStatusMessageType.ConfigAlreadyReceived)
                 {
                     configAcceptedTcs.TrySetResult();
                 }
                 if (msg.Type == StreamConfigStatusMessageType.ConfigDenied ||
-                    msg.Type == StreamConfigStatusMessageType.ConfigTimeout ||
                     msg.Type == StreamConfigStatusMessageType.ConfigMissing ||
-                    msg.Type == StreamConfigStatusMessageType.ConfigNotProvided ||
-                    msg.Type == StreamConfigStatusMessageType.ConfigAlreadyReceived)
+                    msg.Type == StreamConfigStatusMessageType.ConfigNotProvided)
                 {
                     configAcceptedTcs.TrySetException(new InvalidOperationException($"Config not accepted: {msg.Type}"));
                 }

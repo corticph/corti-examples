@@ -50,12 +50,14 @@ public static class TranscribeEndpoint
             transcribeApi.TranscribeConfigStatusMessage.Subscribe((TranscribeConfigStatusMessage msg) =>
             {
                 AddMessage(msg);
-                if (msg.Type == TranscribeConfigStatusMessageType.ConfigAccepted)
+                if (msg.Type == TranscribeConfigStatusMessageType.ConfigAccepted ||
+                    msg.Type == "CONFIG_ALREADY_RECEIVED")
                 {
                     configAcceptedTcs.TrySetResult();
                 }
                 if (msg.Type == TranscribeConfigStatusMessageType.ConfigDenied ||
-                    msg.Type == TranscribeConfigStatusMessageType.ConfigTimeout)
+                    msg.Type == TranscribeConfigStatusMessageType.ConfigTimeout ||
+                    msg.Type == "CONFIG_MISSING")
                 {
                     configAcceptedTcs.TrySetException(new InvalidOperationException($"Config not accepted: {msg.Type}"));
                 }

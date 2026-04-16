@@ -82,7 +82,7 @@ public static class StreamWithConfigEndpoint
             streamApi.StreamErrorMessage.Subscribe(AddMessage);
 
             // ConnectAsync sends configuration and resolves only after CONFIG_ACCEPTED.
-            // It throws on CONFIG_DENIED / CONFIG_MISSING / CONFIG_TIMEOUT / CONFIG_NOT_PROVIDED.
+            // It throws on CONFIG_DENIED / CONFIG_MISSING / CONFIG_NOT_PROVIDED.
             await streamApi.ConnectAsync(new StreamConfig
             {
                 Transcription = new StreamConfigTranscription
