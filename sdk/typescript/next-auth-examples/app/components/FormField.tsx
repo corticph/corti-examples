@@ -2,6 +2,7 @@
 
 type FormFieldProps = {
   id: string;
+  name: string;
   label: string;
   type: "text" | "password";
   value: string;
@@ -9,7 +10,7 @@ type FormFieldProps = {
   placeholder: string;
 };
 
-export function FormField({ id, label, type, value, onChange, placeholder }: FormFieldProps) {
+export function FormField({ id, name, label, type, value, onChange, placeholder }: FormFieldProps) {
   return (
     <div className="flex items-center gap-3">
       <label htmlFor={id} className="w-32 text-sm font-medium text-gray-700 shrink-0">
@@ -17,6 +18,7 @@ export function FormField({ id, label, type, value, onChange, placeholder }: For
       </label>
       <input
         id={id}
+        name={name}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}

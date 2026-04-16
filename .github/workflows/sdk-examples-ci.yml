@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       dotnet: ${{ steps.filter.outputs.dotnet }}
-      express: ${{ steps.filter.outputs.express }}
+      typescript: ${{ steps.filter.outputs.typescript }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -19,10 +19,10 @@ jobs:
         with:
           filters: |
             dotnet:
-              - 'sdk/dotnet/web-api/**'
+              - 'sdk/dotnet/**'
               - '.github/workflows/sdk-examples-ci.yml'
-            express:
-              - 'sdk/typescript/express-web-api/**'
+            typescript:
+              - 'sdk/typescript/**'
               - '.github/workflows/sdk-examples-ci.yml'
 
   dotnet:
@@ -52,14 +52,22 @@ jobs:
       - name: Build
         run: dotnet build --no-restore -c Release
 
-  express-web-api:
-    name: Express Web API lint & build
+  typescript:
+    name: TypeScript ${{ matrix.project.name }} lint & build
     needs: changes
-    if: needs.changes.outputs.express == 'true'
+    if: needs.changes.outputs.typescript == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - name: express-web-api
+            path: sdk/typescript/express-web-api
+          - name: next-auth-examples
+            path: sdk/typescript/next-auth-examples
     defaults:
       run:
-        working-directory: sdk/typescript/express-web-api
+        working-directory: ${{ matrix.project.path }}
 
     steps:
       - name: Checkout
@@ -70,7 +78,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: sdk/typescript/express-web-api/package-lock.json
+          cache-dependency-path: ${{ matrix.project.path }}/package-lock.json
 
       - name: Install dependencies
         run: npm ci

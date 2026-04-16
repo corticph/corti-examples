@@ -8,7 +8,9 @@ This is a **server-side** reference API you can run locally. It shows how to:
 
 - **Authenticate** — Client credentials and ROPC token endpoints; optional scopes.
 - **Call Corti APIs** — Interactions (list, create, get, update, delete), recordings (list, upload sample, get, delete), transcripts (list, create from sample, get status, get, delete), facts (groups, list, create, update, batch, extract), codes (ICD-10-CM, CPT), templates, agents, documents.
-- **Stream and transcribe** — WebSocket endpoints for real-time audio (TypeScript-only in this repo).
+- **Stream and transcribe** — WebSocket endpoints for real-time audio 
+(TypeScript-only in this repo).
+- **Ambient** — `/ambient-async-end-to-end` and `/ambient-async-facts` (upload → transcript → document or facts); `/ambient-rt-streams` (real-time **stream** in facts mode, chunked `sendAudio`, then **`sendEnd`** / await ended).
 
 A **Postman** collection in this repo is set up for this API: import `sdk/postman/WebApi.postman_collection.json` and `sdk/postman/environments/JS.postman_environment.json`, choose the **“Web API – JS (Express)”** environment (`http://localhost:3000`), start this server, then run requests from the **Web Api** collection. See `sdk/postman/README.md` for setup.
 
@@ -80,9 +82,9 @@ npm start
 | `/token/ropc-client` | Call Facts.FactGroupsList with ROPC auth |
 | `/token/ropc-refresh` | ROPC refresh token (uses env refresh token) |
 | `/token/custom-refresh` | Custom refresh flow with ROPC credentials |
-| `/token/auth-code-authorize` | Auth code: get authorization URL (query: redirectUri, state) |
+| `/token/auth-code-authorize` | Auth code: get authorization URL (query: optional `redirectUri`; defaults from env) |
 | `/token/auth-code` | Auth code: exchange code for token (query: code, redirectUri) |
-| `/token/pkce-authorize` | PKCE: get authorization URL (query: redirectUri, state) |
+| `/token/pkce-authorize` | PKCE: get authorization URL (query: **codeChallenge** required; optional `redirectUri`) |
 | `/token/pkce` | PKCE: exchange code for token (query: code, codeVerifier, redirectUri) |
 | `/client-variants` | Exercise CC, ROPC, auth code, PKCE clients; call Facts.FactGroupsList per variant (query: authCode, pkceCode, pkceVerifier) |
 | `/interactions` | List, create, get, update, delete interactions (query: sort, direction, pageSize, index, encounterStatus, patient) |
@@ -93,8 +95,13 @@ npm start
 | `/templates` | List templates, list sections, get by key (query: org, lang, status) |
 | `/agents` | List, create, get, card, registry experts, message send, get task/context, delete (query: limit, offset, ephemeral) |
 | `/documents` | List, create, get, update, delete document |
-| `/stream` | Stream WebSocket: create interaction (or use `?interactionId=`), send config + audio chunks + flush (query: optional `interactionId`) |
-| `/transcribe` | Transcribe WebSocket: send config + audio chunks + flush |
+| `/transcribe` | `client.transcribe.connect()`, `sendConfiguration`, chunked `sendAudio`, `sendFlush`; returns JSON |
+| `/transcribe-with-config` | `client.transcribe.connect({ configuration })`, then chunked `sendAudio` and `sendFlush`; returns JSON |
+| `/stream` | Optional `?interactionId=` (else creates interaction); `client.stream.connect({ id })`, `sendConfiguration`, `sendAudio`, `sendFlush`; returns JSON |
+| `/stream-with-config` | Same `interactionId` behavior; `client.stream.connect({ id, configuration })`, then `sendAudio` and `sendFlush`; returns JSON |
+| `/ambient-async-end-to-end` | Create interaction → upload sample → transcript → SOAP document from transcript; returns JSON |
+| `/ambient-async-facts` | Upload → diarized transcript → facts extract from transcript text; returns JSON |
+| `/ambient-rt-streams` | Real-time `client.stream` (facts mode), chunked `sendAudio`, `sendEnd`, await ended; returns JSON |
 
 ---
 
@@ -104,7 +111,7 @@ Set Corti credentials in `.env` / `.env.local` or in the environment. Alternate 
 
 ### Client credentials (main)
 
-Required for `/token`, `/token/cc`, `/token/bearer`, and most API endpoints (interactions, recordings, transcripts, facts, codes, templates, agents, documents, stream, transcribe):
+Required for `/token`, `/token/cc`, `/token/bearer`, and most API endpoints (interactions, recordings, transcripts, facts, codes, templates, agents, documents, `/transcribe`, `/transcribe-with-config`, `/stream`, `/stream-with-config`, `/ambient-async-end-to-end`, `/ambient-async-facts`, `/ambient-rt-streams`):
 
 | Variable | Description |
 |----------|-------------|
@@ -114,7 +121,7 @@ Required for `/token`, `/token/cc`, `/token/bearer`, and most API endpoints (int
 
 ### ROPC (resource owner password credentials)
 
-Required for `/token/ropc`, `/token/ropc-client`, and ROPC-based client usage (e.g. in `/client-variants`):
+Required for `/token/ropc`, `/token/ropc-client`, `/token/ropc-refresh`, `/token/custom-refresh`, and ROPC usage in `/client-variants`:
 
 | Variable | Description |
 |----------|-------------|

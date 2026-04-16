@@ -2,7 +2,7 @@
 
 import { CortiAuth } from "@corti/sdk";
 import type { SubmitEvent } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { AuthCodeCredentialsForm } from "@/app/components/AuthCodeCredentialsForm";
 import { AuthCodeReceivedView } from "@/app/components/AuthCodeReceivedView";
 import { BackButton } from "@/app/components/BackButton";
@@ -12,42 +12,40 @@ import { PkceCredentialsForm } from "@/app/components/PkceCredentialsForm";
 import { RopcCredentialsForm } from "@/app/components/RopcCredentialsForm";
 import { SuccessView } from "@/app/components/SuccessView";
 import { WarningBanner } from "@/app/components/WarningBanner";
-import {
-  initialAuthCodeForm,
-  initialForm,
-  initialPkceForm,
-  initialRopcForm,
-} from "@/app/lib/constants";
+import { getRequiredFormValues } from "@/app/lib/forms";
+import { cacheFormValues } from "@/app/lib/sessionJson";
 import { requestToken } from "@/app/lib/tokenRequest";
-import type {
-  AuthCodeFormState,
-  FormState,
-  PkceFormState,
-  RopcFormState,
-  TokenResponse,
-} from "@/app/lib/types";
+import { useAuthExampleState } from "@/app/lib/useAuthExampleState";
 import { useInteractionsList } from "@/app/lib/useInteractionsList";
 
 const AUTH_CODE_SESSION_KEY = "authcode_form";
 const PKCE_SESSION_KEY = "pkce_form";
 
-type Flow = "cc" | "ropc" | "authCode" | "pkce" | null;
-
 export default function Home() {
-  const [flow, setFlow] = useState<Flow>(null);
-  const [form, setForm] = useState<FormState>(initialForm);
-  const [ropcForm, setRopcForm] = useState<RopcFormState>(initialRopcForm);
-  const [authCodeForm, setAuthCodeForm] = useState<AuthCodeFormState>(initialAuthCodeForm);
-  const [pkceForm, setPkceForm] = useState<PkceFormState>(initialPkceForm);
-  const [receivedCode, setReceivedCode] = useState<string | null>(null);
-  const [pkceReceivedCode, setPkceReceivedCode] = useState<string | null>(null);
-  const [tokenLoading, setTokenLoading] = useState(false);
-  const [tokenError, setTokenError] = useState<string | null>(null);
-  const [token, setToken] = useState<TokenResponse | null>(null);
-  const [tokenEnvTenant, setTokenEnvTenant] = useState<{
-    environment: string;
-    tenant: string;
-  } | null>(null);
+  const {
+    flow,
+    setFlow,
+    form,
+    setForm,
+    ropcForm,
+    setRopcForm,
+    authCodeForm,
+    setAuthCodeForm,
+    pkceForm,
+    setPkceForm,
+    receivedCode,
+    setReceivedCode,
+    pkceReceivedCode,
+    tokenLoading,
+    tokenError,
+    setTokenError,
+    token,
+    tokenEnvTenant,
+    tokenClient,
+    handleBack,
+    withTokenStates,
+    setTokenResult,
+  } = useAuthExampleState();
 
   const {
     list: interactionsList,
@@ -59,218 +57,203 @@ export default function Home() {
     tokenEnvTenant?.tenant ?? "",
   );
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    if (!code) return;
-
-    window.history.replaceState({}, "", window.location.pathname);
-
-    const pkceRaw = sessionStorage.getItem(PKCE_SESSION_KEY);
-    if (pkceRaw) {
-      try {
-        const saved = JSON.parse(pkceRaw) as PkceFormState;
-        sessionStorage.removeItem(PKCE_SESSION_KEY);
-        setFlow("pkce");
-        setPkceForm(saved);
-        setPkceReceivedCode(code);
-      } catch {
-        // ignore invalid stored state
-      }
-      return;
-    }
-
-    const authCodeRaw = sessionStorage.getItem(AUTH_CODE_SESSION_KEY);
-    if (!authCodeRaw) return;
-
-    try {
-      const saved = JSON.parse(authCodeRaw) as AuthCodeFormState;
-      sessionStorage.removeItem(AUTH_CODE_SESSION_KEY);
-      setFlow("authCode");
-      setAuthCodeForm(saved);
-      setReceivedCode(code);
-    } catch {
-      // ignore invalid stored state
-    }
-  }, []);
-
   const handleSubmit = useCallback(
-    async (e: SubmitEvent) => {
+    async (e: SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const clientId = form.clientId.trim();
-      const clientSecret = form.clientSecret.trim();
-      const environment = form.environment.trim();
-      const tenant = form.tenant.trim();
-      if (!clientId || !clientSecret || !environment || !tenant) {
+
+      const required = getRequiredFormValues(e.currentTarget);
+
+      if (!required.ok) {
         setTokenError("All fields are required.");
         return;
       }
-      setTokenError(null);
-      setTokenLoading(true);
-      const result = await requestToken(
-        "/api/auth/token",
-        { clientId, clientSecret, environment, tenant },
-        environment,
-        tenant,
-        "Failed to get token",
-      );
-      setTokenLoading(false);
-      if (result.ok) {
-        setToken(result.data);
-        setTokenEnvTenant({ environment: result.environment, tenant: result.tenant });
-      } else {
-        setTokenError(result.error);
-      }
+
+      await withTokenStates(async () => {
+        const result = await requestToken(
+          "/api/auth/token",
+          required.values,
+          required.values.environment,
+          required.values.tenant,
+          "Failed to get token",
+        );
+
+        if (!result.ok) {
+          throw new Error(result.error);
+        }
+
+        setTokenResult(result.data, result.environment, result.tenant, required.values.clientId);
+      }, "Failed to get token");
     },
-    [form],
+    [setTokenError, setTokenResult, withTokenStates],
   );
 
   const handleRopcSubmit = useCallback(
-    async (e: SubmitEvent) => {
+    async (e: SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const clientId = ropcForm.clientId.trim();
-      const environment = ropcForm.environment.trim();
-      const tenant = ropcForm.tenant.trim();
-      const username = ropcForm.username.trim();
-      const password = ropcForm.password.trim();
-      if (!clientId || !environment || !tenant || !username || !password) {
+      const required = getRequiredFormValues(e.currentTarget);
+
+      if (!required.ok) {
         setTokenError("All fields are required.");
         return;
       }
-      setTokenError(null);
-      setTokenLoading(true);
-      const result = await requestToken(
-        "/api/auth/token/ropc",
-        { clientId, environment, tenant, username, password },
-        environment,
-        tenant,
-        "Failed to get token",
-      );
-      setTokenLoading(false);
-      if (result.ok) {
-        setToken(result.data);
-        setTokenEnvTenant({ environment: result.environment, tenant: result.tenant });
-      } else {
-        setTokenError(result.error);
-      }
+
+      await withTokenStates(async () => {
+        const result = await requestToken(
+          "/api/auth/token/ropc",
+          required.values,
+          required.values.environment,
+          required.values.tenant,
+          "Failed to get token",
+        );
+
+        if (!result.ok) {
+          throw new Error(result.error);
+        }
+
+        setTokenResult(result.data, result.environment, result.tenant, required.values.clientId);
+      }, "Failed to get token");
     },
-    [ropcForm],
+    [setTokenError, setTokenResult, withTokenStates],
   );
 
   const handleAuthCodeSubmit = useCallback(
-    async (e: SubmitEvent) => {
+    async (e: SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const clientId = authCodeForm.clientId.trim();
-      const clientSecret = authCodeForm.clientSecret.trim();
-      const environment = authCodeForm.environment.trim();
-      const tenant = authCodeForm.tenant.trim();
-      const redirectUri = authCodeForm.redirectUri.trim();
-      if (!clientId || !clientSecret || !environment || !tenant || !redirectUri) {
+      const required = getRequiredFormValues(e.currentTarget);
+
+      if (!required.ok) {
         setTokenError("All fields are required.");
         return;
       }
+
       setTokenError(null);
-      sessionStorage.setItem(
-        AUTH_CODE_SESSION_KEY,
-        JSON.stringify({ clientId, clientSecret, environment, tenant, redirectUri }),
-      );
-      const cortiAuth = new CortiAuth({ tenantName: tenant, environment });
-      await cortiAuth.authorizeUrl({ clientId, redirectUri });
+      cacheFormValues(AUTH_CODE_SESSION_KEY, required.values);
+
+      const cortiAuth = new CortiAuth({
+        tenantName: required.values.tenant,
+        environment: required.values.environment,
+      });
+
+      await cortiAuth.authorizeURL({
+        clientId: required.values.clientId,
+        redirectUri: required.values.redirectUri,
+      });
     },
-    [authCodeForm],
+    [setTokenError],
   );
 
   const handlePkceSubmit = useCallback(
-    async (e: SubmitEvent) => {
+    async (e: SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const clientId = pkceForm.clientId.trim();
-      const environment = pkceForm.environment.trim();
-      const tenant = pkceForm.tenant.trim();
-      const redirectUri = pkceForm.redirectUri.trim();
-      if (!clientId || !environment || !tenant || !redirectUri) {
+      const required = getRequiredFormValues(e.currentTarget);
+
+      if (!required.ok) {
         setTokenError("All fields are required.");
         return;
       }
+
       setTokenError(null);
-      sessionStorage.setItem(
-        PKCE_SESSION_KEY,
-        JSON.stringify({ clientId, environment, tenant, redirectUri }),
-      );
-      const cortiAuth = new CortiAuth({ tenantName: tenant, environment });
-      await cortiAuth.authorizePkceUrl({ clientId, redirectUri });
+      cacheFormValues(PKCE_SESSION_KEY, required.values);
+
+      const cortiAuth = new CortiAuth({
+        tenantName: required.values.tenant,
+        environment: required.values.environment,
+      });
+
+      await cortiAuth.authorizePkceUrl({
+        clientId: required.values.clientId,
+        redirectUri: required.values.redirectUri,
+      });
     },
-    [pkceForm],
+    [setTokenError],
   );
 
   const handlePkceProceed = useCallback(async () => {
     if (!pkceReceivedCode) {
       return;
     }
-    setTokenError(null);
-    setTokenLoading(true);
-    const codeVerifier = CortiAuth.getCodeVerifier();
-    const result = await requestToken(
-      "/api/auth/token/pkce",
-      {
-        clientId: pkceForm.clientId,
+
+    await withTokenStates(async () => {
+      const cortiAuth = new CortiAuth({
+        tenantName: pkceForm.tenant,
         environment: pkceForm.environment,
-        tenant: pkceForm.tenant,
+      });
+
+      const tokenResponse = await cortiAuth.getPkceFlowToken({
+        clientId: pkceForm.clientId,
         code: pkceReceivedCode,
         redirectUri: pkceForm.redirectUri,
-        codeVerifier,
-      },
-      pkceForm.environment,
-      pkceForm.tenant,
-      "Failed to exchange PKCE authorization code",
-    );
-    setTokenLoading(false);
-    if (result.ok) {
-      setPkceReceivedCode(null);
-      setToken(result.data);
-      setTokenEnvTenant({ environment: result.environment, tenant: result.tenant });
-    } else {
-      setTokenError(result.error);
-    }
-  }, [pkceReceivedCode, pkceForm]);
+      });
+
+      setTokenResult(tokenResponse, pkceForm.environment, pkceForm.tenant, pkceForm.clientId);
+    }, "Failed to exchange PKCE authorization code");
+  }, [pkceForm, pkceReceivedCode, setTokenResult, withTokenStates]);
 
   const handleAuthCodeProceed = useCallback(async () => {
     if (!receivedCode) {
       return;
     }
-    setTokenError(null);
-    setTokenLoading(true);
-    const result = await requestToken(
-      "/api/auth/token/authcode",
-      {
-        clientId: authCodeForm.clientId,
-        clientSecret: authCodeForm.clientSecret,
-        environment: authCodeForm.environment,
-        tenant: authCodeForm.tenant,
-        code: receivedCode,
-        redirectUri: authCodeForm.redirectUri,
-      },
-      authCodeForm.environment,
-      authCodeForm.tenant,
-      "Failed to exchange authorization code",
-    );
-    setTokenLoading(false);
-    if (result.ok) {
-      setReceivedCode(null);
-      setToken(result.data);
-      setTokenEnvTenant({ environment: result.environment, tenant: result.tenant });
-    } else {
-      setTokenError(result.error);
-    }
-  }, [receivedCode, authCodeForm]);
+    await withTokenStates(async () => {
+      const result = await requestToken(
+        "/api/auth/token/authcode",
+        {
+          clientId: authCodeForm.clientId,
+          clientSecret: authCodeForm.clientSecret,
+          environment: authCodeForm.environment,
+          tenant: authCodeForm.tenant,
+          code: receivedCode,
+          redirectUri: authCodeForm.redirectUri,
+        },
+        authCodeForm.environment,
+        authCodeForm.tenant,
+        "Failed to exchange authorization code",
+      );
 
-  const handleBack = useCallback(() => {
-    setFlow(null);
-    setToken(null);
-    setTokenEnvTenant(null);
-    setTokenError(null);
-    setReceivedCode(null);
-    setPkceReceivedCode(null);
-  }, []);
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
+
+      setTokenResult(result.data, result.environment, result.tenant, authCodeForm.clientId);
+      setReceivedCode(null);
+    }, "Failed to exchange authorization code");
+  }, [authCodeForm, receivedCode, setReceivedCode, setTokenResult, withTokenStates]);
+
+  const handleRefreshToken = useCallback(() => {
+    const canRefresh =
+      token != null &&
+      token.refreshToken != null &&
+      tokenEnvTenant != null &&
+      tokenClient != null &&
+      !!tokenClient.clientId;
+
+    if (!canRefresh) {
+      return;
+    }
+
+    void withTokenStates(async () => {
+      const refreshToken = token.refreshToken;
+      if (!refreshToken) {
+        return;
+      }
+
+      const cortiAuth = new CortiAuth({
+        tenantName: tokenEnvTenant.tenant,
+        environment: tokenEnvTenant.environment,
+      });
+
+      const tokenResponse = await cortiAuth.refreshToken({
+        clientId: tokenClient.clientId,
+        refreshToken,
+      });
+
+      setTokenResult(
+        tokenResponse,
+        tokenEnvTenant.environment,
+        tokenEnvTenant.tenant,
+        tokenClient.clientId,
+      );
+    }, "Failed to refresh token");
+  }, [setTokenResult, token, tokenClient, tokenEnvTenant, withTokenStates]);
 
   const showBack = flow != null || token != null;
 
@@ -350,6 +333,8 @@ export default function Home() {
               interactionsList={interactionsList}
               interactionsLoading={interactionsLoading}
               interactionsError={interactionsError}
+              onRefreshToken={handleRefreshToken}
+              refreshTokenLoading={tokenLoading}
             />
           )}
         </div>
