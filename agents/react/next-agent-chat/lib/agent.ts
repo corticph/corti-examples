@@ -17,13 +17,13 @@ import { CortiClient } from "@corti/sdk";
 
 // Validate required environment variables at startup
 if (!process.env.TENANT) {
-	throw new Error("Missing required environment variable: TENANT");
+  throw new Error("Missing required environment variable: TENANT");
 }
 if (!process.env.CLIENT_ID) {
-	throw new Error("Missing required environment variable: CLIENT_ID");
+  throw new Error("Missing required environment variable: CLIENT_ID");
 }
 if (!process.env.CLIENT_SECRET) {
-	throw new Error("Missing required environment variable: CLIENT_SECRET");
+  throw new Error("Missing required environment variable: CLIENT_SECRET");
 }
 
 const environment = (process.env.ENVIRONMENT || "eu") as "eu" | "us";
@@ -36,12 +36,12 @@ const environment = (process.env.ENVIRONMENT || "eu") as "eu" | "us";
  * server-side applications.
  */
 const cortiClient = new CortiClient({
-	tenantName: process.env.TENANT,
-	environment,
-	auth: {
-		clientId: process.env.CLIENT_ID,
-		clientSecret: process.env.CLIENT_SECRET,
-	},
+  tenantName: process.env.TENANT,
+  environment,
+  auth: {
+    clientId: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+  },
 });
 
 const A2AClientFactory = createA2AClientFactory(cortiClient);
@@ -54,8 +54,8 @@ const A2AClientFactory = createA2AClientFactory(cortiClient);
  * in during initialization, they all wait for the same agent creation.
  */
 let agentPromise: Promise<{
-	agentId: string;
-	a2aClient: Client;
+  agentId: string;
+  a2aClient: Client;
 }> | null = null;
 
 /**
@@ -68,44 +68,38 @@ let agentPromise: Promise<{
  * @returns Promise resolving to agent ID and A2A client instance
  */
 async function initializeAgent() {
-	console.log("[Agent] Initializing Corti agent...");
+  console.log("[Agent] Initializing Corti agent...");
 
-	// Create a new agent using the Corti SDK
-	// This agent will handle all chat interactions
-	const agent = await cortiClient.agents.create({
-		name: "Next.js Chat Demo Agent",
-		description:
-			"A demo agent for showcasing A2A chat integration with Next.js",
-		// Ephemeral agents are automatically cleaned up by Corti
-		ephemeral: true,
-	});
+  // Create a new agent using the Corti SDK
+  // This agent will handle all chat interactions
+  const agent = await cortiClient.agents.create({
+    name: "Next.js Chat Demo Agent",
+    description: "A demo agent for showcasing A2A chat integration with Next.js",
+    // Ephemeral agents are automatically cleaned up by Corti
+    ephemeral: true,
+  });
 
-	console.log(`[Agent] Created agent with ID: ${agent.id}`);
+  console.log(`[Agent] Created agent with ID: ${agent.id}`);
 
-	/**
-	 * Initialize the A2A client with authenticated fetch
-	 *
-	 * We pass the authenticated fetch to both the transport factory and
-	 * the agent card resolver so all requests include the Bearer token.
-	 */
+  /**
+   * Initialize the A2A client with authenticated fetch
+   *
+   * We pass the authenticated fetch to both the transport factory and
+   * the agent card resolver so all requests include the Bearer token.
+   */
 
-	const cardUrl = await cortiClient.agents.getCardUrl(agent.id);
+  const cardUrl = await cortiClient.agents.getCardUrl(agent.id);
 
-	// Construct the agent card URL from the Corti environment
+  // Construct the agent card URL from the Corti environment
 
-	const a2aClient = await A2AClientFactory.createFromUrl(
-		cardUrl.toString(),
-		"",
-	);
+  const a2aClient = await A2AClientFactory.createFromUrl(cardUrl.toString(), "");
 
-	console.log(
-		"[Agent] A2A client initialized successfully with authentication",
-	);
+  console.log("[Agent] A2A client initialized successfully with authentication");
 
-	return {
-		agentId: agent.id,
-		a2aClient,
-	};
+  return {
+    agentId: agent.id,
+    a2aClient,
+  };
 }
 
 /**
@@ -117,8 +111,8 @@ async function initializeAgent() {
  * @returns Promise resolving to agent ID and A2A client instance
  */
 export async function getAgent() {
-	if (!agentPromise) {
-		agentPromise = initializeAgent();
-	}
-	return agentPromise;
+  if (!agentPromise) {
+    agentPromise = initializeAgent();
+  }
+  return agentPromise;
 }
