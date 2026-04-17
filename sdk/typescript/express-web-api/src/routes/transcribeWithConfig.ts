@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import { Corti } from "@corti/sdk";
 import type { Application, Request, Response } from "express";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { cortiErrorResponse, createCortiClient, sendCortiConfigError } from "../lib/corti.js";
@@ -7,8 +6,8 @@ import { resolveSampleFilePath } from "../lib/sample.js";
 
 const CHUNK_SIZE = 4096;
 
-export function registerTranscribe(app: Application): void {
-  app.get("/transcribe", asyncHandler(handle));
+export function registerTranscribeWithConfig(app: Application): void {
+  app.get("/transcribe-with-config", asyncHandler(handle));
 }
 
 async function handle(_req: Request, res: Response): Promise<void> {
@@ -36,15 +35,13 @@ async function handle(_req: Request, res: Response): Promise<void> {
   }
 
   try {
-    const socket = await client.transcribe.connect();
+    // connect() sends configuration and resolves only after CONFIG_ACCEPTED.
+    // It rejects on CONFIG_DENIED / CONFIG_TIMEOUT / CONFIG_MISSING.
+    const socket = await client.transcribe.connect({
+      configuration: { primaryLanguage: "en" },
+    });
 
     const messages: unknown[] = [];
-    let configAcceptedResolve: () => void;
-    let configAcceptedReject: (err: Error) => void;
-    const configAcceptedPromise = new Promise<void>((resolve, reject) => {
-      configAcceptedResolve = resolve;
-      configAcceptedReject = reject;
-    });
     let flushedResolve: () => void;
     const flushedPromise = new Promise<void>((resolve) => {
       flushedResolve = resolve;
@@ -54,32 +51,10 @@ async function handle(_req: Request, res: Response): Promise<void> {
       messages.push(msg);
 
       const m = msg as { type?: string };
-      if (
-        m.type === Corti.TranscribeConfigStatusMessageType.ConfigAccepted ||
-        m.type === "CONFIG_ALREADY_RECEIVED"
-      ) {
-        configAcceptedResolve();
-      }
-      if (
-        m.type === Corti.TranscribeConfigStatusMessageType.ConfigDenied ||
-        m.type === Corti.TranscribeConfigStatusMessageType.ConfigTimeout ||
-        m.type === "CONFIG_MISSING"
-      ) {
-        configAcceptedReject(new Error(`Config not accepted: ${m.type}`));
-      }
       if (m.type === "flushed") {
         flushedResolve();
       }
     });
-
-    await socket.waitForOpen();
-
-    socket.sendConfiguration({
-      type: "config",
-      configuration: { primaryLanguage: "en" },
-    });
-
-    await configAcceptedPromise;
 
     const buffer = Buffer.alloc(CHUNK_SIZE);
     const fd = fs.openSync(samplePath, "r");
@@ -107,7 +82,7 @@ async function handle(_req: Request, res: Response): Promise<void> {
       messageCount: messages.length,
       messages,
       message:
-        "Transcribe WebSocket (SDK): config sent, audio sent by chunks, flush sent, flushed received.",
+        "Transcribe WebSocket (SDK, with config): configuration passed to connect(), audio sent by chunks, flush sent, flushed received.",
     });
   } catch (e) {
     cortiErrorResponse(e, res);

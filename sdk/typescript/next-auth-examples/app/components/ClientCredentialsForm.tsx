@@ -1,6 +1,6 @@
 "use client";
 
-import type { Dispatch, SetStateAction, SubmitEvent } from "react";
+import type { ComponentProps, Dispatch, SetStateAction } from "react";
 import { Button } from "@/app/components/Button";
 import { FormField } from "@/app/components/FormField";
 import { CONSOLE_URL } from "@/app/lib/constants";
@@ -9,7 +9,7 @@ import type { FormState } from "@/app/lib/types";
 type ClientCredentialsFormProps = {
   form: FormState;
   setForm: Dispatch<SetStateAction<FormState>>;
-  onSubmit: (e: SubmitEvent) => void;
+  onSubmit: NonNullable<ComponentProps<"form">["onSubmit"]>;
   tokenError: string | null;
   tokenLoading: boolean;
 };
@@ -39,6 +39,7 @@ export function ClientCredentialsForm({
       <div className="grid gap-3">
         <FormField
           id="cc-client-id"
+          name="clientId"
           label="CLIENT_ID="
           type="text"
           value={form.clientId}
@@ -47,6 +48,7 @@ export function ClientCredentialsForm({
         />
         <FormField
           id="cc-client-secret"
+          name="clientSecret"
           label="CLIENT_SECRET="
           type="password"
           value={form.clientSecret}
@@ -55,6 +57,7 @@ export function ClientCredentialsForm({
         />
         <FormField
           id="cc-environment"
+          name="environment"
           label="ENVIRONMENT="
           type="text"
           value={form.environment}
@@ -63,6 +66,7 @@ export function ClientCredentialsForm({
         />
         <FormField
           id="cc-tenant"
+          name="tenant"
           label="TENANT="
           type="text"
           value={form.tenant}

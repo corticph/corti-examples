@@ -92,6 +92,60 @@
       "response": []
     },
     {
+      "name": "Ambient async (end-to-end)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/ambient-async-end-to-end",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "ambient-async-end-to-end"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ambient async facts (SDK)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/ambient-async-facts",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "ambient-async-facts"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ambient RT streams (SDK)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/ambient-rt-streams",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "ambient-rt-streams"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Facts",
       "request": {
         "method": "GET",
@@ -232,6 +286,24 @@
       "response": []
     },
     {
+      "name": "Transcribe with config",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/transcribe-with-config",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "transcribe-with-config"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Stream",
       "request": {
         "method": "GET",
@@ -243,6 +315,30 @@
           ],
           "path": [
             "stream"
+          ],
+          "query": [
+            {
+              "key": "interactionId",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Stream with config",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/stream-with-config",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "stream-with-config"
           ],
           "query": [
             {
