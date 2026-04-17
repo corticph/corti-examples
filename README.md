@@ -90,3 +90,10 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 |--------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------|
 | [dictation/typescript/basic-example/](dictation/typescript/basic-example/)           | TypeScript, Express | Microphone streaming via the Corti SDK; interim + final transcripts; voice commands          |
 | [dictation/typescript/web-component/](dictation/typescript/web-component/)           | TypeScript, Express | Four demos of `@corti/dictation-web`: basic, custom UI, styling, and token refresh           |
+| [dictation/commands/en/auto-text](dictation/commands/en/auto-text.json)              | Json                | Commands to insert templates and macro-text                                                  |
+| [dictation/commands/en/dictation-box](dictation/commands/en/dictation-box.json)      | Json                | Commands to control dictation box                                                            |
+| [dictation/commands/en/editing](dictation/commands/en/editing.json)                  | Json                | Commands for edit actions and formatting                                                     |
+| [dictation/commands/en/lists](dictation/commands/en/lists.json)                      | Json                | Commands to create and navigate ordered and unordered lists                                  |
+| [dictation/commands/en/navigation](dictation/commands/en/navigation.json)            | Json                | Commands for cursor and field navigation                                                     |
+| [dictation/commands/en/roman-numerals](dictation/commands/en/roman-numerals.json)    | Json                | Commands to insert Roman numerals                                                            |
+| [dictation/commands/en/select](dictation/commands/en/select.json)                    | Json                | Commands for text selection controls                                                         |
