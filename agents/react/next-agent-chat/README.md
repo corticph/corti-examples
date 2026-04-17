@@ -237,7 +237,7 @@ Creating an agent on every request is inefficient. This demo uses a singleton pa
 
 ## Related Documentation
 
-- **Corti SDK**: [https://docs.corti.ai/get_started/welcome](https://docs.corti.ai/get_started/welcome)
+- **Corti SDK**: [https://docs.corti.ai/sdk/overview](https://docs.corti.ai/get_started/welcome)
 - **Corti SDK NPM**: [https://www.npmjs.com/package/@corti/sdk](https://www.npmjs.com/package/@corti/sdk)
 - **A2A JS SDK**: [https://www.npmjs.com/package/@a2a-js/sdk](https://www.npmjs.com/package/@a2a-js/sdk)
 - **Corti AI SDK Adapter**: [https://github.com/corti-ai/corti-ai-sdk-adapter](https://github.com/corti-ai/corti-ai-sdk-adapter)
