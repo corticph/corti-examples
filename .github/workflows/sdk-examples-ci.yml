@@ -65,6 +65,9 @@ jobs:
             path: sdk/typescript/express-web-api
           - name: next-auth-examples
             path: sdk/typescript/next-auth-examples
+          - name: react-next-agent-chat
+            path: agents/react/next-agent-chat
+
     defaults:
       run:
         working-directory: ${{ matrix.project.path }}
