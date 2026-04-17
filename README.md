@@ -32,6 +32,14 @@ preferred.
 
 Command catalogs and configuration details are documented in [dictation/commands/README.md](dictation/commands/README.md).
 
+**[Agents](#agents)**
+
+The Corti Agentic Framework is a modular AI system for building advanced agents that perform clinical and operational
+tasks. Agents are autonomous systems that can think, reason, and adapt — using AI to understand context, make decisions
+dynamically, and take actions. These examples demonstrate how to integrate Corti agents into custom applications using
+the A2A (Agent-to-Agent) protocol for real-time streaming communication, enabling chat interfaces and interactive
+assistants with the Corti SDK and modern frontend frameworks.
+
 **[Proxy](#proxy)**
 
 Corti APIs should never be called directly from the browser — doing so would expose client
@@ -97,3 +105,11 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 | [dictation/commands/en/navigation](dictation/commands/en/navigation.json)            | Json                | Commands for cursor and field navigation                                                     |
 | [dictation/commands/en/roman-numerals](dictation/commands/en/roman-numerals.json)    | Json                | Commands to insert Roman numerals                                                            |
 | [dictation/commands/en/select](dictation/commands/en/select.json)                    | Json                | Commands for text selection controls                                                         |
+
+---
+
+### Agents
+
+| Example                                                                              | Stack                      | Description                                                                                  |
+|--------------------------------------------------------------------------------------|----------------------------|----------------------------------------------------------------------------------------------|
+| [agents/react/next-agent-chat/](agents/react/next-agent-chat/)                       | TypeScript, Next.js, React | AI agent chat interface with A2A streaming, AI SDK integration, and real-time messaging      |

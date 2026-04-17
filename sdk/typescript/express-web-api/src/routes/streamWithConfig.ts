@@ -7,8 +7,8 @@ import { resolveSampleFilePath } from "../lib/sample.js";
 
 const CHUNK_SIZE = 4096;
 
-export function registerStream(app: Application): void {
-  app.get("/stream", asyncHandler(handle));
+export function registerStreamWithConfig(app: Application): void {
+  app.get("/stream-with-config", asyncHandler(handle));
 }
 
 async function handle(req: Request, res: Response): Promise<void> {
@@ -62,46 +62,10 @@ async function handle(req: Request, res: Response): Promise<void> {
   }
 
   try {
-    const socket = await client.stream.connect({ id: interactionId });
-
-    const messages: unknown[] = [];
-    let configAcceptedResolve: () => void;
-    let configAcceptedReject: (err: Error) => void;
-    const configAcceptedPromise = new Promise<void>((resolve, reject) => {
-      configAcceptedResolve = resolve;
-      configAcceptedReject = reject;
-    });
-    let flushedResolve: () => void;
-    const flushedPromise = new Promise<void>((resolve) => {
-      flushedResolve = resolve;
-    });
-
-    socket.on("message", (msg: unknown) => {
-      messages.push(msg);
-
-      const m = msg as { type?: string };
-      if (
-        m.type === Corti.StreamConfigStatusMessageType.ConfigAccepted ||
-        m.type === Corti.StreamConfigStatusMessageType.ConfigAlreadyReceived
-      ) {
-        configAcceptedResolve();
-      }
-      if (
-        m.type === Corti.StreamConfigStatusMessageType.ConfigDenied ||
-        m.type === Corti.StreamConfigStatusMessageType.ConfigMissing ||
-        m.type === Corti.StreamConfigStatusMessageType.ConfigNotProvided
-      ) {
-        configAcceptedReject(new Error(`Config not accepted: ${m.type}`));
-      }
-      if (m.type === "flushed") {
-        flushedResolve();
-      }
-    });
-
-    await socket.waitForOpen();
-
-    socket.sendConfiguration({
-      type: "config",
+    // connect() sends configuration and resolves only after CONFIG_ACCEPTED.
+    // It rejects on CONFIG_DENIED / CONFIG_MISSING / CONFIG_NOT_PROVIDED.
+    const socket = await client.stream.connect({
+      id: interactionId,
       configuration: {
         transcription: {
           primaryLanguage: "en",
@@ -111,7 +75,20 @@ async function handle(req: Request, res: Response): Promise<void> {
       },
     });
 
-    await configAcceptedPromise;
+    const messages: unknown[] = [];
+    let flushedResolve: () => void;
+    const flushedPromise = new Promise<void>((resolve) => {
+      flushedResolve = resolve;
+    });
+
+    socket.on("message", (msg: unknown) => {
+      messages.push(msg);
+
+      const m = msg as { type?: string };
+      if (m.type === "flushed") {
+        flushedResolve();
+      }
+    });
 
     const buffer = Buffer.alloc(CHUNK_SIZE);
     const fd = fs.openSync(samplePath, "r");
@@ -140,7 +117,7 @@ async function handle(req: Request, res: Response): Promise<void> {
       messageCount: messages.length,
       messages,
       message:
-        "Stream WebSocket (SDK): config sent, audio sent by chunks, flush sent, flushed received.",
+        "Stream WebSocket (SDK, with config): configuration passed to connect(), audio sent by chunks, flush sent, flushed received.",
     });
   } catch (e) {
     cortiErrorResponse(e, res);

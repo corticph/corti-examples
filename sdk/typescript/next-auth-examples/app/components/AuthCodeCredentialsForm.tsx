@@ -1,6 +1,6 @@
 "use client";
 
-import type { Dispatch, SetStateAction, SubmitEvent } from "react";
+import type { ComponentProps, Dispatch, SetStateAction } from "react";
 import { Button } from "@/app/components/Button";
 import { FormField } from "@/app/components/FormField";
 import { CONSOLE_URL } from "@/app/lib/constants";
@@ -9,7 +9,7 @@ import type { AuthCodeFormState } from "@/app/lib/types";
 type AuthCodeCredentialsFormProps = {
   form: AuthCodeFormState;
   setForm: Dispatch<SetStateAction<AuthCodeFormState>>;
-  onSubmit: (e: SubmitEvent) => void;
+  onSubmit: NonNullable<ComponentProps<"form">["onSubmit"]>;
   tokenError: string | null;
   tokenLoading: boolean;
 };
@@ -39,6 +39,7 @@ export function AuthCodeCredentialsForm({
       <div className="grid gap-3">
         <FormField
           id="authcode-client-id"
+          name="clientId"
           label="CLIENT_ID="
           type="text"
           value={form.clientId}
@@ -47,6 +48,7 @@ export function AuthCodeCredentialsForm({
         />
         <FormField
           id="authcode-client-secret"
+          name="clientSecret"
           label="CLIENT_SECRET="
           type="password"
           value={form.clientSecret}
@@ -55,6 +57,7 @@ export function AuthCodeCredentialsForm({
         />
         <FormField
           id="authcode-environment"
+          name="environment"
           label="ENVIRONMENT="
           type="text"
           value={form.environment}
@@ -63,6 +66,7 @@ export function AuthCodeCredentialsForm({
         />
         <FormField
           id="authcode-tenant"
+          name="tenant"
           label="TENANT="
           type="text"
           value={form.tenant}
@@ -71,6 +75,7 @@ export function AuthCodeCredentialsForm({
         />
         <FormField
           id="authcode-redirect-uri"
+          name="redirectUri"
           label="REDIRECT_URI="
           type="text"
           value={form.redirectUri}

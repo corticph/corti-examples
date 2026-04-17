@@ -7,8 +7,8 @@ export type TokenRequestResult =
 export async function requestToken(
   url: string,
   body: Record<string, unknown>,
-  environment: string,
-  tenant: string,
+  environment: unknown,
+  tenant: unknown,
   defaultError: string,
 ): Promise<TokenRequestResult> {
   try {
@@ -24,11 +24,12 @@ export async function requestToken(
         error: data?.error ?? `Request failed (${res.status})`,
       };
     }
+
     return {
       ok: true,
       data: data as TokenResponse,
-      environment,
-      tenant,
+      environment: environment as string,
+      tenant: tenant as string,
     };
   } catch (e) {
     return {

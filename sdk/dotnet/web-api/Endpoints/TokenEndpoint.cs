@@ -98,9 +98,8 @@ public static class TokenEndpoint
             var tokenResponse = await auth.GetTokenAsync(new OAuthTokenRequest { ClientId = cortiConfig.ClientId, ClientSecret = cortiConfig.ClientSecret });
 
             var client = new CortiClient(
-                cortiConfig.TenantName,
-                cortiConfig.Environment,
-                new CortiClientAuth.Bearer(tokenResponse.AccessToken ?? string.Empty));
+                new CortiClientAuth.Bearer(tokenResponse.AccessToken ?? string.Empty)
+            );
 
             var factGroups = await client.Facts.FactGroupsListAsync();
             return Results.Ok(new { message = "Corti client (Bearer token from CC) called Facts.FactGroupsListAsync successfully." });

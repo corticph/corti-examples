@@ -1,5 +1,5 @@
 {
-  "name": "next-auth-examples",
+  "name": "next-agent-chat",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,9 +11,12 @@
     "format": "biome format --write ."
   },
   "dependencies": {
+    "@a2a-js/sdk": "^0.3.0",
+    "@ai-sdk/react": "^3.0.0",
+    "@corti/ai-sdk-adapter": "latest",
     "@corti/sdk": "latest",
-    "clsx": "^2.1.1",
-    "next": "16.1.6",
+    "ai": "^6.0.0",
+    "next": "^16.2.3",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

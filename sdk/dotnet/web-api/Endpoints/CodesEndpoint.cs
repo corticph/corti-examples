@@ -21,7 +21,7 @@ public static class CodesEndpoint
         {
             var predictResponse = await client!.Codes.PredictAsync(new CodesGeneralPredictRequest
             {
-                System = [CommonCodingSystemEnum.Icd10Cm, CommonCodingSystemEnum.Cpt],
+                System = [CommonCodingSystemEnum.Icd10CmOutpatient, CommonCodingSystemEnum.Cpt],
                 Context =
                 [
                     new CommonTextContext
@@ -30,7 +30,6 @@ public static class CodesEndpoint
                         Text = "Short arm splint applied in ED for pain control.",
                     },
                 ],
-                MaxCandidates = 5,
             });
 
             return Results.Ok(new

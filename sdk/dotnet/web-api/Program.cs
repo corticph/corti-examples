@@ -29,6 +29,11 @@ app.MapTemplatesEndpoint();
 app.MapAgentsEndpoint();
 app.MapDocumentsEndpoint();
 app.MapTranscribeEndpoint();
+app.MapTranscribeWithConfigEndpoint();
 app.MapStreamEndpoint();
+app.MapStreamWithConfigEndpoint();
+app.MapAmbientAsyncEndToEndEndpoint();
+app.MapAmbientAsyncFactsEndpoint();
+app.MapAmbientRtStreamsEndpoint();
 
 app.Run();
