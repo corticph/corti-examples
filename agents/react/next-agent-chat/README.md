@@ -85,13 +85,13 @@ This example shows how to:
 
 3. **Configure environment variables**
 
-   Copy the example environment file and fill in your Corti credentials:
+   Copy the environment file and fill in your Corti credentials:
 
    ```bash
-   cp .env.example .env
+   cp .env .env.local
    ```
 
-   Edit `.env` and add your credentials:
+   Edit `.env.local` and add your credentials:
 
    ```env
    TENANT=your-tenant-name
@@ -100,7 +100,7 @@ This example shows how to:
    ENVIRONMENT=eu  # or "us" for US region
    ```
 
-   > ⚠️ **Security Note**: Never commit your `.env` file to version control. The `.env.example` file is provided as a template only.
+   > ⚠️ **Security Note**: Never commit your `.env.local` file to version control. The `.env` file is committed as a template with placeholder values.
 
 4. **Run the development server**
 
@@ -129,7 +129,7 @@ next-agent-chat/
 │   └── globals.css               # Tailwind CSS imports
 ├── lib/
 │   └── agent.ts                  # Agent singleton initialization
-├── .env.example                  # Environment variables template
+├── .env                          # Environment variables template (committed)
 ├── package.json                  # Dependencies and scripts
 ├── tsconfig.json                 # TypeScript configuration
 ├── next.config.ts                # Next.js configuration
@@ -216,7 +216,7 @@ Creating an agent on every request is inefficient. This demo uses a singleton pa
 
 **Error**: `Missing required environment variable: TENANT`
 
-**Solution**: Make sure you've copied `.env.example` to `.env` and filled in all required values.
+**Solution**: Make sure you've copied `.env` to `.env.local` and filled in all required values.
 
 ### Authentication errors
 
