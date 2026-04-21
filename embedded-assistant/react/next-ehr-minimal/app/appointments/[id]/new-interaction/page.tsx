@@ -27,10 +27,10 @@ export default async function NewInteractionPage({
   const interactionData: CortiAssistantInteractionData = {
     assignedUserId: null,
     encounter: {
-      identifier: `appointment-${appointment.id}`,
+      identifier: `appointment-${appointment.id}-${new Date().getTime()}`,
       status: "planned",
       type: "first_consultation",
-      period: { startedAt: appointment.startsAt },
+      period: { startedAt: new Date().toISOString() },
     },
   };
 
