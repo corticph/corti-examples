@@ -25,6 +25,18 @@ cp .env.example .env
 Current variables:
 
 - `EHR_SQLITE_PATH` - Server-only path to the local SQLite database file.
+- `CORTI_ENVIRONMENT` - Corti environment used to construct the assistant base URL.
+- `CORTI_TENANT_NAME` - Corti tenant used for ROPC authentication.
+- `CORTI_CLIENT_ID` - OAuth client ID with direct access grants enabled.
+- `CORTI_USER_EMAIL` - ROPC user email.
+- `CORTI_USER_PASSWORD` - ROPC user password.
+
+### API Endpoints
+
+The app now exposes server-side route handlers under `/api`:
+
+- `GET /api/config` - Returns `{ baseUrl }` built from `CORTI_ENVIRONMENT`.
+- `GET /api/auth` - Returns auth credentials in the same shape as the Express example.
 
 ### Install Dependencies
 
