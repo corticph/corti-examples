@@ -14,6 +14,18 @@ A minimal Next.js application with a stable, production-ready stack.
 
 ## Getting Started
 
+### Environment Setup
+
+Create a local env file before starting the app:
+
+```bash
+cp .env.example .env
+```
+
+Current variables:
+
+- `EHR_SQLITE_PATH` - Server-only path to the local SQLite database file.
+
 ### Install Dependencies
 
 ```bash

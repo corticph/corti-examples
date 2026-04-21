@@ -11,8 +11,18 @@ import type {
   VisitSummary,
 } from "@/lib/ehr-types";
 
-const dataDirectory = path.join(process.cwd(), "data");
-const databasePath = path.join(dataDirectory, "ehr-demo.sqlite");
+const configuredDatabasePath = process.env.EHR_SQLITE_PATH;
+
+if (!configuredDatabasePath) {
+  throw new Error(
+    "Missing EHR_SQLITE_PATH. Copy .env.example to .env and set the SQLite path.",
+  );
+}
+
+const databasePath = path.isAbsolute(configuredDatabasePath)
+  ? configuredDatabasePath
+  : path.join(process.cwd(), configuredDatabasePath);
+const dataDirectory = path.dirname(databasePath);
 
 type GlobalWithDb = typeof globalThis & {
   ehrDatabase?: Database.Database;
