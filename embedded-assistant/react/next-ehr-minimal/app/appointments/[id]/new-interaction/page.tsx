@@ -1,11 +1,7 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ConsultationForm } from "@/components/consultation-form";
-import { CortiAssistantLoader } from "@/components/corti-assistant-loader";
-import { CortiAssistantPanel } from "@/components/corti-assistant-panel";
 import { EhrSidebar } from "@/components/ehr-sidebar";
 import { BackActions } from "@/components/ehr-parts";
-import { type CortiAssistantInteractionData } from "@/components/corti-assistant-types";
 import { PageShell, SectionCard } from "@/components/ui";
 import { getAppointmentDetail } from "@/lib/ehr-db";
 import { formatDateTime } from "@/lib/ehr-utils";
@@ -23,16 +19,6 @@ export default async function NewInteractionPage({
   }
 
   const { appointment, patient } = detail;
-
-  const interactionData: CortiAssistantInteractionData = {
-    assignedUserId: null,
-    encounter: {
-      identifier: `appointment-${appointment.id}-${new Date().getTime()}`,
-      status: "planned",
-      type: "first_consultation",
-      period: { startedAt: new Date().toISOString() },
-    },
-  };
 
   return (
     <PageShell sidebar={<EhrSidebar activePath="/appointments" />}>
@@ -53,12 +39,6 @@ export default async function NewInteractionPage({
             </p>
           </div>
         </header>
-
-        <SectionCard className="p-5">
-          <Suspense fallback={<CortiAssistantLoader />}>
-            <CortiAssistantPanel interactionData={interactionData} />
-          </Suspense>
-        </SectionCard>
 
         <SectionCard className="p-5">
           <ConsultationForm
