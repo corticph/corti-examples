@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sdk", "sdk", "{FF13A09E-0E72-1904-124B-A4E979EF28D3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnet", "dotnet", "{9D954F24-B3F1-FF05-00E7-71549D8DD0D6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "web-api", "web-api", "{7CDCBEFD-EF73-E947-4359-60BDE80598C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Corti.Sdk.Examples.Api", "sdk\dotnet\web-api\Corti.Sdk.Examples.Api.csproj", "{7EF771F2-02DA-0A74-C014-DDE79D6C52EE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7EF771F2-02DA-0A74-C014-DDE79D6C52EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EF771F2-02DA-0A74-C014-DDE79D6C52EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EF771F2-02DA-0A74-C014-DDE79D6C52EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EF771F2-02DA-0A74-C014-DDE79D6C52EE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9D954F24-B3F1-FF05-00E7-71549D8DD0D6} = {FF13A09E-0E72-1904-124B-A4E979EF28D3}
+		{7CDCBEFD-EF73-E947-4359-60BDE80598C9} = {9D954F24-B3F1-FF05-00E7-71549D8DD0D6}
+		{7EF771F2-02DA-0A74-C014-DDE79D6C52EE} = {7CDCBEFD-EF73-E947-4359-60BDE80598C9}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5F040F65-33ED-4F88-8005-B29578AF40AE}
+	EndGlobalSection
+EndGlobal
