@@ -9,8 +9,8 @@ export function PageShell({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1600px] min-w-0">
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto flex min-h-screen w-full max-w-400 min-w-0">
         <aside className="hidden w-72 shrink-0 border-r border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-background))] px-5 py-6 lg:block">
           {sidebar}
         </aside>
