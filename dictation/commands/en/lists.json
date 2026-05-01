@@ -1,0 +1,40 @@
+{
+    "commands": [
+      {
+        "id": "new_list",
+        "_comment": "Use to create a new list. Example: 'new list' or 'bullet list'",
+        "phrases": ["new list", "new {type} list", "insert list", "start list", "{type} list"],
+        "variables": [
+          {
+            "key": "type",
+            "type": "enum",
+            "enum": ["bullet", "bulleted", "number", "numbered", "unordered", "ordered"]
+          }
+        ]
+      },
+      {
+        "id": "next_item",
+        "_comment": "Use to navigate to the next item in the current list. Example: 'next item'",
+        "phrases": ["next {item}", "{item} next"],
+        "variables": [
+          {
+            "key": "item",
+            "type": "enum",
+            "enum": ["item", "bullet", "number"]
+          }
+        ]
+      },
+      {
+        "id": "list_number",
+        "_comment": "Use to navigate or insert a specific item in a list. Example: 'list item three'",
+        "phrases": ["item {number}", "list item {number}", "list number {number}"],
+        "variables": [
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+          }
+        ]
+      }
+    ]
+}

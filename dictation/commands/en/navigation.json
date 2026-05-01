@@ -1,0 +1,60 @@
+{
+    "commands": [
+      {
+        "id": "navigate_fields",
+        "_comment": "Use to navigate between fields in the current text area. Example: 'next field'",
+        "phrases": ["{choice} {location}"],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["next", "previous", "prior", "first", "last"]
+          },
+          {
+            "key": "location",
+            "type": "enum",
+            "enum": ["field", "section", "control"]
+          }
+        ]
+      },
+      {
+        "id": "go_to",
+        "_comment": "Use to go to a specific location in the current text area. Example: 'go to end of document'",
+        "phrases": ["go to {choice} of {location}", "{choice} of {location}"],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["beginning", "start", "end"]
+          },
+          {
+            "key": "location",
+            "type": "enum",
+            "enum": ["line", "paragraph", "document"]
+          }
+        ]
+      },
+      {
+        "id": "insert_cursor",
+        "_comment": "Use to insert a cursor at a specific location in the current text area. Example: 'insert before current paragraph'",
+        "phrases": ["insert {direction} {choice} {location}"],
+        "variables": [
+          {
+            "key": "direction",
+            "type": "enum",
+            "enum": ["before", "after"]
+          },
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": ["current", "first", "last", "previous", "prior", "next"]
+          },
+          {
+            "key": "location",
+            "type": "enum",
+            "enum": ["line", "word", "paragraph", "document"]
+          }
+        ]
+      }
+    ]
+}

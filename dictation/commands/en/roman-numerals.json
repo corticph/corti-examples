@@ -1,0 +1,16 @@
+{
+    "commands": [
+      {
+        "id": "roman_numeral",
+        "_comment": "Use to insert a Roman numeral. Example: 'roman numeral five' or 'roman five'",
+        "phrases": ["roman numeral {number}", "roman {number}"],
+        "variables": [
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"]
+          }
+        ]
+      }
+    ]
+}
