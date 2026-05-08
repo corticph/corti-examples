@@ -15,12 +15,12 @@
       {
         "id": "unselect",
         "_comment": "Use to unselect text selection. Example: 'unselect text'",
-        "phrases": ["unselect {selection}", "deselect {selection}", "clear selection"],
+        "phrases": ["unselect {selection}", "deselect {selection}", "clear {selection}"],
         "variables": [
           {
             "key": "selection",
             "type": "enum",
-            "enum": ["all", "that", "text"]
+            "enum": ["all", "that", "text", "selection"]
           }
         ]
       },
@@ -61,7 +61,7 @@
       {
         "id": "select_number",
         "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three'",
-        "phrases": ["select {choice} {number}", "select {choice} {ordinal}, pick {number}, pick {ordinal}"],
+        "phrases": ["select {choice} {number}", "select {number} {choice}, select {number}, pick {number} {choice}, pick {number}, choose {number} {choice}, choose {number}"],
         "variables": [
           {
             "key": "choice",
@@ -71,12 +71,7 @@
           {
             "key": "number",
             "type": "enum",
-            "enum": ["one", "two", "three", "four", "five"]
-          },
-          {
-            "key": "ordinal",
-            "type": "enum",
-            "enum": ["first", "second", "third", "fourth", "fifth"]
+            "enum": ["one", "two", "three", "four", "five", "first", "second", "third", "fourth", "fifth"]
           }
         ]
       }
