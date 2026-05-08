@@ -78,7 +78,7 @@
       {
         "id": "cap_that",
         "_comment": "Use to capitalize the selected text. Example: 'cap that' or 'all caps on'",
-        "phrases": ["cap that", "all caps {action}"],
+        "phrases": ["all caps {action}"],
         "variables": [
           {
             "key": "action",
