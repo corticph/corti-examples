@@ -10,7 +10,6 @@ This folder contains example dictation command catalogs for use with Corti Symph
   - `editing.json` — Edit actions and formatting
   - `lists.json` — List creation and navigation
   - `navigation.json` — Cursor and field navigation
-  - `roman-numerals.json` — Roman numeral insertion
   - `select.json` — Selection controls
 
 ## Using Commands in `/transcribe`
