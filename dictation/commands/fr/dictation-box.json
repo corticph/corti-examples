@@ -1,0 +1,21 @@
+{
+    "commands": [
+      {
+        "id": "dictation_box",
+        "_comment": "Use to control the dictation box if one is available in the application. Example: 'open dictation box' (Contrôler la boîte de dictée si elle est disponible dans l'application. Exemple : 'ouvrir la boîte de dictée')",
+        "phrases": ["{action} la boîte de dictée"],
+        "variables": [
+          {
+            "key": "action",
+            "type": "enum",
+            "enum": ["ouvrir", "fermer", "afficher", "masquer", "ancrer", "libérer"]
+          }
+        ]
+      },
+      {
+        "id": "transfer_text",
+        "_comment": "Use to transfer text from the dictation box to the cursor location. Example: 'transfer text' (Transférer le texte de la boîte de dictée vers la position du curseur. Exemple : 'transférer le texte')",
+        "phrases": ["transférer le texte"]
+      }
+    ]
+}
