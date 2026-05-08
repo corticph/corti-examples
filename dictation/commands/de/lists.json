@@ -1,0 +1,40 @@
+{
+    "commands": [
+      {
+        "id": "new_list",
+        "_comment": "Use to create a new list. Example: 'new list' or 'bullet list' (Neue Liste erstellen. Beispiel: 'neue Liste' oder 'Aufzählungsliste')",
+        "phrases": ["{action} Liste"],
+        "variables": [
+          {
+            "key": "action",
+            "type": "enum",
+            "enum": ["neue", "einfügen", "starten", "beenden", "Aufzählungs", "Aufzählung", "nummerierte", "nummerierten", "ungeordnete", "geordnete"]
+          }
+        ]
+      },
+      {
+        "id": "next_item",
+        "_comment": "Use to navigate to the next item in the current list. Example: 'next item' (Zum nächsten Element in der aktuellen Liste navigieren. Beispiel: 'nächstes Element')",
+        "phrases": ["nächstes {item}", "{item} weiter"],
+        "variables": [
+          {
+            "key": "item",
+            "type": "enum",
+            "enum": ["Element", "Aufzählungspunkt", "Nummer"]
+          }
+        ]
+      },
+      {
+        "id": "list_number",
+        "_comment": "Use to navigate or insert a specific item in a list. Example: 'list item three' (Zu einem bestimmten Listenelement navigieren oder es einfügen. Beispiel: 'Listenelement drei')",
+        "phrases": ["Element {number}", "Listenelement {number}", "Listennummer {number}"],
+        "variables": [
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": ["eins", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun", "zehn"]
+          }
+        ]
+      }
+    ]
+}
