@@ -81,6 +81,7 @@ public static class FactsEndpoint
                 [
                     new CommonTextContext
                     {
+                        Type = new CommonTextContext.TypeLiteral(),
                         Text = "Patient reports headache and fever for two days. No known allergies.",
                     },
                 ],
