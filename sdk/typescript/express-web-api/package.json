@@ -12,7 +12,7 @@
     "format": "biome format --write src/"
   },
   "dependencies": {
-    "@corti/sdk": "^2.2.0-rc.3",
+    "@corti/sdk": "latest",
     "dotenv": "^16.4.5",
     "express": "^4.21.0"
   },
