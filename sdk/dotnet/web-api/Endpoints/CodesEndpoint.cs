@@ -26,7 +26,6 @@ public static class CodesEndpoint
                 [
                     new CommonTextContext
                     {
-                        Type = CommonTextContextType.Text,
                         Text = "Short arm splint applied in ED for pain control.",
                     },
                 ],

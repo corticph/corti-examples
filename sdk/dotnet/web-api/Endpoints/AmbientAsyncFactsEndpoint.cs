@@ -61,7 +61,6 @@ public static class AmbientAsyncFactsEndpoint
             {
                 new CommonTextContext
                 {
-                    Type = CommonTextContextType.Text,
                     Text = string.Join(" ", (transcript.Transcripts ?? Enumerable.Empty<CommonTranscriptResponse>()).Select(t => t.Text)),
                 },
             };
