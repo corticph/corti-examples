@@ -5,9 +5,10 @@ Minimal React example showing how to integrate the Corti Embedded Assistant.
 ## What This Example Does
 
 1. **Authenticates** with Corti using ROPC flow via backend
-2. **Creates an interaction** with encounter details
-3. **Navigates** to the session view
-4. **Handles** events and errors from the embedded component
+2. **Configures** app-level UI and interaction options using the current Embedded API
+3. **Creates an interaction** with encounter details
+4. **Navigates** to the session view
+5. **Handles** events and errors from the embedded component
 
 ## What This Example Doesn't Cover
 
@@ -32,7 +33,7 @@ npm install
 npm run dev
 ```
 
-Opens on `http://localhost:5173` with backend at `http://localhost:3000`.
+Opens on `http://localhost:8015` with backend at `http://localhost:8013`.
 
 ## Core Files
 
@@ -41,7 +42,7 @@ Opens on `http://localhost:5173` with backend at `http://localhost:3000`.
 - **[server.ts](server.ts)** - Express HTTP server with CORS for Vite dev server:
   - **Config endpoint** (`/api/config`) - Returns `baseUrl` constructed from `CORTI_ENVIRONMENT`
   - **Authentication endpoint** (`/api/auth`) - Implements ROPC flow using `@corti/sdk` to exchange user credentials for OAuth tokens
-  - Runs on port 3000, separate from Vite dev server
+  - Runs on port 8013, separate from Vite dev server on port 8015
 
 ### Frontend
 
@@ -54,6 +55,8 @@ Opens on `http://localhost:5173` with backend at `http://localhost:3000`.
   - **Component setup** - Uses `CortiEmbeddedReact` component with ref
   - **API access** - Gets API via `useCortiEmbeddedApi()` hook
   - **Authentication** - Calls `api.auth()` in `onReady` handler
+  - **App configuration** - Calls `api.configureApp()` for app-level UI options
+  - **Interaction options** - Calls `api.setInteractionOptions()` before creating the interaction
   - **Interaction creation** - Creates encounter and navigates to session
   - **Event handling** - Handles `onReady`, `onEvent`, and `onError` callbacks
 
@@ -76,6 +79,25 @@ const api = useCortiEmbeddedApi(cortiRef);
 
 // In onReady callback:
 await api.auth(credentials);
+await api.configureApp({
+  ui: {
+    interactionTitle: true,
+    aiChat: true,
+    documentFeedback: true,
+    navigation: true,
+  },
+});
+await api.setInteractionOptions({
+  mode: {
+    fallback: "in-person",
+    options: ["in-person", "virtual"],
+  },
+  documents: {
+    actions: {
+      sync: true,
+    },
+  },
+});
 const interaction = await api.createInteraction({ encounter: {...} });
 await api.navigate(`/session/${interaction.id}`);
 ```

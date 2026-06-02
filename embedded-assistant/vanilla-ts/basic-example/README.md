@@ -5,9 +5,10 @@ Minimal vanilla TypeScript example showing how to integrate the Corti Embedded A
 ## What This Example Does
 
 1. **Authenticates** with Corti using ROPC flow via backend
-2. **Creates an interaction** with encounter details
-3. **Navigates** to the session view
-4. **Handles** events and errors from the embedded component
+2. **Configures** app-level UI and interaction options using the current Embedded API
+3. **Creates an interaction** with encounter details
+4. **Navigates** to the session view
+5. **Handles** events and errors from the embedded component
 
 ## What This Example Doesn't Cover
 
@@ -32,7 +33,7 @@ npm install
 npm run dev
 ```
 
-This starts both the TypeScript compiler in watch mode and the server. Opens on `http://localhost:3000` with:
+This starts both the TypeScript compiler in watch mode and the server. Opens on `http://localhost:8011` with:
 
 - Auto-compilation of TypeScript files on changes
 - Auto-restart of server on file changes
@@ -47,7 +48,7 @@ This starts both the TypeScript compiler in watch mode and the server. Opens on 
   - **Library endpoint** (`/lib/embedded-web`) - Serves `@corti/embedded-web` bundle from `node_modules`
   - **Authentication endpoint** (`/api/auth`) - Implements ROPC flow using `@corti/sdk` to exchange user credentials for OAuth tokens
   - Auto-restarts on changes to `server.ts`, `index.html`, or `.env` (via `tsx watch`)
-  - Runs on port 3000
+  - Runs on port 8011
 
 ### Frontend
 
@@ -59,8 +60,10 @@ This starts both the TypeScript compiler in watch mode and the server. Opens on 
 
 - **[public/app.ts](public/app.ts)** - Main application logic:
   - **Component access** - Gets `<corti-embedded>` element by ID and casts to API type
-  - **Event listener** - Listens for `ready` event (with `{ once: true }` option)
+  - **Readiness check** - Waits for the `embedded.ready` event before starting API calls
   - **Authentication** - Calls `corti.auth()` with credentials from `/api/auth`
+  - **App configuration** - Calls `corti.configureApp()` for app-level UI options
+  - **Interaction options** - Calls `corti.setInteractionOptions()` before creating the interaction
   - **Interaction creation** - Creates encounter with `corti.createInteraction()`
   - **Navigation** - Calls `corti.navigate()` to session view
   - **Error handling** - Listens for `error` events and displays status
@@ -84,12 +87,33 @@ This starts both the TypeScript compiler in watch mode and the server. Opens on 
 // Get embedded element reference
 const corti = document.getElementById("assistant") as CortiEmbeddedElement;
 
-// Listen for ready event (once)
-corti.addEventListener("ready", async () => {
-  await corti.auth(credentials);
-  const interaction = await corti.createInteraction({ encounter: {...} });
-  await corti.navigate(`/session/${interaction.id}`);
-}, { once: true });
+const readyPromise = waitForReady(corti);
+const authPromise = fetch("/api/auth").then((response) => response.json());
+
+const [, credentials] = await Promise.all([readyPromise, authPromise]);
+
+await corti.auth(credentials);
+await corti.configureApp({
+  ui: {
+    interactionTitle: true,
+    aiChat: true,
+    documentFeedback: true,
+    navigation: true,
+  },
+});
+await corti.setInteractionOptions({
+  mode: {
+    fallback: "in-person",
+    options: ["in-person", "virtual"],
+  },
+  documents: {
+    actions: {
+      sync: true,
+    },
+  },
+});
+const interaction = await corti.createInteraction({ encounter: {...} });
+await corti.navigate(`/session/${interaction.id}`);
 
 // Handle errors
 corti.addEventListener("error", (event: any) => {

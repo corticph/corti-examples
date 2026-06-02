@@ -9,12 +9,12 @@ import { CortiAuth } from "@corti/sdk";
 config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT ?? 8011);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:8011"],
     credentials: true,
   }),
 );

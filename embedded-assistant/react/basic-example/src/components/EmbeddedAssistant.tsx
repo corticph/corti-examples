@@ -34,6 +34,27 @@ export function EmbeddedAssistant({
       setStatus({ message: "Authenticating...", type: "loading" });
       await api.auth(authData);
 
+      await api.configureApp({
+        ui: {
+          interactionTitle: true,
+          aiChat: true,
+          documentFeedback: true,
+          navigation: true,
+        },
+      });
+
+      await api.setInteractionOptions({
+        mode: {
+          fallback: "in-person",
+          options: ["in-person", "virtual"],
+        },
+        documents: {
+          actions: {
+            sync: true,
+          },
+        },
+      });
+
       setStatus({ message: "Creating interaction...", type: "loading" });
       const interaction = await api.createInteraction({
         assignedUserId: null,
