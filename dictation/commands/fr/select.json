@@ -1,0 +1,183 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "fr",
+    "commands": [
+      {
+        "id": "select",
+        "_comment": "Use to select all text in current text area. Example: 'select all' (Sélectionner tout le texte dans la zone de texte actuelle. Exemple : 'sélectionner tout')",
+        "phrases": [
+          "sélectionner {selection}"
+        ],
+        "variables": [
+          {
+            "key": "selection",
+            "type": "enum",
+            "enum": [
+              "tout",
+              "ça"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "unselect",
+        "_comment": "Use to unselect text selection. Example: 'unselect text' (Annuler la sélection de texte. Exemple : 'désélectionner le texte')",
+        "phrases": [
+          "désélectionner {selection}",
+          "décocher {selection}",
+          "effacer {selection}"
+        ],
+        "variables": [
+          {
+            "key": "selection",
+            "type": "enum",
+            "enum": [
+              "tout",
+              "ça",
+              "le texte",
+              "la sélection"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "select_that",
+        "_comment": "Use to select a sentence in the current text area. Example: 'select current sentence' (Sélectionner une phrase dans la zone de texte actuelle. Exemple : 'sélectionner cette phrase')",
+        "phrases": [
+          "sélectionner {choice} {selection}"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": [
+              "ce",
+              "cette",
+              "premier",
+              "première",
+              "dernier",
+              "dernière",
+              "précédent",
+              "précédente",
+              "suivant",
+              "suivante"
+            ]
+          },
+          {
+            "key": "selection",
+            "type": "enum",
+            "enum": [
+              "mot",
+              "phrase",
+              "paragraphe"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "select_number_of_words",
+        "_comment": "Use to select a number of words relative to cursor position within the current text area. Example: 'select next three words' (Sélectionner un nombre de mots relatif à la position du curseur. Exemple : 'sélectionner les trois mots suivants')",
+        "phrases": [
+          "sélectionner {choice} {number} mots",
+          "sélectionner {choice} {number} mot"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": [
+              "ce",
+              "cette",
+              "premier",
+              "première",
+              "dernier",
+              "dernière",
+              "précédent",
+              "précédente",
+              "suivant",
+              "suivante"
+            ]
+          },
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": [
+              "un",
+              "deux",
+              "trois",
+              "quatre",
+              "cinq",
+              "six",
+              "sept",
+              "huit",
+              "neuf",
+              "dix"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "select_number",
+        "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three' (Sélectionner un choix ou une option dans une liste. Exemple : 'sélectionner option trois')",
+        "phrases": [
+          "sélectionner {number}, choisir {number}"
+        ],
+        "variables": [
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": [
+              "un",
+              "deux",
+              "trois",
+              "quatre",
+              "cinq",
+              "premier",
+              "deuxième",
+              "troisième",
+              "quatrième",
+              "cinquième"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "select_choice_number",
+        "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three' (Sélectionner un choix ou une option dans une liste. Exemple : 'sélectionner option trois')",
+        "phrases": [
+          "sélectionner {choice} {number}",
+          "sélectionner {number} {choice}, choisir {number} {choice}"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": [
+              "choix",
+              "option",
+              "numéro",
+              "élément"
+            ]
+          },
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": [
+              "un",
+              "deux",
+              "trois",
+              "quatre",
+              "cinq",
+              "premier",
+              "deuxième",
+              "troisième",
+              "quatrième",
+              "cinquième"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

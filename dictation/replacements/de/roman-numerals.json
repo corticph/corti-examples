@@ -1,0 +1,20 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "de",
+    "replacements": [
+      { "find": "Römisch eins", "replace": "i" },
+      { "find": "Römisch zwei", "replace": "ii" },
+      { "find": "Römisch drei", "replace": "iii" },
+      { "find": "Römisch vier", "replace": "iv" },
+      { "find": "Römisch fünf", "replace": "v" },
+      { "find": "Römisch sechs", "replace": "vi" },
+      { "find": "Römisch sieben", "replace": "vii" },
+      { "find": "Römisch acht", "replace": "viii" },
+      { "find": "Römisch neun", "replace": "ix" },
+      { "find": "Römisch zehn", "replace": "x" },
+      { "find": "Römisch elf", "replace": "xi" },
+      { "find": "Römisch zwölf", "replace": "xii" }
+    ]
+  }
+}

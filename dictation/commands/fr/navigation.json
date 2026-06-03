@@ -1,0 +1,110 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "fr",
+    "commands": [
+      {
+        "id": "navigate_fields",
+        "_comment": "Use to navigate between fields in the current text area. Example: 'next field' (Naviguer entre les champs dans la zone de texte actuelle. Exemple : 'champ suivant')",
+        "phrases": [
+          "{choice} {location}"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": [
+              "suivant",
+              "suivante",
+              "précédent",
+              "précédente",
+              "premier",
+              "première",
+              "dernier",
+              "dernière"
+            ]
+          },
+          {
+            "key": "location",
+            "type": "enum",
+            "enum": [
+              "champ",
+              "section",
+              "contrôle"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "go_to",
+        "_comment": "Use to go to a specific location in the current text area. Example: 'go to end of document' (Aller à un emplacement spécifique dans la zone de texte actuelle. Exemple : 'aller à la fin du document')",
+        "phrases": [
+          "aller au {choice} de {location}",
+          "au {choice} de {location}"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": [
+              "début",
+              "fin"
+            ]
+          },
+          {
+            "key": "location",
+            "type": "enum",
+            "enum": [
+              "la ligne",
+              "le paragraphe",
+              "le document"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "insert_cursor",
+        "_comment": "Use to insert a cursor at a specific location in the current text area. Example: 'insert before current paragraph' (Insérer le curseur à un emplacement spécifique. Exemple : 'insérer avant le paragraphe actuel')",
+        "phrases": [
+          "insérer {direction} {choice} {location}"
+        ],
+        "variables": [
+          {
+            "key": "direction",
+            "type": "enum",
+            "enum": [
+              "avant",
+              "après"
+            ]
+          },
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": [
+              "le",
+              "la",
+              "le premier",
+              "la première",
+              "le dernier",
+              "la dernière",
+              "le précédent",
+              "la précédente",
+              "le suivant",
+              "la suivante"
+            ]
+          },
+          {
+            "key": "location",
+            "type": "enum",
+            "enum": [
+              "ligne",
+              "mot",
+              "paragraphe",
+              "document"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

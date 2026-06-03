@@ -1,0 +1,78 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "fr",
+    "commands": [
+      {
+        "id": "new_list",
+        "_comment": "Use to create a new list. Example: 'new list' or 'bullet list' (Créer une nouvelle liste. Exemple : 'nouvelle liste' ou 'liste à puces')",
+        "phrases": [
+          "{action} liste",
+          "liste {action}"
+        ],
+        "variables": [
+          {
+            "key": "action",
+            "type": "enum",
+            "enum": [
+              "nouvelle",
+              "insérer",
+              "démarrer",
+              "terminer",
+              "à puces",
+              "numérotée",
+              "non ordonnée",
+              "ordonnée"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "next_item",
+        "_comment": "Use to navigate to the next item in the current list. Example: 'next item' (Naviguer vers l'élément suivant dans la liste actuelle. Exemple : 'élément suivant')",
+        "phrases": [
+          "{item} suivant",
+          "suivant {item}"
+        ],
+        "variables": [
+          {
+            "key": "item",
+            "type": "enum",
+            "enum": [
+              "élément",
+              "puce",
+              "numéro"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "list_number",
+        "_comment": "Use to navigate or insert a specific item in a list. Example: 'list item three' (Naviguer vers un élément spécifique dans une liste. Exemple : 'élément de liste trois')",
+        "phrases": [
+          "élément {number}",
+          "élément de liste {number}",
+          "numéro de liste {number}"
+        ],
+        "variables": [
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": [
+              "un",
+              "deux",
+              "trois",
+              "quatre",
+              "cinq",
+              "six",
+              "sept",
+              "huit",
+              "neuf",
+              "dix"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

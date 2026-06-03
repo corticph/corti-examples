@@ -96,7 +96,8 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 |--------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------|
 | [dictation/typescript/basic-example/](dictation/typescript/basic-example/)           | TypeScript, Express | Microphone streaming via the Corti SDK; interim + final transcripts; voice commands          |
 | [dictation/typescript/web-component/](dictation/typescript/web-component/)           | TypeScript, Express | Four demos of `@corti/dictation-web`: basic, custom UI, styling, and token refresh           |
-| [dictation/commands/](dictation/commands/)                                           | Json                | English voice-command phrase JSON (templates, dictation box, editing, lists, navigation, selection) |
+| [dictation/commands/](dictation/commands/)                                           | Json                | Command configuration JSON (templates, dictation box, editing, lists, navigation, selection) |
+| [dictation/replacements/](dictation/replacements/)                                   | Json                | Replacements configuration JSON (numbered list items, Roman numerals) |
 
 ---
 

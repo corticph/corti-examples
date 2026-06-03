@@ -1,0 +1,178 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "de",
+    "commands": [
+      {
+        "id": "select",
+        "_comment": "Use to select all text in current text area. Example: 'select all' (Gesamten Text im aktuellen Textbereich auswählen. Beispiel: 'alles auswählen')",
+        "phrases": [
+          "{selection} auswählen"
+        ],
+        "variables": [
+          {
+            "key": "selection",
+            "type": "enum",
+            "enum": [
+              "alles",
+              "das"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "unselect",
+        "_comment": "Use to unselect text selection. Example: 'unselect text' (Textauswahl aufheben. Beispiel: 'Text abwählen')",
+        "phrases": [
+          "{selection} abwählen",
+          "{selection} deselektieren",
+          "{selection} löschen"
+        ],
+        "variables": [
+          {
+            "key": "selection",
+            "type": "enum",
+            "enum": [
+              "alles",
+              "das",
+              "Text",
+              "Auswahl"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "select_that",
+        "_comment": "Use to select a sentence in the current text area. Example: 'select current sentence' (Einen Satz im aktuellen Textbereich auswählen. Beispiel: 'aktuellen Satz auswählen')",
+        "phrases": [
+          "{choice} {selection} auswählen"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": [
+              "aktuellen",
+              "aktuelles",
+              "ersten",
+              "erstes",
+              "letzten",
+              "letztes",
+              "vorherigen",
+              "vorheriges",
+              "nächsten",
+              "nächstes"
+            ]
+          },
+          {
+            "key": "selection",
+            "type": "enum",
+            "enum": [
+              "Wort",
+              "Satz",
+              "Absatz"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "select_number_of_words",
+        "_comment": "Use to select a number of words relative to cursor position within the current text area. Example: 'select next three words' (Eine bestimmte Anzahl Wörter relativ zur Cursorposition auswählen. Beispiel: 'nächste drei Wörter auswählen')",
+        "phrases": [
+          "{choice} {number} Wörter auswählen",
+          "{choice} {number} Wort auswählen"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": [
+              "aktuelle",
+              "erste",
+              "letzte",
+              "vorherige",
+              "nächste"
+            ]
+          },
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": [
+              "eins",
+              "zwei",
+              "drei",
+              "vier",
+              "fünf",
+              "sechs",
+              "sieben",
+              "acht",
+              "neun",
+              "zehn"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "select_number",
+        "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three' (Eine Option oder Auswahl aus einer Liste auswählen. Beispiel: 'Option drei auswählen')",
+        "phrases": [
+          "{number} auswählen, {number} wählen"
+        ],
+        "variables": [
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": [
+              "eins",
+              "zwei",
+              "drei",
+              "vier",
+              "fünf",
+              "erste",
+              "zweite",
+              "dritte",
+              "vierte",
+              "fünfte"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "select_choice_number",
+        "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three' (Eine Option oder Auswahl aus einer Liste auswählen. Beispiel: 'Option drei auswählen')",
+        "phrases": [
+          "{choice} {number} auswählen",
+          "{number} {choice} auswählen, {number} {choice} wählen"
+        ],
+        "variables": [
+          {
+            "key": "choice",
+            "type": "enum",
+            "enum": [
+              "Auswahl",
+              "Option",
+              "Nummer",
+              "Element"
+            ]
+          },
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": [
+              "eins",
+              "zwei",
+              "drei",
+              "vier",
+              "fünf",
+              "erste",
+              "zweite",
+              "dritte",
+              "vierte",
+              "fünfte"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
