@@ -1,38 +1,68 @@
 {
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "de",
     "commands": [
       {
         "id": "insert_template",
         "_comment": "Use to insert a pre-defined template. Example: 'insert soap template' (Vordefinierte Vorlage einfügen. Beispiel: 'soap-Vorlage einfügen')",
-        "phrases": ["meine {template_name}-Vorlage einfügen", "{template_name}-Vorlage einfügen"],
+        "phrases": [
+          "meine {template_name}-Vorlage einfügen",
+          "{template_name}-Vorlage einfügen"
+        ],
         "variables": [
           {
             "key": "template_name",
             "type": "enum",
-            "enum": ["soap", "radiologie", "überweisung", "brief", "patientenzusammenfassung", "h und p", "ambulanznotiz", "verlaufsnotiz", "pflege"]
+            "enum": [
+              "soap",
+              "radiologie",
+              "überweisung",
+              "brief",
+              "patientenzusammenfassung",
+              "h und p",
+              "ambulanznotiz",
+              "verlaufsnotiz",
+              "pflege"
+            ]
           }
         ]
       },
       {
         "id": "insert_exam",
         "_comment": "Use to insert a pre-defined exam template. Example: 'insert normal exam' (Vordefinierte Untersuchungsvorlage einfügen. Beispiel: 'normale Untersuchung einfügen')",
-        "phrases": ["{type} Untersuchung einfügen"],
+        "phrases": [
+          "{type} Untersuchung einfügen"
+        ],
         "variables": [
           {
             "key": "type",
             "type": "enum",
-            "enum": ["normale", "männliche", "weibliche", "kurze", "umfassende"]
+            "enum": [
+              "normale",
+              "männliche",
+              "weibliche",
+              "kurze",
+              "umfassende"
+            ]
           }
         ]
       },
       {
         "id": "insert_attestation",
         "_comment": "Use to insert a pre-defined attestation macro. Example: 'insert attestation' (Vordefiniertes Attest einfügen. Beispiel: 'Attest einfügen')",
-        "phrases": ["Attest einfügen"]
+        "phrases": [
+          "Attest einfügen"
+        ]
       },
       {
         "id": "insert_signature",
         "_comment": "Use to insert a pre-defined signature macro. Example: 'insert signature' or 'sign the note' (Vordefinierte Unterschrift einfügen. Beispiel: 'Unterschrift einfügen' oder 'Notiz unterschreiben')",
-        "phrases": ["Unterschrift einfügen", "Notiz unterschreiben"]
+        "phrases": [
+          "Unterschrift einfügen",
+          "Notiz unterschreiben"
+        ]
       }
     ]
+  }
 }

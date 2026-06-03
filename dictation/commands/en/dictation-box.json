@@ -1,21 +1,36 @@
 {
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "en",
     "commands": [
       {
         "id": "dictation_box",
         "_comment": "Use to control the dictation box if one is available in the application. Example: 'open dictation box'",
-        "phrases": ["{action} dictation box"],
+        "phrases": [
+          "{action} dictation box"
+        ],
         "variables": [
           {
             "key": "action",
             "type": "enum",
-            "enum": ["open", "close", "show", "hide", "anchor", "release"]
+            "enum": [
+              "open",
+              "close",
+              "show",
+              "hide",
+              "anchor",
+              "release"
+            ]
           }
         ]
       },
       {
         "id": "transfer_text",
         "_comment": "Use to transfer text from the dictation box to the cursor location. Example: 'transfer text'",
-        "phrases": ["transfer text"]
+        "phrases": [
+          "transfer text"
+        ]
       }
     ]
+  }
 }

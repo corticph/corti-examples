@@ -1,38 +1,68 @@
 {
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "en",
     "commands": [
       {
         "id": "insert_template",
         "_comment": "Use to insert a pre-defined template. Example: 'insert soap template'",
-        "phrases": ["insert my {template_name} template", "insert {template_name} template"],
+        "phrases": [
+          "insert my {template_name} template",
+          "insert {template_name} template"
+        ],
         "variables": [
           {
             "key": "template_name",
             "type": "enum",
-            "enum": ["soap", "radiology", "referral", "letter", "patient summary", "h and p", "outpatient note", "progress note", "nursing"]
+            "enum": [
+              "soap",
+              "radiology",
+              "referral",
+              "letter",
+              "patient summary",
+              "h and p",
+              "outpatient note",
+              "progress note",
+              "nursing"
+            ]
           }
         ]
       },
       {
         "id": "insert_exam",
         "_comment": "Use to insert a pre-defined exam template. Example: 'insert normal exam'",
-        "phrases": ["insert {type} exam"],
+        "phrases": [
+          "insert {type} exam"
+        ],
         "variables": [
           {
             "key": "type",
             "type": "enum",
-            "enum": ["normal", "male", "female", "brief", "comprehensive"]
+            "enum": [
+              "normal",
+              "male",
+              "female",
+              "brief",
+              "comprehensive"
+            ]
           }
         ]
       },
       {
         "id": "insert_attestation",
         "_comment": "Use to insert a pre-defined attestation macro. Example: 'insert attestation'",
-        "phrases": ["insert attestation"]
+        "phrases": [
+          "insert attestation"
+        ]
       },
       {
         "id": "insert_signature",
         "_comment": "Use to insert a pre-defined signature macro. Example: 'insert signature' or 'sign the note'",
-        "phrases": ["insert signature", "sign the note"]
+        "phrases": [
+          "insert signature",
+          "sign the note"
+        ]
       }
     ]
+  }
 }

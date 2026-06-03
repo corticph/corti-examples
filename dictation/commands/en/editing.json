@@ -1,91 +1,156 @@
 {
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "en",
     "commands": [
       {
         "id": "edit_that",
         "_comment": "Use to edit the selected text. Example: 'delete that' or 'undo that'",
-        "phrases": ["{action} that"],
+        "phrases": [
+          "{action} that"
+        ],
         "variables": [
           {
             "key": "action",
             "type": "enum",
-            "enum": ["delete", "scratch", "undo", "redo", "cut", "copy", "paste", "correct"]
+            "enum": [
+              "delete",
+              "scratch",
+              "undo",
+              "redo",
+              "cut",
+              "copy",
+              "paste",
+              "correct"
+            ]
           }
         ]
       },
       {
         "id": "delete_selection",
         "_comment": "Use to delete the text relative to cursor position. Example: 'delete last sentence'",
-        "phrases": ["delete {choice} {location}"],
+        "phrases": [
+          "delete {choice} {location}"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["current", "this", "last", "previous", "next"]
+            "enum": [
+              "current",
+              "this",
+              "last",
+              "previous",
+              "next"
+            ]
           },
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["word", "sentence", "paragraph"]
+            "enum": [
+              "word",
+              "sentence",
+              "paragraph"
+            ]
           }
         ]
       },
       {
         "id": "copy_selection",
         "_comment": "Use to copy the text relative to cursor position. Example: 'copy current sentence'",
-        "phrases": ["copy {choice} {location}"],
+        "phrases": [
+          "copy {choice} {location}"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["current", "this", "last", "previous", "next"]
+            "enum": [
+              "current",
+              "this",
+              "last",
+              "previous",
+              "next"
+            ]
           },
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["word", "sentence", "paragraph"]
+            "enum": [
+              "word",
+              "sentence",
+              "paragraph"
+            ]
           }
         ]
       },
       {
         "id": "cut_selection",
         "_comment": "Use to cut the text relative to cursor position. Example: 'cut current sentence'",
-        "phrases": ["cut {choice} {location}"],
+        "phrases": [
+          "cut {choice} {location}"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["current", "this", "last", "previous", "next"]
+            "enum": [
+              "current",
+              "this",
+              "last",
+              "previous",
+              "next"
+            ]
           },
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["word", "sentence", "paragraph"]
+            "enum": [
+              "word",
+              "sentence",
+              "paragraph"
+            ]
           }
         ]
       },
       {
         "id": "format_selection",
         "_comment": "Use to format the selected text. Example: 'format that bold'",
-        "phrases": ["format that {style}", "format {style}"],
+        "phrases": [
+          "format that {style}",
+          "format {style}"
+        ],
         "variables": [
           {
             "key": "style",
             "type": "enum",
-            "enum": ["bold", "italic", "underline", "normal"]
+            "enum": [
+              "bold",
+              "italic",
+              "underline",
+              "normal"
+            ]
           }
         ]
       },
       {
         "id": "cap_that",
         "_comment": "Use to capitalize the selected text. Example: 'cap that' or 'all caps on'",
-        "phrases": ["all caps {action}"],
+        "phrases": [
+          "all caps {action}"
+        ],
         "variables": [
           {
             "key": "action",
             "type": "enum",
-            "enum": ["on", "off", "that"]
+            "enum": [
+              "on",
+              "off",
+              "that"
+            ]
           }
         ]
       }
     ]
+  }
 }

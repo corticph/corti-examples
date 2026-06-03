@@ -1,21 +1,36 @@
 {
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "de",
     "commands": [
       {
         "id": "dictation_window",
         "_comment": "Use to control the dictation window if one is available in the application. Example: 'open dictation window' (Diktierfenster steuern, wenn in der Anwendung verfügbar. Beispiel: 'Diktierfenster öffnen')",
-        "phrases": ["Diktierfenster {action}"],
+        "phrases": [
+          "Diktierfenster {action}"
+        ],
         "variables": [
           {
             "key": "action",
             "type": "enum",
-            "enum": ["öffnen", "schließen", "anzeigen", "ausblenden", "verankern", "lösen"]
+            "enum": [
+              "öffnen",
+              "schließen",
+              "anzeigen",
+              "ausblenden",
+              "verankern",
+              "lösen"
+            ]
           }
         ]
       },
       {
         "id": "transfer_text",
         "_comment": "Use to transfer text from the dictation window to the cursor location. Example: 'transfer text' (Text aus dem Diktierfenster an die Cursorposition übertragen. Beispiel: 'Text übertragen')",
-        "phrases": ["Text übertragen"]
+        "phrases": [
+          "Text übertragen"
+        ]
       }
     ]
+  }
 }

@@ -1,91 +1,165 @@
 {
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "fr",
     "commands": [
       {
         "id": "edit_that",
         "_comment": "Use to edit the selected text. Example: 'delete that' or 'undo that' (Modifier le texte sélectionné. Exemple : 'supprimer ça' ou 'annuler ça')",
-        "phrases": ["{action} ça"],
+        "phrases": [
+          "{action} ça"
+        ],
         "variables": [
           {
             "key": "action",
             "type": "enum",
-            "enum": ["supprimer", "effacer", "annuler", "rétablir", "couper", "copier", "coller", "corriger"]
+            "enum": [
+              "supprimer",
+              "effacer",
+              "annuler",
+              "rétablir",
+              "couper",
+              "copier",
+              "coller",
+              "corriger"
+            ]
           }
         ]
       },
       {
         "id": "delete_selection",
         "_comment": "Use to delete the text relative to cursor position. Example: 'delete last sentence' (Supprimer le texte relatif à la position du curseur. Exemple : 'supprimer la dernière phrase')",
-        "phrases": ["supprimer {choice} {location}"],
+        "phrases": [
+          "supprimer {choice} {location}"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["ce", "cette", "dernier", "dernière", "précédent", "précédente", "suivant", "suivante"]
+            "enum": [
+              "ce",
+              "cette",
+              "dernier",
+              "dernière",
+              "précédent",
+              "précédente",
+              "suivant",
+              "suivante"
+            ]
           },
           {
             "key": "location",
             "type": "enum",
-            "enum": ["mot", "phrase", "paragraphe"]
+            "enum": [
+              "mot",
+              "phrase",
+              "paragraphe"
+            ]
           }
         ]
       },
       {
         "id": "copy_selection",
         "_comment": "Use to copy the text relative to cursor position. Example: 'copy current sentence' (Copier le texte relatif à la position du curseur. Exemple : 'copier cette phrase')",
-        "phrases": ["copier {choice} {location}"],
+        "phrases": [
+          "copier {choice} {location}"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["ce", "cette", "dernier", "dernière", "précédent", "précédente", "suivant", "suivante"]
+            "enum": [
+              "ce",
+              "cette",
+              "dernier",
+              "dernière",
+              "précédent",
+              "précédente",
+              "suivant",
+              "suivante"
+            ]
           },
           {
             "key": "location",
             "type": "enum",
-            "enum": ["mot", "phrase", "paragraphe"]
+            "enum": [
+              "mot",
+              "phrase",
+              "paragraphe"
+            ]
           }
         ]
       },
       {
         "id": "cut_selection",
         "_comment": "Use to cut the text relative to cursor position. Example: 'cut current sentence' (Couper le texte relatif à la position du curseur. Exemple : 'couper cette phrase')",
-        "phrases": ["couper {choice} {location}"],
+        "phrases": [
+          "couper {choice} {location}"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["ce", "cette", "dernier", "dernière", "précédent", "précédente", "suivant", "suivante"]
+            "enum": [
+              "ce",
+              "cette",
+              "dernier",
+              "dernière",
+              "précédent",
+              "précédente",
+              "suivant",
+              "suivante"
+            ]
           },
           {
             "key": "location",
             "type": "enum",
-            "enum": ["mot", "phrase", "paragraphe"]
+            "enum": [
+              "mot",
+              "phrase",
+              "paragraphe"
+            ]
           }
         ]
       },
       {
         "id": "format_selection",
         "_comment": "Use to format the selected text. Example: 'format that bold' (Formater le texte sélectionné. Exemple : 'formater ça en gras')",
-        "phrases": ["formater ça en {style}", "formater en {style}"],
+        "phrases": [
+          "formater ça en {style}",
+          "formater en {style}"
+        ],
         "variables": [
           {
             "key": "style",
             "type": "enum",
-            "enum": ["gras", "italique", "souligné", "normal"]
+            "enum": [
+              "gras",
+              "italique",
+              "souligné",
+              "normal"
+            ]
           }
         ]
       },
       {
         "id": "cap_that",
         "_comment": "Use to capitalize the selected text. Example: 'cap that' or 'all caps on' (Mettre le texte sélectionné en majuscules. Exemple : 'majuscules activer' ou 'majuscules désactiver')",
-        "phrases": ["majuscules {action}"],
+        "phrases": [
+          "majuscules {action}"
+        ],
         "variables": [
           {
             "key": "action",
             "type": "enum",
-            "enum": ["activer", "désactiver", "ça"]
+            "enum": [
+              "activer",
+              "désactiver",
+              "ça"
+            ]
           }
         ]
       }
     ]
+  }
 }

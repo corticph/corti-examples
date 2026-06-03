@@ -1,91 +1,171 @@
 {
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "de",
     "commands": [
       {
         "id": "edit_that",
         "_comment": "Use to edit the selected text. Example: 'delete that' or 'undo that' (Ausgewählten Text bearbeiten. Beispiel: 'das löschen' oder 'das rückgängig')",
-        "phrases": ["das {action}"],
+        "phrases": [
+          "das {action}"
+        ],
         "variables": [
           {
             "key": "action",
             "type": "enum",
-            "enum": ["löschen", "verwerfen", "rückgängig", "wiederholen", "ausschneiden", "kopieren", "einfügen", "korrigieren"]
+            "enum": [
+              "löschen",
+              "verwerfen",
+              "rückgängig",
+              "wiederholen",
+              "ausschneiden",
+              "kopieren",
+              "einfügen",
+              "korrigieren"
+            ]
           }
         ]
       },
       {
         "id": "delete_selection",
         "_comment": "Use to delete the text relative to cursor position. Example: 'delete last sentence' (Text relativ zur Cursorposition löschen. Beispiel: 'letzten Satz löschen')",
-        "phrases": ["{choice} {location} löschen"],
+        "phrases": [
+          "{choice} {location} löschen"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["aktuellen", "aktuelles", "diesen", "dieses", "letzten", "letztes", "vorherigen", "vorheriges", "nächsten", "nächstes"]
+            "enum": [
+              "aktuellen",
+              "aktuelles",
+              "diesen",
+              "dieses",
+              "letzten",
+              "letztes",
+              "vorherigen",
+              "vorheriges",
+              "nächsten",
+              "nächstes"
+            ]
           },
           {
             "key": "location",
             "type": "enum",
-            "enum": ["Wort", "Satz", "Absatz"]
+            "enum": [
+              "Wort",
+              "Satz",
+              "Absatz"
+            ]
           }
         ]
       },
       {
         "id": "copy_selection",
         "_comment": "Use to copy the text relative to cursor position. Example: 'copy current sentence' (Text relativ zur Cursorposition kopieren. Beispiel: 'aktuellen Satz kopieren')",
-        "phrases": ["{choice} {location} kopieren"],
+        "phrases": [
+          "{choice} {location} kopieren"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["aktuellen", "aktuelles", "diesen", "dieses", "letzten", "letztes", "vorherigen", "vorheriges", "nächsten", "nächstes"]
+            "enum": [
+              "aktuellen",
+              "aktuelles",
+              "diesen",
+              "dieses",
+              "letzten",
+              "letztes",
+              "vorherigen",
+              "vorheriges",
+              "nächsten",
+              "nächstes"
+            ]
           },
           {
             "key": "location",
             "type": "enum",
-            "enum": ["Wort", "Satz", "Absatz"]
+            "enum": [
+              "Wort",
+              "Satz",
+              "Absatz"
+            ]
           }
         ]
       },
       {
         "id": "cut_selection",
         "_comment": "Use to cut the text relative to cursor position. Example: 'cut current sentence' (Text relativ zur Cursorposition ausschneiden. Beispiel: 'aktuellen Satz ausschneiden')",
-        "phrases": ["{choice} {location} ausschneiden"],
+        "phrases": [
+          "{choice} {location} ausschneiden"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["aktuellen", "aktuelles", "diesen", "dieses", "letzten", "letztes", "vorherigen", "vorheriges", "nächsten", "nächstes"]
+            "enum": [
+              "aktuellen",
+              "aktuelles",
+              "diesen",
+              "dieses",
+              "letzten",
+              "letztes",
+              "vorherigen",
+              "vorheriges",
+              "nächsten",
+              "nächstes"
+            ]
           },
           {
             "key": "location",
             "type": "enum",
-            "enum": ["Wort", "Satz", "Absatz"]
+            "enum": [
+              "Wort",
+              "Satz",
+              "Absatz"
+            ]
           }
         ]
       },
       {
         "id": "format_selection",
         "_comment": "Use to format the selected text. Example: 'format that bold' (Ausgewählten Text formatieren. Beispiel: 'das fett formatieren')",
-        "phrases": ["das {style} formatieren", "{style} formatieren"],
+        "phrases": [
+          "das {style} formatieren",
+          "{style} formatieren"
+        ],
         "variables": [
           {
             "key": "style",
             "type": "enum",
-            "enum": ["fett", "kursiv", "unterstrichen", "normal"]
+            "enum": [
+              "fett",
+              "kursiv",
+              "unterstrichen",
+              "normal"
+            ]
           }
         ]
       },
       {
         "id": "cap_that",
         "_comment": "Use to capitalize the selected text. Example: 'cap that' or 'all caps on' (Ausgewählten Text in Großbuchstaben umwandeln. Beispiel: 'Großbuchstaben ein' oder 'Großbuchstaben aus')",
-        "phrases": ["Großbuchstaben {action}"],
+        "phrases": [
+          "Großbuchstaben {action}"
+        ],
         "variables": [
           {
             "key": "action",
             "type": "enum",
-            "enum": ["ein", "aus", "das"]
+            "enum": [
+              "ein",
+              "aus",
+              "das"
+            ]
           }
         ]
       }
     ]
+  }
 }

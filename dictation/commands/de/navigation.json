@@ -1,60 +1,111 @@
 {
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "de",
     "commands": [
       {
         "id": "navigate_fields",
         "_comment": "Use to navigate between fields in the current text area. Example: 'next field' (Zwischen Feldern im aktuellen Textbereich navigieren. Beispiel: 'nächstes Feld')",
-        "phrases": ["{choice} {location}"],
+        "phrases": [
+          "{choice} {location}"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["nächstes", "nächster", "vorheriges", "vorheriger", "erstes", "erster", "letztes", "letzter"]
+            "enum": [
+              "nächstes",
+              "nächster",
+              "vorheriges",
+              "vorheriger",
+              "erstes",
+              "erster",
+              "letztes",
+              "letzter"
+            ]
           },
           {
             "key": "location",
             "type": "enum",
-            "enum": ["Feld", "Abschnitt", "Steuerelement"]
+            "enum": [
+              "Feld",
+              "Abschnitt",
+              "Steuerelement"
+            ]
           }
         ]
       },
       {
         "id": "go_to",
         "_comment": "Use to go to a specific location in the current text area. Example: 'go to end of document' (An eine bestimmte Stelle im aktuellen Textbereich springen. Beispiel: 'zum Ende des Dokuments')",
-        "phrases": ["zum {choice} des {location} gehen", "zum {choice} des {location}"],
+        "phrases": [
+          "zum {choice} des {location} gehen",
+          "zum {choice} des {location}"
+        ],
         "variables": [
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["Anfang", "Beginn", "Ende"]
+            "enum": [
+              "Anfang",
+              "Beginn",
+              "Ende"
+            ]
           },
           {
             "key": "location",
             "type": "enum",
-            "enum": ["Zeile", "Absatzes", "Dokuments"]
+            "enum": [
+              "Zeile",
+              "Absatzes",
+              "Dokuments"
+            ]
           }
         ]
       },
       {
         "id": "insert_cursor",
         "_comment": "Use to insert a cursor at a specific location in the current text area. Example: 'insert before current paragraph' (Cursor an einer bestimmten Stelle einfügen. Beispiel: 'vor aktuellem Absatz einfügen')",
-        "phrases": ["Cursor {direction} {choice} {location} einfügen"],
+        "phrases": [
+          "Cursor {direction} {choice} {location} einfügen"
+        ],
         "variables": [
           {
             "key": "direction",
             "type": "enum",
-            "enum": ["vor", "nach"]
+            "enum": [
+              "vor",
+              "nach"
+            ]
           },
           {
             "key": "choice",
             "type": "enum",
-            "enum": ["aktuellem", "aktueller", "erstem", "erster", "letztem", "letzter", "vorherigem", "vorheriger", "nächstem", "nächster"]
+            "enum": [
+              "aktuellem",
+              "aktueller",
+              "erstem",
+              "erster",
+              "letztem",
+              "letzter",
+              "vorherigem",
+              "vorheriger",
+              "nächstem",
+              "nächster"
+            ]
           },
           {
             "key": "location",
             "type": "enum",
-            "enum": ["Zeile", "Wort", "Absatz", "Dokument"]
+            "enum": [
+              "Zeile",
+              "Wort",
+              "Absatz",
+              "Dokument"
+            ]
           }
         ]
       }
     ]
+  }
 }
