@@ -1,0 +1,17 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "en",
+    "replacements": [
+      { "find": "QD", "replace": "once daily" },
+      { "find": "BID", "replace": "twice daily" },
+      { "find": "TID", "replace": "three times daily" },
+      { "find": "QID", "replace": "four times daily" },
+      { "find": "QHS", "replace": "at bedtime" },
+      { "find": "QOD", "replace": "every other day" },
+      { "find": "PRN", "replace": "as needed" },
+      { "find": "STAT", "replace": "immediately" },
+      { "find": "PO", "replace": "by mouth" }
+    ]
+  }
+}

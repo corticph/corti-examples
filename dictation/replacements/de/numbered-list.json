@@ -1,0 +1,18 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "de",
+    "replacements": [
+      { "find": "Erstens", "replace": "1." },
+      { "find": "Zweitens", "replace": "2." },
+      { "find": "Drittens", "replace": "3." },
+      { "find": "Viertens", "replace": "4." },
+      { "find": "Fünftens", "replace": "5." },
+      { "find": "Sechstens", "replace": "6." },
+      { "find": "Siebtens", "replace": "7." },
+      { "find": "Achtens", "replace": "8." },
+      { "find": "Neuntens", "replace": "9." },
+      { "find": "Zehntens", "replace": "10." }
+    ]
+  }
+}

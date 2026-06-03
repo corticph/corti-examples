@@ -1,0 +1,20 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "fr",
+    "replacements": [
+      { "find": "Romain un", "replace": "i" },
+      { "find": "Romain deux", "replace": "ii" },
+      { "find": "Romain trois", "replace": "iii" },
+      { "find": "Romain quatre", "replace": "iv" },
+      { "find": "Romain cinq", "replace": "v" },
+      { "find": "Romain six", "replace": "vi" },
+      { "find": "Romain sept", "replace": "vii" },
+      { "find": "Romain huit", "replace": "viii" },
+      { "find": "Romain neuf", "replace": "ix" },
+      { "find": "Romain dix", "replace": "x" },
+      { "find": "Romain onze", "replace": "xi" },
+      { "find": "Romain douze", "replace": "xii" }
+    ]
+  }
+}

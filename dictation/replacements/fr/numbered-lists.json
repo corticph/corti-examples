@@ -1,0 +1,18 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "fr",
+    "replacements": [
+      { "find": "Premièrement", "replace": "1." },
+      { "find": "Deuxièmement", "replace": "2." },
+      { "find": "Troisièmement", "replace": "3." },
+      { "find": "Quatrièmement", "replace": "4." },
+      { "find": "Cinquièmement", "replace": "5." },
+      { "find": "Sixièmement", "replace": "6." },
+      { "find": "Septièmement", "replace": "7." },
+      { "find": "Huitièmement", "replace": "8." },
+      { "find": "Neuvièmement", "replace": "9." },
+      { "find": "Dixièmement", "replace": "10." }
+    ]
+  }
+}

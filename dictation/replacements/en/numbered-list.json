@@ -1,0 +1,18 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "en",
+    "replacements": [
+      { "find": "firstly", "replace": "1." },
+      { "find": "secondly", "replace": "2." },
+      { "find": "thirdly", "replace": "3." },
+      { "find": "fourthly", "replace": "4." },
+      { "find": "fifthly", "replace": "5." },
+      { "find": "sixthly", "replace": "6." },
+      { "find": "seventhly", "replace": "7." },
+      { "find": "eighthly", "replace": "8." },
+      { "find": "ninthly", "replace": "9." },
+      { "find": "tenthly", "replace": "10." }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "en",
+    "replacements": [
+      { "find": "Roman numeral one", "replace": "i" },
+      { "find": "Roman numeral two", "replace": "ii" },
+      { "find": "Roman numeral three", "replace": "iii" },
+      { "find": "Roman numeral four", "replace": "iv" },
+      { "find": "Roman numeral five", "replace": "v" },
+      { "find": "Roman numeral six", "replace": "vi" },
+      { "find": "Roman numeral seven", "replace": "vii" },
+      { "find": "Roman numeral eight", "replace": "viii" },
+      { "find": "Roman numeral nine", "replace": "ix" },
+      { "find": "Roman numeral ten", "replace": "x" },
+      { "find": "Roman numeral eleven", "replace": "xi" },
+      { "find": "Roman numeral twelve", "replace": "xii" }
+    ]
+  }
+}
