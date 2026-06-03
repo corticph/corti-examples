@@ -61,7 +61,19 @@
       {
         "id": "select_number",
         "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three' (Sélectionner un choix ou une option dans une liste. Exemple : 'sélectionner option trois')",
-        "phrases": ["sélectionner {choice} {number}", "sélectionner {number} {choice}", "sélectionner {number}", "choisir {number} {choice}", "choisir {number}"],
+        "phrases": ["sélectionner {number}, choisir {number}"],
+        "variables": [
+          {
+            "key": "number",
+            "type": "enum",
+            "enum": ["un", "deux", "trois", "quatre", "cinq", "premier", "deuxième", "troisième", "quatrième", "cinquième"]
+          }
+        ]
+      },
+      {
+        "id": "select_choice_number",
+        "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three' (Sélectionner un choix ou une option dans une liste. Exemple : 'sélectionner option trois')",
+        "phrases": ["sélectionner {choice} {number}", "sélectionner {number} {choice}, choisir {number} {choice}"],
         "variables": [
           {
             "key": "choice",
