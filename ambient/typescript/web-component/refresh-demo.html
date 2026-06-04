@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Automatic Token Refresh Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+    />
+  </head>
+  <body>
+    <header>
+      <nav><a href="index.html">← Back to Demo Index</a></nav>
+      <h1>Automatic Token Refresh Demo</h1>
+      <p>
+        Uses <code>authConfig.refreshAccessToken</code> so the component can
+        renew a streams-scoped token before it expires.
+      </p>
+    </header>
+    <main>
+      <article id="componentPlaceholder">
+        <corti-ambient></corti-ambient>
+      </article>
+
+      <textarea
+        id="transcript"
+        placeholder="Transcript will appear here…"
+      ></textarea>
+    </main>
+
+    <script type="module">
+      import "https://cdn.jsdelivr.net/npm/@corti/ambient-web@0.7.0-ambient.19/dist/bundle.js";
+
+      const ambient = document.querySelector("corti-ambient");
+      const transcriptArea = document.getElementById("transcript");
+
+      const session = await fetch("/api/start-session", {
+        method: "POST",
+      }).then((r) => r.json());
+
+      ambient.interactionId = session.interactionId;
+
+      ambient.authConfig = {
+        accessToken: session.accessToken,
+        refreshAccessToken: async () => {
+          return fetch("/api/token", { method: "POST" }).then((r) => r.json());
+        },
+      };
+
+      ambient.addEventListener("transcript", (e) => {
+        for (const segment of e.detail.data ?? []) {
+          if (segment.final) {
+            transcriptArea.value += segment.transcript + " ";
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

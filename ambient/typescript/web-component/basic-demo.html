@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Basic Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+    />
+    <style>
+      #output { display: grid; gap: 1rem; margin-top: 1rem; }
+      #facts-panel { font-size: 0.9rem; }
+      .fact-line { margin: 0.2rem 0; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav><a href="index.html">← Back to Demo Index</a></nav>
+      <h1>Basic Demo</h1>
+    </header>
+
+    <main>
+      <article id="componentPlaceholder" aria-busy="true">
+        <corti-ambient></corti-ambient>
+      </article>
+
+      <div id="output">
+        <textarea
+          id="transcript"
+          rows="6"
+          placeholder="Transcript segments appear here…"
+        ></textarea>
+        <div id="facts-panel">
+          <strong>Facts</strong>
+          <div id="facts"></div>
+        </div>
+      </div>
+    </main>
+
+    <script type="module">
+      import "https://cdn.jsdelivr.net/npm/@corti/ambient-web@0.7.0-ambient.19/dist/bundle.js";
+
+      const ambient = document.querySelector("corti-ambient");
+      const componentPlaceholder = document.getElementById("componentPlaceholder");
+      const transcriptArea = document.getElementById("transcript");
+      const factsEl = document.getElementById("facts");
+      const seenFacts = new Set();
+
+      const { interactionId, accessToken } = await fetch("/api/start-session", {
+        method: "POST",
+      }).then((r) => r.json());
+
+      ambient.interactionId = interactionId;
+      ambient.accessToken = accessToken;
+      componentPlaceholder.setAttribute("aria-busy", "false");
+
+      ambient.addEventListener("transcript", (e) => {
+        for (const segment of e.detail.data ?? []) {
+          if (segment.final) {
+            const prefix =
+              segment.speakerId != null ? `[${segment.speakerId}] ` : "";
+            transcriptArea.value += prefix + segment.transcript + " ";
+          }
+        }
+      });
+
+      ambient.addEventListener("facts", (e) => {
+        for (const fact of e.detail.fact ?? []) {
+          const key = (fact.id ?? fact.text) + (fact.group ?? "");
+          if (seenFacts.has(key)) continue;
+          seenFacts.add(key);
+          const line = document.createElement("div");
+          line.className = "fact-line";
+          line.textContent = `${fact.group ?? "fact"}: ${fact.text}`;
+          factsEl.appendChild(line);
+        }
+      });
+
+      ambient.addEventListener("error", (e) => {
+        console.error(e.detail);
+      });
+    </script>
+  </body>
+</html>

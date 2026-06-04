@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Corti Ambient Demo</title>
+  <style>
+    body { font-family: sans-serif; max-width: 720px; margin: 2rem auto; }
+    button { margin-right: 0.5rem; padding: 0.4rem 1rem; }
+    #status { margin-top: 0.75rem; font-size: 0.9em; color: #555; min-height: 1.2em; }
+    section { margin-top: 1.5rem; }
+    h2 { font-size: 1rem; margin-bottom: 0.5rem; }
+    #transcript, #facts {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      min-height: 120px;
+      padding: 1rem;
+      background: #fafafa;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .fact-line { margin: 0.25rem 0; }
+    .fact-group { color: #666; font-size: 0.85em; }
+  </style>
+</head>
+<body>
+  <h1>Corti Ambient (SDK)</h1>
+
+  <div>
+    <button id="start-btn">Start session</button>
+    <button id="stop-btn" disabled>End session</button>
+    <button id="clear-btn">Clear</button>
+  </div>
+
+  <p id="status"><em>Ready. Click Start to open a stream on an interaction.</em></p>
+
+  <section>
+    <h2>Transcript</h2>
+    <div id="transcript"></div>
+  </section>
+
+  <section>
+    <h2>Facts</h2>
+    <div id="facts"></div>
+  </section>
+
+  <script src="./dist/client.js"></script>
+
+  <script>
+    var session = null;
+    var factKeys = new Set();
+
+    var startBtn = document.getElementById("start-btn");
+    var stopBtn = document.getElementById("stop-btn");
+    var clearBtn = document.getElementById("clear-btn");
+    var statusEl = document.getElementById("status");
+    var transcriptEl = document.getElementById("transcript");
+    var factsEl = document.getElementById("facts");
+
+    function setStatus(msg) {
+      statusEl.innerHTML = "<em>" + msg + "</em>";
+    }
+
+    function appendTranscript(message) {
+      var segments = message.data || [];
+      for (var i = 0; i < segments.length; i++) {
+        var seg = segments[i];
+        if (!seg.final) continue;
+        var line = document.createElement("div");
+        line.textContent = (seg.speakerId != null ? "[" + seg.speakerId + "] " : "") + seg.transcript;
+        transcriptEl.appendChild(line);
+      }
+    }
+
+    function appendFacts(message) {
+      var items = message.fact || [];
+      for (var j = 0; j < items.length; j++) {
+        var fact = items[j];
+        var key = (fact.id || fact.text) + (fact.group || "");
+        if (factKeys.has(key)) continue;
+        factKeys.add(key);
+        var row = document.createElement("div");
+        row.className = "fact-line";
+        row.innerHTML = "<span class=\"fact-group\">" + (fact.group || "fact") + "</span>: " + fact.text;
+        factsEl.appendChild(row);
+      }
+    }
+
+    startBtn.addEventListener("click", async function () {
+      startBtn.disabled = true;
+      setStatus("Creating interaction and connecting\u2026");
+
+      try {
+        var resp = await fetch("/api/start-session", { method: "POST" });
+        var data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        session = await Ambient.startSession({
+          accessToken: data.accessToken,
+          interactionId: data.interactionId,
+          tenantName: data.tenantName,
+          environment: data.environment,
+
+          onReady: function () {
+            setStatus("Streaming\u2026 speak into the microphone.");
+            stopBtn.disabled = false;
+          },
+
+          onTranscript: appendTranscript,
+          onFacts: appendFacts,
+        });
+      } catch (err) {
+        console.error(err);
+        setStatus("Error: " + err.message);
+        startBtn.disabled = false;
+      }
+    });
+
+    stopBtn.addEventListener("click", async function () {
+      stopBtn.disabled = true;
+      setStatus("Ending session\u2026");
+      if (session) {
+        await session.endSession();
+        session = null;
+      }
+      startBtn.disabled = false;
+      setStatus("Session ended.");
+    });
+
+    clearBtn.addEventListener("click", function () {
+      transcriptEl.textContent = "";
+      factsEl.textContent = "";
+      factKeys.clear();
+    });
+  </script>
+</body>
+</html>
