@@ -15,7 +15,7 @@ A pre-built Corti [Web Component](https://www.npmjs.com/package/@corti/embedded-
 any web application. The assistant manages the full clinical session experience — recording, transcription, fact review,
 and documentation — so the host application only needs to handle authentication and interaction lifecycle.
 
-**[Ambient Scribe](#ambient-scribe)**
+**[Ambient](#ambient)**
 
 Ambient scribing lets the system listen passively to a clinical encounter and automatically produce structured
 documentation without requiring the clinician to dictate or type. Audio is streamed in real time, clinical facts are
@@ -29,13 +29,6 @@ speech. Unlike ambient scribing — where the system listens in the background �
 speaks directly into the record. Supports real-time transcription with interim results, spoken punctuation, and voice
 commands for navigation and editing. Complements ambient workflows for specialties or situations where direct control is
 preferred.
-
-**[Ambient Web Component](#ambient-web-component)**
-
-Real-time ambient streaming on the Corti Streams API using [`@corti/ambient-web`](https://www.npmjs.com/package/@corti/ambient-web).
-The component handles capture, WebSocket lifecycle, live transcript, facts, and optional virtual mode (mic + tab/window
-audio). Examples mirror the dictation web-component layout: SDK-only basic sample plus HTML demos for the all-in-one and
-modular elements.
 
 **[Agents](#agents)**
 
@@ -81,11 +74,12 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 
 ---
 
-### Ambient Scribe
+### Ambient
 
 | Example                                                                              | Stack               | Description                                                                                              |
 |--------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------------------|
 | [ambient-scribe/typescript/basic-example/](ambient-scribe/typescript/basic-example/) | TypeScript, Express | Single-mic or virtual consultation (doctor + patient channels); document generation from extracted facts |
+| [ambient/typescript/web-component/](ambient/typescript/web-component/)               | TypeScript, Express | Four demos of `@corti/ambient-web`: basic, custom UI, styling, and token refresh                         |
 
 ---
 
@@ -105,15 +99,6 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 | [dictation/typescript/web-component/](dictation/typescript/web-component/)           | TypeScript, Express | Four demos of `@corti/dictation-web`: basic, custom UI, styling, and token refresh           |
 | [dictation/commands/](dictation/commands/)                                           | Json                | Command configuration JSON (templates, dictation box, editing, lists, navigation, selection) |
 | [dictation/replacements/](dictation/replacements/)                                   | Json                | Replacements configuration JSON (numbered list items, Roman numerals) |
-
----
-
-### Ambient Web Component
-
-| Example                                                                        | Stack               | Description                                                                                    |
-|--------------------------------------------------------------------------------|---------------------|------------------------------------------------------------------------------------------------|
-| [ambient/typescript/basic-example/](ambient/typescript/basic-example/)         | TypeScript, Express | Streams API via SDK: interaction + scoped token, live transcript and facts                     |
-| [ambient/typescript/web-component/](ambient/typescript/web-component/)         | TypeScript, Express | Four demos of `@corti/ambient-web`: basic, custom UI, styling, and token refresh               |
 
 ---
 

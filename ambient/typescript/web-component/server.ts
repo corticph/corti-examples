@@ -1,5 +1,10 @@
 /**
- * server.ts — Express server for Corti Ambient Web Component demos.
+ * server.ts — Express server for the Corti Ambient Web Component demos.
+ *
+ * Responsible for:
+ *   1. Creating interactions and minting streams-scoped tokens via client credentials
+ *      (never exposed to the browser).
+ *   2. Serving the static HTML demo files.
  */
 
 import { randomUUID } from "node:crypto";
@@ -11,6 +16,10 @@ import { CortiAuth, CortiClient } from "@corti/sdk";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ---------------------------------------------------------------------------
+// Configuration — set via .env (copy .env.example to .env)
+// ---------------------------------------------------------------------------
 
 const TENANT_NAME = process.env.CORTI_TENANT_NAME ?? "YOUR_TENANT_NAME";
 const CLIENT_ID = process.env.CORTI_CLIENT_ID ?? "YOUR_CLIENT_ID";
@@ -50,10 +59,16 @@ async function getStreamToken() {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Express app
+// ---------------------------------------------------------------------------
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+// POST /api/start-session
+// Creates an interaction and returns it with a streams-scoped access token.
 app.post("/api/start-session", async (_req, res) => {
   try {
     const interaction = await createInteraction();
@@ -69,6 +84,8 @@ app.post("/api/start-session", async (_req, res) => {
   }
 });
 
+// POST /api/token
+// Returns a short-lived streams-scoped access token for the browser.
 app.post("/api/token", async (_req, res) => {
   try {
     const token = await getStreamToken();
