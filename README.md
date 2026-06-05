@@ -78,8 +78,8 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 
 | Example                                                                              | Stack               | Description                                                                                              |
 |--------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------------------|
-| [ambient-scribe/typescript/basic-example/](ambient-scribe/typescript/basic-example/) | TypeScript, Express | Single-mic or virtual consultation (doctor + patient channels); document generation from extracted facts |
-| [ambient/typescript/web-component/](ambient/typescript/web-component/)               | TypeScript, Express | Four demos of `@corti/ambient-web`: basic, custom UI, styling, and token refresh                         |
+| [ambient/typescript/basic-example/](ambient/typescript/basic-example/)                 | TypeScript, Express | Single-mic or virtual consultation (doctor + patient channels); document generation from extracted facts |
+| [ambient/typescript/web-component/](ambient/typescript/web-component/)               | TypeScript, Express | Four demos of `@corti/ambient-web`: basic, custom UI, styling, and token refresh                       |
 
 ---
 
