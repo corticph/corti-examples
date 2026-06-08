@@ -15,7 +15,7 @@ A pre-built Corti [Web Component](https://www.npmjs.com/package/@corti/embedded-
 any web application. The assistant manages the full clinical session experience — recording, transcription, fact review,
 and documentation — so the host application only needs to handle authentication and interaction lifecycle.
 
-**[Ambient Scribe](#ambient-scribe)**
+**[Ambient](#ambient)**
 
 Ambient scribing lets the system listen passively to a clinical encounter and automatically produce structured
 documentation without requiring the clinician to dictate or type. Audio is streamed in real time, clinical facts are
@@ -74,11 +74,12 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 
 ---
 
-### Ambient Scribe
+### Ambient
 
 | Example                                                                              | Stack               | Description                                                                                              |
 |--------------------------------------------------------------------------------------|---------------------|----------------------------------------------------------------------------------------------------------|
-| [ambient-scribe/typescript/basic-example/](ambient-scribe/typescript/basic-example/) | TypeScript, Express | Single-mic or virtual consultation (doctor + patient channels); document generation from extracted facts |
+| [ambient/typescript/basic-example/](ambient/typescript/basic-example/)                 | TypeScript, Express | Single-mic or virtual consultation (doctor + patient channels); document generation from extracted facts |
+| [ambient/typescript/web-component/](ambient/typescript/web-component/)               | TypeScript, Express | Four demos of `@corti/ambient-web`: basic, custom UI, styling, and token refresh                       |
 
 ---
 

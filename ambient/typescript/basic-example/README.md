@@ -43,7 +43,7 @@ npm i -D typescript ts-node @types/express @types/node
 ## File Structure
 
 ```
-AmbientScribe/
+ambient/typescript/basic-example/
   server.ts      # Server-side: OAuth2 auth, interaction creation, scoped token, document generation
   client.ts      # Client-side: stream connection, audio capture, event handling, document creation
   audio.ts       # Audio utilities: getMicrophoneStream(), getRemoteParticipantStream(), getDisplayMediaStream(), mergeMediaStreams()

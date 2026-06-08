@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Custom UI Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+    />
+  </head>
+  <body>
+    <header>
+      <nav><a href="index.html">← Back to Demo Index</a></nav>
+      <h1>Custom UI Demo</h1>
+    </header>
+
+    <main>
+      <corti-ambient style="display: none"></corti-ambient>
+
+      <div role="group">
+        <button id="recordingButton">Start</button>
+        <select id="micSelector"></select>
+        <select id="languageSelector"></select>
+      </div>
+
+      <progress id="progress" value="0" max="1"></progress>
+
+      <textarea
+        id="transcriptArea"
+        placeholder="Transcript will appear here…"
+      ></textarea>
+      <div id="factsArea"></div>
+    </main>
+
+    <script type="module">
+      import "https://esm.sh/@corti/ambient-web";
+
+      window.addEventListener("DOMContentLoaded", async () => {
+        const ambient = document.querySelector("corti-ambient");
+        const recordingButton = document.getElementById("recordingButton");
+        const micSelector = document.getElementById("micSelector");
+        const languageSelector = document.getElementById("languageSelector");
+        const transcriptArea = document.getElementById("transcriptArea");
+        const factsArea = document.getElementById("factsArea");
+        const progress = document.getElementById("progress");
+        const seenFacts = new Set();
+
+        const { interactionId, accessToken } = await fetch("/api/start-session", {
+          method: "POST",
+        }).then((r) => r.json());
+
+        ambient.interactionId = interactionId;
+        ambient.accessToken = accessToken;
+
+        const userLocale = navigator.language || "en";
+        let languageDisplayNames;
+        try {
+          languageDisplayNames = new Intl.DisplayNames([userLocale], {
+            type: "language",
+          });
+        } catch {
+          languageDisplayNames = null;
+        }
+
+        const getLanguageName = (code) =>
+          languageDisplayNames?.of(code) || code;
+
+        function populateDevices(devices = [], selectedDevice) {
+          if (!devices.length) return;
+
+          micSelector.innerHTML = "";
+          for (const device of devices) {
+            const option = document.createElement("option");
+            option.value = device.deviceId;
+            option.textContent = device.label || `Device ${device.deviceId}`;
+            micSelector.appendChild(option);
+          }
+
+          if (selectedDevice) {
+            micSelector.value = selectedDevice.deviceId;
+          }
+        }
+
+        function populateLanguages(languages = [], selectedLanguage) {
+          if (!languages.length) return;
+
+          languageSelector.innerHTML = "";
+          for (const language of languages) {
+            const option = document.createElement("option");
+            option.value = language;
+            option.textContent = getLanguageName(language);
+            languageSelector.appendChild(option);
+          }
+
+          if (selectedLanguage) {
+            languageSelector.value = selectedLanguage;
+          }
+        }
+
+        ambient.addEventListener("ready", () => {
+          populateDevices(ambient.devices, ambient.selectedDevice);
+          populateLanguages(
+            ambient.languagesSupported,
+            ambient.ambientConfig?.transcription?.primaryLanguage,
+          );
+        });
+
+        ambient.addEventListener("recording-state-changed", (e) => {
+          const { state } = e.detail;
+          const labels = {
+            recording: "Stop",
+            stopped: "Start",
+            initializing: "Initializing…",
+            stopping: "Stopping…",
+          };
+          recordingButton.textContent = labels[state] || "Start";
+          const busy = state === "initializing" || state === "stopping";
+          recordingButton.toggleAttribute("aria-busy", busy);
+          recordingButton.disabled = busy;
+        });
+
+        ambient.addEventListener("recording-devices-changed", (e) => {
+          const { devices, selectedDevice } = e.detail;
+          populateDevices(devices, selectedDevice);
+        });
+
+        ambient.addEventListener("transcript", (e) => {
+          for (const segment of e.detail.data ?? []) {
+            if (segment.final) {
+              transcriptArea.value += segment.transcript + " ";
+              transcriptArea.scrollTop = transcriptArea.scrollHeight;
+            }
+          }
+        });
+
+        ambient.addEventListener("facts", (e) => {
+          for (const fact of e.detail.fact ?? []) {
+            const key = (fact.id ?? fact.text) + (fact.group ?? "");
+            if (seenFacts.has(key)) continue;
+            seenFacts.add(key);
+            const line = document.createElement("div");
+            line.textContent = `${fact.group ?? "fact"}: ${fact.text}`;
+            factsArea.appendChild(line);
+          }
+        });
+
+        ambient.addEventListener("audio-level-changed", (e) => {
+          progress.value = e.detail.audioLevel;
+        });
+
+        ambient.addEventListener("error", (e) => {
+          console.error("Corti ambient error:", e.detail);
+        });
+
+        recordingButton.addEventListener("click", () => {
+          ambient.toggleRecording();
+        });
+
+        micSelector.addEventListener("change", () => {
+          const selected = ambient.devices.find(
+            (d) => d.deviceId === micSelector.value,
+          );
+          if (selected) {
+            ambient.selectedDevice = selected;
+          }
+        });
+
+        languageSelector.addEventListener("change", () => {
+          const config = ambient.ambientConfig ?? {};
+          ambient.ambientConfig = {
+            ...config,
+            transcription: {
+              ...config.transcription,
+              primaryLanguage: languageSelector.value,
+            },
+          };
+        });
+      });
+    </script>
+  </body>
+</html>
