@@ -234,7 +234,7 @@ public static class CortiHelpers
             "createdat" => InteractionsListRequestSort.CreatedAt,
             "endedat" => InteractionsListRequestSort.EndedAt,
             "updatedat" => InteractionsListRequestSort.UpdatedAt,
-            _ => InteractionsListRequestSort.FromCustom(value),
+            _ => null,
         };
     }
 
@@ -249,7 +249,7 @@ public static class CortiHelpers
         {
             "asc" => CommonSortingDirectionEnum.Asc,
             "desc" => CommonSortingDirectionEnum.Desc,
-            _ => CommonSortingDirectionEnum.FromCustom(value),
+            _ => null,
         };
     }
 
