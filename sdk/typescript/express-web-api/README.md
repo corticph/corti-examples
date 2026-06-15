@@ -7,7 +7,7 @@ A minimal **Express (TypeScript) API** that demonstrates the [`@corti/sdk`](http
 This is a **server-side** reference API you can run locally. It shows how to:
 
 - **Authenticate** — Client credentials and ROPC token endpoints; optional scopes.
-- **Call Corti APIs** — Interactions (list, create, get, update, delete), recordings (list, upload sample, get, delete), transcripts (list, create from sample, get status, get, delete), facts (groups, list, create, update, batch, extract), codes (ICD-10-CM, CPT), templates, agents, documents.
+- **Call Corti APIs** — Interactions (list, create, get, update, delete), recordings (list, upload sample, get, delete), transcripts (list, create from sample, get status, get, delete), facts (groups, list, create, update, batch, extract), codes (ICD-10-CM, CPT), languages, templates, agents, documents (standard and guided).
 - **Stream and transcribe** — WebSocket endpoints for real-time audio 
 (TypeScript-only in this repo).
 - **Ambient** — `/ambient-async-end-to-end` and `/ambient-async-facts` (upload → transcript → document or facts); `/ambient-rt-streams` (real-time **stream** in facts mode, chunked `sendAudio`, then **`sendEnd`** / await ended).
@@ -92,9 +92,11 @@ npm start
 | `/transcripts` | List, create transcript from sample, get status, get, delete |
 | `/facts` | Fact groups, list, create, update, batch update, extract |
 | `/codes` | Code prediction (ICD-10-CM, CPT) |
+| `/languages` | List supported languages (optional query: `endpoint=streams\|transcribe\|transcripts`) |
 | `/templates` | List templates, list sections, get by key (query: org, lang, status) |
 | `/agents` | List, create, get, card, registry experts, message send, get task/context, delete (query: limit, offset, ephemeral) |
 | `/documents` | List, create, get, update, delete document |
+| `/guided-documents` | Guided templates/sections: list, create, generate (template ref and dynamic), cleanup |
 | `/transcribe` | `client.transcribe.connect()`, `sendConfiguration`, chunked `sendAudio`, `sendFlush`; returns JSON |
 | `/transcribe-with-config` | `client.transcribe.connect({ configuration })`, then chunked `sendAudio` and `sendFlush`; returns JSON |
 | `/stream` | Optional `?interactionId=` (else creates interaction); `client.stream.connect({ id })`, `sendConfiguration`, `sendAudio`, `sendFlush`; returns JSON |
