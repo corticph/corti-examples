@@ -36,6 +36,7 @@ public static class TranscribeEndpoint
 
             var messages = new List<object>();
             var flushedTcs = new TaskCompletionSource();
+            DictationTranscriptSnapshot? snapshot = null;
 
             void AddMessage(object msg)
             {
@@ -68,7 +69,11 @@ public static class TranscribeEndpoint
                 flushedTcs.TrySetResult();
             });
             transcribeApi.TranscribeUsageMessage.Subscribe(AddMessage);
-            transcribeApi.TranscribeTranscriptMessage.Subscribe(AddMessage);
+            transcribeApi.TranscribeTranscriptMessage.Subscribe((TranscribeTranscriptMessage msg) =>
+            {
+                snapshot = DictationTranscript.Apply(snapshot, msg.Data);
+                AddMessage(msg);
+            });
             transcribeApi.TranscribeErrorMessage.Subscribe(AddMessage);
             transcribeApi.TranscribeCommandMessage.Subscribe(AddMessage);
             transcribeApi.TranscribeEndedMessage.Subscribe(AddMessage);
@@ -106,6 +111,8 @@ public static class TranscribeEndpoint
             {
                 messageCount = messages.Count,
                 messages,
+                committedText = snapshot?.CommittedText ?? string.Empty,
+                interimText = snapshot?.InterimText ?? string.Empty,
                 message = "Transcribe WebSocket (SDK): config sent, audio sent by chunks, flush sent, flushed received.",
             });
         }
