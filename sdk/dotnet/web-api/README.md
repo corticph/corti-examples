@@ -7,7 +7,7 @@ A minimal **ASP.NET Core** API that demonstrates the [Corti.Sdk](https://www.nug
 This is a **server-side** reference API you can run locally. It shows how to:
 
 - **Authenticate** — Client credentials, ROPC, refresh token, authorization code, and PKCE token endpoints (optional scopes where applicable).
-- **Call Corti APIs** — Interactions (list, create, get, update, delete), recordings (list, upload sample, get, delete), transcripts (list, create from sample, get status, get, delete), facts (groups, list, create, update, batch, extract), codes (ICD-10-CM, CPT), templates, agents, documents.
+- **Call Corti APIs** — Interactions (list, create, get, update, delete), recordings (list, upload sample, get, delete), transcripts (list, create from sample, get status, get, delete), facts (groups, list, create, update, batch, extract), codes (ICD-10-CM, CPT), languages, templates, agents, documents (standard and guided).
 - **Stream and transcribe** — Each demo is a **GET** that runs the SDK client in-process against sample audio (`trouble-breathing.mp3` under `sample/`), then returns a JSON payload of captured WebSocket messages. Variants: config sent after `ConnectAsync()` vs. `ConnectAsync(config)`.
 - **Ambient** — `/ambient-async-end-to-end` and `/ambient-async-facts` exercise upload → transcript → document or facts extraction; `/ambient-rt-streams` exercises the real-time stream API in **facts** mode with chunked audio and `StreamEndMessage`.
 
@@ -77,9 +77,11 @@ The API listens on **port 8080** inside the container. Use `http://localhost:808
 | `/transcripts` | List, create transcript from sample, get status, get, delete |
 | `/facts` | Fact groups, list, create, update, batch update, extract |
 | `/codes` | Code prediction (ICD-10-CM, CPT) |
+| `/languages` | List supported languages (optional query: `endpoint=streams\|transcribe\|transcripts`) |
 | `/templates` | List templates, list sections, get by key (query: org, lang, status) |
 | `/agents` | List, create, get, card, registry experts, message send, get task/context, delete (query: limit, offset, ephemeral) |
 | `/documents` | List, create, get, update, delete document |
+| `/guided-documents` | Guided templates/sections: list, create, generate (template ref and dynamic), cleanup |
 | `/transcribe` | Dictation **transcribe** WebSocket: `ConnectAsync()`, then `TranscribeConfigMessage`, stream sample MP3 in chunks, flush; returns JSON with captured messages |
 | `/transcribe-with-config` | Same as `/transcribe` but `ConnectAsync(TranscribeConfig)` so configuration is supplied at connect |
 | `/stream` | Ambient **stream** WebSocket: optional `?interactionId=` (otherwise creates an interaction), `ConnectAsync()`, then `StreamConfigMessage` (transcription mode), chunks + flush; returns JSON |
