@@ -71,8 +71,11 @@ public static class TranscribeEndpoint
             transcribeApi.TranscribeUsageMessage.Subscribe(AddMessage);
             transcribeApi.TranscribeTranscriptMessage.Subscribe((TranscribeTranscriptMessage msg) =>
             {
-                snapshot = DictationTranscript.Apply(snapshot, msg.Data);
-                AddMessage(msg);
+                lock (messages)
+                {
+                    snapshot = DictationTranscript.Apply(snapshot, msg.Data);
+                    messages.Add(msg);
+                }
             });
             transcribeApi.TranscribeErrorMessage.Subscribe(AddMessage);
             transcribeApi.TranscribeCommandMessage.Subscribe(AddMessage);
