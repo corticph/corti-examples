@@ -52,13 +52,13 @@ public static class TranscribeEndpoint
             {
                 AddMessage(msg);
                 if (msg.Type == TranscribeConfigStatusMessageType.ConfigAccepted ||
-                    msg.Type == "CONFIG_ALREADY_RECEIVED")
+                    msg.Type == TranscribeConfigStatusMessageType.ConfigAlreadyReceived)
                 {
                     configAcceptedTcs.TrySetResult();
                 }
                 if (msg.Type == TranscribeConfigStatusMessageType.ConfigDenied ||
                     msg.Type == TranscribeConfigStatusMessageType.ConfigTimeout ||
-                    msg.Type == "CONFIG_MISSING")
+                    msg.Type == TranscribeConfigStatusMessageType.ConfigMissing)
                 {
                     configAcceptedTcs.TrySetException(new InvalidOperationException($"Config not accepted: {msg.Type}"));
                 }

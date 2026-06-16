@@ -182,6 +182,30 @@
       "response": []
     },
     {
+      "name": "Languages",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/languages",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "languages"
+          ],
+          "query": [
+            {
+              "key": "endpoint",
+              "value": "transcribe",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Documents",
       "request": {
         "method": "GET",
@@ -193,6 +217,24 @@
           ],
           "path": [
             "documents"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guided documents",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/guided-documents",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "guided-documents"
           ],
           "query": []
         }
