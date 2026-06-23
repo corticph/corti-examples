@@ -7,7 +7,7 @@ import chatRoutes from './routes/chat.js'
 import documentsRoutes from './routes/documents.js'
 
 const app = express()
-// 25 MB cap — uploaded file parts arrive as base64 inside the message body.
+// 25 MB cap; uploaded file parts arrive as base64 inside the message body.
 app.use(express.json({ limit: '25mb' }))
 
 app.use('/api', authRoutes)

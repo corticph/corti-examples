@@ -16,7 +16,7 @@ router.post('/documents', requireCorti, async (req, res) => {
     return res.status(400).json({ error: 'Document text is required.' })
   }
 
-  // Authorize the chosen scope against the clinician's panel — never trust the
+  // Authorize the chosen scope against the clinician's panel; never trust the
   // browser's scope. For patient docs, prepend an identifier header so the
   // name/MRN stay searchable.
   let resolvedScope
@@ -39,13 +39,13 @@ router.post('/documents', requireCorti, async (req, res) => {
   const source = `upload-${Date.now()}-${randomUUID().slice(0, 8)}`
 
   try {
-    const r = await fetch(INGEST_URL, {
+    const ingestResponse = await fetch(INGEST_URL, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ source, text: docText, scope: resolvedScope }),
     })
-    const body = await r.json().catch(() => ({}))
-    if (!r.ok) return res.status(502).json({ error: body.error || `MCP ingest failed: ${r.status}` })
+    const body = await ingestResponse.json().catch(() => ({}))
+    if (!ingestResponse.ok) return res.status(502).json({ error: body.error || `MCP ingest failed: ${ingestResponse.status}` })
     console.log(`[upload] clinician=${clinician.id} scope=${resolvedScope} source=${source} chunks=${body.chunks}`)
     res.json({ ok: true, source, scope: resolvedScope, chunks: body.chunks })
   } catch (err) {

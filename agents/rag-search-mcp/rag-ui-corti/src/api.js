@@ -1,7 +1,7 @@
 // When the server returns 401 (session expired after restart), call this.
 // App.jsx wires it up to reset auth state.
 let _onUnauthorized = null
-export function onUnauthorized(fn) { _onUnauthorized = fn }
+export function onUnauthorized(handler) { _onUnauthorized = handler }
 
 // One fetch helper for every call: JSON-encodes the body, resets auth on 401,
 // throws the server's error message on failure, and returns the parsed JSON.
@@ -40,7 +40,7 @@ export const uploadDocument = ({ scope, text }) =>
 export const getAgentTask = (agentId, taskId) =>
   request(`/api/agents/${encodeURIComponent(agentId)}/task/${encodeURIComponent(taskId)}`, { label: 'Get task' })
 
-// Reads a File as base64 (FileReader gives "data:<mime>;base64,<payload>" — strip the prefix).
+// Reads a File as base64 (FileReader gives "data:<mime>;base64,<payload>"; strip the prefix).
 function readFileAsBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -56,15 +56,15 @@ function readFileAsBase64(file) {
 
 const TERMINAL_OK_STATES   = new Set(['completed'])
 const TERMINAL_FAIL_STATES = new Set(['canceled', 'failed', 'rejected'])
-// input-required: the agent paused to ask the user a follow-up — return the task
+// input-required: the agent paused to ask the user a follow-up; return the task
 // so the chat can render the question and let the user reply. Not an error.
 const FOLLOWUP_STATES      = new Set(['input-required'])
-// auth-required is a genuine MCP auth problem, not a question — surface it.
+// auth-required is a genuine MCP auth problem, not a question; surface it.
 const STUCK_STATES         = new Set(['auth-required'])
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds))
 
-// Poll a task to completion. Cadence: 2s for the first 30s, then 5s — responsive
+// Poll a task to completion. Cadence: 2s for the first 30s, then 5s; responsive
 // at the start, gentle for long-running agent reasoning.
 async function pollAgentTask(agentId, taskId, { onTick } = {}) {
   const start = performance.now()
@@ -85,10 +85,10 @@ async function pollAgentTask(agentId, taskId, { onTick } = {}) {
 
 export async function sendAgentMessage(agentId, { text, files, contextId, taskId, onPoll }) {
   const encodedFiles = files && files.length
-    ? await Promise.all(files.map(async (f) => ({
-        name:     f.name,
-        mimeType: f.type || 'application/octet-stream',
-        bytes:    await readFileAsBase64(f),
+    ? await Promise.all(files.map(async (file) => ({
+        name:     file.name,
+        mimeType: file.type || 'application/octet-stream',
+        bytes:    await readFileAsBase64(file),
       })))
     : undefined
 

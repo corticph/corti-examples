@@ -17,11 +17,11 @@ export default function AgentSetupView({ onReady, onDisconnect }) {
     let cancelled = false
     ;(async () => {
       try {
-        const [active, cfg] = await Promise.all([getActiveAgent(), getSetupConfig()])
+        const [active, setupConfig] = await Promise.all([getActiveAgent(), getSetupConfig()])
         if (cancelled) return
-        setConfig(cfg)
+        setConfig(setupConfig)
         if (active.agent) {
-          onReady(active.agent) // already set up — skip straight through
+          onReady(active.agent) // already set up, skip straight through
         } else {
           setPhase('setup')
         }
@@ -91,7 +91,7 @@ export default function AgentSetupView({ onReady, onDisconnect }) {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               disabled={creating}
               placeholder="Document Search Orchestrator"
               className="w-full bg-card border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"

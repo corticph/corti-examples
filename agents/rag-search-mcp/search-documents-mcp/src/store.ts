@@ -32,7 +32,7 @@ export interface SearchHit {
   source: string;
   text: string;
   score: number;
-  scope: string; // "shared" | "patient:<MRN>" — lets the caller see which patient a passage belongs to
+  scope: string; // "shared" | "patient:<MRN>"; lets the caller see which patient a passage belongs to
 }
 
 // In-memory cache for the process lifetime; loaded lazily from disk on first access.
@@ -61,34 +61,34 @@ function chunkText(text: string, size = 128, overlap = 24): string[] {
   if (words.length === 0) return [];
   const out: string[] = [];
   const step = Math.max(1, size - overlap);
-  for (let i = 0; i < words.length; i += step) {
-    out.push(words.slice(i, i + size).join(" "));
-    if (i + size >= words.length) break;
+  for (let index = 0; index < words.length; index += step) {
+    out.push(words.slice(index, index + size).join(" "));
+    if (index + size >= words.length) break;
   }
   return out;
 }
 
 // Cosine similarity. Embeddings are L2-normalized at creation, so this is
 // effectively a dot product, but we normalize defensively in case that changes.
-function cosine(a: number[], b: number[]): number {
-  let dot = 0;
-  let na = 0;
-  let nb = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    na += a[i] * a[i];
-    nb += b[i] * b[i];
+function cosine(vectorA: number[], vectorB: number[]): number {
+  let dotProduct = 0;
+  let sumSquaresA = 0;
+  let sumSquaresB = 0;
+  for (let index = 0; index < vectorA.length; index++) {
+    dotProduct += vectorA[index] * vectorB[index];
+    sumSquaresA += vectorA[index] * vectorA[index];
+    sumSquaresB += vectorB[index] * vectorB[index];
   }
-  return dot / (Math.sqrt(na) * Math.sqrt(nb) || 1);
+  return dotProduct / (Math.sqrt(sumSquaresA) * Math.sqrt(sumSquaresB) || 1);
 }
 
 // Extract a scope front-matter tag (an HTML comment like
 //   <!-- scope: patient:000-MOCK-1234 -->
 // invisible in rendered markdown) and return the scope plus the body without it.
 function parseScope(text: string): { scope: string | null; body: string } {
-  const m = text.match(/<!--\s*scope:\s*(\S+)\s*-->/i);
-  if (!m) return { scope: null, body: text };
-  return { scope: m[1], body: text.replace(m[0], "").trimStart() };
+  const match = text.match(/<!--\s*scope:\s*(\S+)\s*-->/i);
+  if (!match) return { scope: null, body: text };
+  return { scope: match[1], body: text.replace(match[0], "").trimStart() };
 }
 
 // Chunk, embed, and persist a document; returns the chunk count. Re-ingesting a
@@ -101,11 +101,11 @@ export async function addDocument(source: string, text: string, scope?: string):
   if (pieces.length === 0) return 0;
   const vectors = await embed(pieces);
   // Remove any existing chunks from this source (in place, to keep the cache).
-  for (let i = all.length - 1; i >= 0; i--) {
-    if (all[i].source === source) all.splice(i, 1);
+  for (let index = all.length - 1; index >= 0; index--) {
+    if (all[index].source === source) all.splice(index, 1);
   }
-  pieces.forEach((t, i) =>
-    all.push({ id: `${source}#${i}`, source, text: t, scope: resolvedScope, embedding: vectors[i] }),
+  pieces.forEach((piece, index) =>
+    all.push({ id: `${source}#${index}`, source, text: piece, scope: resolvedScope, embedding: vectors[index] }),
   );
   await persist();
   return pieces.length;
@@ -118,30 +118,30 @@ function isVisible(chunk: Chunk, allowed: string[]): boolean {
 }
 
 // Semantic ranking scoped to what the caller may see. Defaults to [] (shared
-// docs only), so PHI is withheld unless explicitly granted — deny by default.
+// docs only), so PHI is withheld unless explicitly granted: deny by default.
 export async function search(query: string, topK = 4, allowed: string[] = []): Promise<SearchHit[]> {
   const all = await load();
   if (all.length === 0) return [];
 
-  const visible = all.filter((c) => isVisible(c, allowed));
+  const visible = all.filter((chunk) => isVisible(chunk, allowed));
   if (visible.length === 0) return [];
 
-  const [q] = await embed([query]);
+  const [queryVector] = await embed([query]);
 
   return visible
-    .map((c) => ({
-      source: c.source,
-      text: c.text,
-      scope: c.scope,
+    .map((chunk) => ({
+      source: chunk.source,
+      text: chunk.text,
+      scope: chunk.scope,
       // Guard against legacy chunks stored before embeddings existed.
-      score: Array.isArray(c.embedding) ? cosine(q, c.embedding) : -Infinity,
+      score: Array.isArray(chunk.embedding) ? cosine(queryVector, chunk.embedding) : -Infinity,
     }))
-    .filter((h) => h.score >= MIN_SCORE) // drop off-topic chunks so junk isn't returned
-    .sort((a, b) => b.score - a.score)
+    .filter((hit) => hit.score >= MIN_SCORE) // drop off-topic chunks so junk isn't returned
+    .sort((first, second) => second.score - first.score)
     .slice(0, topK);
 }
 
-// Total chunk count — handy for ingestion feedback.
+// Total chunk count; handy for ingestion feedback.
 export async function count(): Promise<number> {
   return (await load()).length;
 }

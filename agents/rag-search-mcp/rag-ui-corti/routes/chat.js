@@ -32,14 +32,14 @@ router.post('/chat/start', requireCorti, async (req, res) => {
     if (!contextId) return res.status(502).json({ error: 'Could not obtain a context id from Corti.' })
 
     const token = mintScopeToken(clinician)
-    const r = await fetch(BIND_URL, {
+    const bindResponse = await fetch(BIND_URL, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
       body: JSON.stringify({ contextId }),
     })
-    if (!r.ok) {
-      const body = await r.json().catch(() => ({}))
-      return res.status(502).json({ error: body.error || `Pre-bind failed: ${r.status}` })
+    if (!bindResponse.ok) {
+      const body = await bindResponse.json().catch(() => ({}))
+      return res.status(502).json({ error: body.error || `Pre-bind failed: ${bindResponse.status}` })
     }
     console.log(`[chat] started context ${contextId} pre-bound for ${clinician.id}`)
     res.json({ contextId })
@@ -66,8 +66,8 @@ router.post('/agents/:id/message', requireCorti, async (req, res) => {
     const parts = []
     if (typeof text === 'string' && text.length > 0) parts.push({ kind: 'text', text })
     if (Array.isArray(files)) {
-      for (const f of files) {
-        parts.push({ kind: 'file', file: { name: f.name, mimeType: f.mimeType, bytes: f.bytes } })
+      for (const file of files) {
+        parts.push({ kind: 'file', file: { name: file.name, mimeType: file.mimeType, bytes: file.bytes } })
       }
     }
     const clinician = getClinician()

@@ -4,7 +4,7 @@ import { listClinicians, signInClinician } from './api.js'
 import { Banner, ScreenHeader } from './ui.jsx'
 
 // Clinician sign-in: a picker over the mock clinician directory. Selecting a
-// clinician records the identity on the backend (no password — stubbed auth)
+// clinician records the identity on the backend (no password, stubbed auth)
 // and returns their profile, including the patient panel.
 export default function ClinicianSignInView({ onSignIn, onDisconnect }) {
   const [clinicians, setClinicians] = useState([])
@@ -13,12 +13,12 @@ export default function ClinicianSignInView({ onSignIn, onDisconnect }) {
   const [signingId,  setSigningId]  = useState(null)
   const [signInError, setSignInError] = useState('')
 
-  async function handleSelect(c) {
+  async function handleSelect(clinician) {
     if (signingId) return
-    setSigningId(c.id)
+    setSigningId(clinician.id)
     setSignInError('')
     try {
-      const profile = await signInClinician(c.id)
+      const profile = await signInClinician(clinician.id)
       onSignIn(profile)
     } catch (err) {
       setSignInError(err.message)
@@ -78,19 +78,19 @@ export default function ClinicianSignInView({ onSignIn, onDisconnect }) {
 
           {!loading && !error && (
             <ul className="space-y-2">
-              {clinicians.map((c) => (
-                <li key={c.id}>
+              {clinicians.map((clinician) => (
+                <li key={clinician.id}>
                   <button
                     type="button"
-                    onClick={() => handleSelect(c)}
+                    onClick={() => handleSelect(clinician)}
                     disabled={!!signingId}
                     className="w-full bg-card border border-border rounded-lg p-4 flex items-center gap-3 text-left hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
                   >
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold text-card-foreground truncate">{c.name}</h3>
-                      <p className="text-xs text-muted-foreground truncate">{c.role}</p>
+                      <h3 className="text-sm font-semibold text-card-foreground truncate">{clinician.name}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{clinician.role}</p>
                     </div>
-                    {signingId === c.id
+                    {signingId === clinician.id
                       ? <Loader2 size={16} className="text-muted-foreground flex-shrink-0 animate-spin" />
                       : <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />}
                   </button>

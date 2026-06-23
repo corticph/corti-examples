@@ -1,10 +1,10 @@
 import 'dotenv/config'
 
-// Owner config (env). Required values have no default — fail fast if missing
+// Owner config (env). Required values have no default;
 // rather than starting with a silent fallback that would create a misconfigured
 // agent. All process.env reading lives here.
 const required = ['MCP_URL', 'MCP_NAME', 'SYSTEM_PROMPT']
-const missing = required.filter((k) => !process.env[k])
+const missing = required.filter((key) => !process.env[key])
 if (missing.length) {
   console.error(`[config] Missing required env var(s): ${missing.join(', ')}. See .env.example.`)
   process.exit(1)

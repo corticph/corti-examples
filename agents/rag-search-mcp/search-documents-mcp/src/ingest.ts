@@ -23,7 +23,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const files = entries.filter((f) => EXTENSIONS.has(path.extname(f).toLowerCase()));
+  const files = entries.filter((entry) => EXTENSIONS.has(path.extname(entry).toLowerCase()));
   if (files.length === 0) {
     console.error(`No .txt or .md files in ${DOCS_DIR}.`);
     process.exit(1);

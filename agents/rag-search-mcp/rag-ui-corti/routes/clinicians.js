@@ -4,7 +4,7 @@ import { setClinician } from '../session.js'
 
 const router = Router()
 
-// Clinician directory for the sign-in picker — id/name/role only, no panels.
+// Clinician directory for the sign-in picker: id/name/role only, no panels.
 router.get('/clinicians', (req, res) => {
   res.json(CLINICIANS.map(({ id, name, role }) => ({ id, name, role })))
 })
@@ -13,7 +13,7 @@ router.get('/clinicians', (req, res) => {
 // including the resolved patient panel.
 router.post('/clinician/login', (req, res) => {
   const { clinicianId } = req.body ?? {}
-  const clinician = CLINICIANS.find((c) => c.id === clinicianId)
+  const clinician = CLINICIANS.find((candidate) => candidate.id === clinicianId)
   if (!clinician) return res.status(400).json({ error: `Unknown clinician: ${clinicianId}` })
   setClinician(clinician)
   console.log(`[clinician] signed in: ${clinician.name} (panel: ${clinician.patients.join(', ')})`)

@@ -49,7 +49,7 @@ export function createServer(opts: ServerOptions = {}): McpServer {
       console.error(
         `[scope] search_documents | ctx=${contextId?.slice(0, 8) ?? "none"} | allowed=[${allowed.join(", ")}]` +
           ` | query=${JSON.stringify(query)} | hits=${hits.length} [${hits
-            .map((h) => (h.scope === "shared" ? "shared" : h.scope.replace(/^patient:/, "")))
+            .map((hit) => (hit.scope === "shared" ? "shared" : hit.scope.replace(/^patient:/, "")))
             .join(", ")}]`,
       );
       if (hits.length === 0) {
@@ -60,20 +60,20 @@ export function createServer(opts: ServerOptions = {}): McpServer {
         };
       }
       return {
-        content: hits.map((h) => {
+        content: hits.map((hit) => {
           // Label each passage by patient (name + MRN, or "reference" for shared)
           // so the orchestrator can disambiguate results that span patients.
           let label: string;
-          if (h.scope === "shared") {
+          if (hit.scope === "shared") {
             label = "reference";
           } else {
-            const mrn = h.scope.replace(/^patient:/, "");
-            const name = patientNames[h.scope];
+            const mrn = hit.scope.replace(/^patient:/, "");
+            const name = patientNames[hit.scope];
             label = name ? `patient ${name} (${mrn})` : `patient ${mrn}`;
           }
           return {
             type: "text",
-            text: `[${label} | source: ${h.source}]\n${h.text}`,
+            text: `[${label} | source: ${hit.source}]\n${hit.text}`,
           };
         }),
       };

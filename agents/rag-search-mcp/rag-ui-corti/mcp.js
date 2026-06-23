@@ -13,8 +13,8 @@ export function mintScopeToken(clinician) {
 }
 
 // ── Agent detection by MCP URL (name-agnostic). ───────────────────────────────
-function normalizeUrl(u) {
-  return String(u || '').trim().toLowerCase().replace(/\/+$/, '')
+function normalizeUrl(url) {
+  return String(url || '').trim().toLowerCase().replace(/\/+$/, '')
 }
 
 // The agent's MCP server (agent-level or expert-level) wired to the target URL,
@@ -24,9 +24,9 @@ export function matchedMcpServer(agent, targetUrl) {
   if (!target) return null
   const servers = [
     ...(agent.mcpServers || []),
-    ...((agent.experts || []).flatMap((e) => e.mcpServers || [])),
+    ...((agent.experts || []).flatMap((expert) => expert.mcpServers || [])),
   ]
-  return servers.find((s) => normalizeUrl(s.url) === target) ?? null
+  return servers.find((server) => normalizeUrl(server.url) === target) ?? null
 }
 
 export function agentUsesMcp(agent, targetUrl) {

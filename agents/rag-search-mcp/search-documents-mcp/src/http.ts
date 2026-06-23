@@ -29,10 +29,10 @@ app.post("/mcp", async (req, res) => {
   // scopeForContext reads it back at tool-call time.
   const contextId =
     typeof req.body?.params?._meta?._contextId === "string" ? req.body.params._meta._contextId : undefined;
-  const scopeCtx = scopeFromAuthHeader(req.header("authorization"));
-  if (contextId && scopeCtx.authed) {
-    bindContext(contextId, scopeCtx);
-    console.error(`[mcp] context ${contextId.slice(0, 8)} bound scopes=[${scopeCtx.allowed.join(", ")}]`);
+  const scopeContext = scopeFromAuthHeader(req.header("authorization"));
+  if (contextId && scopeContext.authed) {
+    bindContext(contextId, scopeContext);
+    console.error(`[mcp] context ${contextId.slice(0, 8)} bound scopes=[${scopeContext.allowed.join(", ")}]`);
   }
 
   let transport: StreamableHTTPServerTransport;
@@ -44,14 +44,14 @@ app.post("/mcp", async (req, res) => {
     console.error(`[mcp] initialize | NEW session | auth=${hasAuth}`);
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
-      onsessioninitialized: (sid) => {
-        sessions[sid] = { transport };
+      onsessioninitialized: (newSessionId) => {
+        sessions[newSessionId] = { transport };
       },
     });
     transport.onclose = () => {
       if (transport.sessionId) delete sessions[transport.sessionId];
     };
-    // Scope is resolved per tool-call by contextId — see scopeForContext.
+    // Scope is resolved per tool-call by contextId; see scopeForContext.
     const server = createServer({ getScope: scopeForContext });
     await server.connect(transport);
   } else {
@@ -88,14 +88,14 @@ app.post("/bind-context", (req, res) => {
     res.status(400).json({ error: "contextId is required." });
     return;
   }
-  const scopeCtx = scopeFromAuthHeader(req.header("authorization"));
-  if (!scopeCtx.authed) {
+  const scopeContext = scopeFromAuthHeader(req.header("authorization"));
+  if (!scopeContext.authed) {
     res.status(401).json({ error: "A valid scope token is required." });
     return;
   }
-  bindContext(contextId, scopeCtx);
-  console.error(`[mcp] context ${contextId.slice(0, 8)} PRE-BOUND scopes=[${scopeCtx.allowed.join(", ")}]`);
-  res.json({ ok: true, contextId, scopes: scopeCtx.allowed });
+  bindContext(contextId, scopeContext);
+  console.error(`[mcp] context ${contextId.slice(0, 8)} PRE-BOUND scopes=[${scopeContext.allowed.join(", ")}]`);
+  res.json({ ok: true, contextId, scopes: scopeContext.allowed });
 });
 
 // Add a document to the RAG index. Body: { source?, text, scope? }; scope

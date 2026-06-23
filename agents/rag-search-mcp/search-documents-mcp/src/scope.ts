@@ -33,12 +33,12 @@ export function scopeFromAuthHeader(authHeader?: string): ScopeContext {
   };
 }
 
-// Process-local scope store keyed by contextId — for horizontal scaling, move
+// Process-local scope store keyed by contextId; for horizontal scaling, move
 // to shared storage + a TTL.
 const contextScopes = new Map<string, { allowed: string[]; patientNames: Record<string, string> }>();
 
-export function bindContext(contextId: string, scopeCtx: ScopeContext): void {
-  contextScopes.set(contextId, { allowed: scopeCtx.allowed, patientNames: scopeCtx.patientNames });
+export function bindContext(contextId: string, scopeContext: ScopeContext): void {
+  contextScopes.set(contextId, { allowed: scopeContext.allowed, patientNames: scopeContext.patientNames });
 }
 
 // Resolve the scope for a contextId at tool-call time. Defaults to shared-only.

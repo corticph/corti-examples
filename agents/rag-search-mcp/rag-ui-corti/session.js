@@ -10,8 +10,8 @@ let activeMcpName = MCP_NAME
 export function getClinician() {
   return activeClinician
 }
-export function setClinician(c) {
-  activeClinician = c
+export function setClinician(clinician) {
+  activeClinician = clinician
 }
 
 export function getActiveMcpName() {

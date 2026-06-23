@@ -36,9 +36,9 @@ export default function PatientPanelView({ clinician, onStartChat, starting, sta
             <p className="text-sm text-muted-foreground">No patients in your panel.</p>
           ) : (
             <ul className="space-y-2 mb-6">
-              {patients.map((p) => (
+              {patients.map((patient) => (
                 <li
-                  key={p.mrn}
+                  key={patient.mrn}
                   className="w-full bg-card border border-border rounded-lg p-4 flex items-center gap-3"
                 >
                   <span
@@ -46,8 +46,8 @@ export default function PatientPanelView({ clinician, onStartChat, starting, sta
                     style={{ background: 'hsl(var(--corti-lime))' }}
                   />
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-semibold text-card-foreground truncate">{p.name}</h3>
-                    <p className="text-xs text-muted-foreground truncate" style={MONO}>{p.mrn}</p>
+                    <h3 className="text-sm font-semibold text-card-foreground truncate">{patient.name}</h3>
+                    <p className="text-xs text-muted-foreground truncate" style={MONO}>{patient.mrn}</p>
                   </div>
                 </li>
               ))}

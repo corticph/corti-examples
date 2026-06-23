@@ -10,19 +10,19 @@ export function getCorti() {
 }
 
 export async function connect() {
-  const c = new CortiClient({
+  const cortiClient = new CortiClient({
     environment: CORTI.env,
     tenantName: CORTI.tenant,
     auth: { clientId: CORTI.clientId, clientSecret: CORTI.clientSecret },
   })
-  await c.getAuthHeaders()
-  client = c
+  await cortiClient.getAuthHeaders()
+  client = cortiClient
 }
 
 // Express middleware: block routes that need an authenticated Corti client.
 // Returns 401 so the frontend resets to the connect screen.
 export function requireCorti(req, res, next) {
-  if (!client) return res.status(401).json({ error: 'Session expired — please reconnect' })
+  if (!client) return res.status(401).json({ error: 'Session expired, please reconnect' })
   next()
 }
 
@@ -43,8 +43,8 @@ function deriveUserErrorMessage(err) {
   if (typeof body === 'string' && body.length > 0) return body
   const wwwAuth = err.rawResponse?.headers?.get?.('www-authenticate')
   if (wwwAuth) {
-    const desc = wwwAuth.match(/error_description="([^"]+)"/)?.[1]
-    if (desc) return desc
+    const description = wwwAuth.match(/error_description="([^"]+)"/)?.[1]
+    if (description) return description
     const code = wwwAuth.match(/error="([^"]+)"/)?.[1]
     if (code) return code
   }

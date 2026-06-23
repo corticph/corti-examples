@@ -20,19 +20,19 @@ function hmac(data: string): string {
 }
 
 // Verify signature + expiry (constant-time compare). Returns the claims, or null
-// if invalid/expired. Verify-only — RAG_UI mints the tokens.
+// if invalid/expired. Verify-only; RAG_UI mints the tokens.
 export function verifyScopeToken(token: string, nowSeconds?: number): ScopeClaims | null {
   if (typeof token !== "string") return null;
   const parts = token.split(".");
   if (parts.length !== 3) return null;
-  const [head, pay, sig] = parts;
-  const expected = hmac(`${head}.${pay}`);
-  const a = Buffer.from(sig);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  const [header, payload, signature] = parts;
+  const expected = hmac(`${header}.${payload}`);
+  const signatureBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expected);
+  if (signatureBuffer.length !== expectedBuffer.length || !timingSafeEqual(signatureBuffer, expectedBuffer)) return null;
   let claims: ScopeClaims;
   try {
-    claims = JSON.parse(Buffer.from(pay, "base64url").toString("utf8")) as ScopeClaims;
+    claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as ScopeClaims;
   } catch {
     return null;
   }

@@ -7,7 +7,6 @@ const SHARED = 'shared'
 
 // Upload a document to the MCP index, scoped to one of the clinician's patients
 // or "shared". The clinician can pick a .txt/.md file (read in-browser) or paste
-// text directly — both feed the same text box.
 export default function UploadView({ clinician, onBack }) {
   const patients = clinician?.patients ?? []
   const [scope,     setScope]     = useState(patients[0] ? `patient:${patients[0].mrn}` : SHARED)
@@ -55,8 +54,8 @@ export default function UploadView({ clinician, onBack }) {
     setError('')
   }
 
-  const scopeLabel = (s) =>
-    s === SHARED ? 'Shared / reference (all clinicians)' : s.replace(/^patient:/, '')
+  const scopeLabel = (scopeValue) =>
+    scopeValue === SHARED ? 'Shared / reference (all clinicians)' : scopeValue.replace(/^patient:/, '')
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -93,12 +92,12 @@ export default function UploadView({ clinician, onBack }) {
                 <label className="text-xs font-semibold text-foreground mb-1.5 block">Belongs to</label>
                 <select
                   value={scope}
-                  onChange={(e) => setScope(e.target.value)}
+                  onChange={(event) => setScope(event.target.value)}
                   disabled={submitting}
                   className="w-full bg-card border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
-                  {patients.map((p) => (
-                    <option key={p.mrn} value={`patient:${p.mrn}`}>{p.name} ({p.mrn})</option>
+                  {patients.map((patient) => (
+                    <option key={patient.mrn} value={`patient:${patient.mrn}`}>{patient.name} ({patient.mrn})</option>
                   ))}
                   <option value={SHARED}>Shared / reference (all clinicians)</option>
                 </select>
@@ -121,7 +120,7 @@ export default function UploadView({ clinician, onBack }) {
                 </div>
                 <textarea
                   value={text}
-                  onChange={(e) => { setText(e.target.value); setFileName('') }}
+                  onChange={(event) => { setText(event.target.value); setFileName('') }}
                   disabled={submitting}
                   rows={14}
                   placeholder="Paste document text here, or choose a file above…"

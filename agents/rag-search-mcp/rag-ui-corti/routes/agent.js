@@ -16,7 +16,7 @@ router.get('/agent/active', requireCorti, async (req, res) => {
   try {
     const result = await getCorti().agents.list()
     const agents = Array.isArray(result) ? result : (result?.data ?? [])
-    const match = agents.find((a) => agentUsesMcp(a, MCP_URL)) ?? null
+    const match = agents.find((candidate) => agentUsesMcp(candidate, MCP_URL)) ?? null
     if (match) {
       // Use the reused agent's actual MCP server name for the token DataPart,
       // not the configured MCP_NAME (they can differ for a pre-existing agent).

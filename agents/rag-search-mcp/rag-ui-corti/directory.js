@@ -1,4 +1,4 @@
-// Mock patient + clinician directories (stubbed identity — no real provider).
+// Mock patient + clinician directories (stubbed identity, no real provider).
 // The MRNs match the patient records in search-documents-mcp's docs so scoped
 // retrieval lines up. This is the file you'd edit to change who sees what.
 
@@ -15,11 +15,11 @@ export const CLINICIANS = [
   { id: 'dr-tanaka', name: 'Dr. C. Tanaka', role: 'Family Medicine',   patients: ['000-MOCK-1234', '000-MOCK-3456'] },
 ]
 
-export function clinicianProfile(c) {
+export function clinicianProfile(clinician) {
   return {
-    id: c.id,
-    name: c.name,
-    role: c.role,
-    patients: c.patients.map((mrn) => ({ mrn, name: PATIENTS[mrn] ?? mrn })),
+    id: clinician.id,
+    name: clinician.name,
+    role: clinician.role,
+    patients: clinician.patients.map((mrn) => ({ mrn, name: PATIENTS[mrn] ?? mrn })),
   }
 }
