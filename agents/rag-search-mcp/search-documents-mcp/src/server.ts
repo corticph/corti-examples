@@ -47,10 +47,7 @@ export function createServer(opts: ServerOptions = {}): McpServer {
       const { allowed, patientNames } = getScope(contextId);
       const hits = await search(query, topK ?? 4, allowed);
       console.error(
-        `[scope] search_documents | ctx=${contextId?.slice(0, 8) ?? "none"} | allowed=[${allowed.join(", ")}]` +
-          ` | query=${JSON.stringify(query)} | hits=${hits.length} [${hits
-            .map((hit) => (hit.scope === "shared" ? "shared" : hit.scope.replace(/^patient:/, "")))
-            .join(", ")}]`,
+        `[mcp] search_documents | ctx=${contextId?.slice(0, 8) ?? "none"} | hits=${hits.length}`,
       );
       if (hits.length === 0) {
         return {

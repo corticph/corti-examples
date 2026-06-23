@@ -32,7 +32,7 @@ app.post("/mcp", async (req, res) => {
   const scopeContext = scopeFromAuthHeader(req.header("authorization"));
   if (contextId && scopeContext.authed) {
     bindContext(contextId, scopeContext);
-    console.error(`[mcp] context ${contextId.slice(0, 8)} bound scopes=[${scopeContext.allowed.join(", ")}]`);
+    console.error(`[mcp] context ${contextId.slice(0, 8)} bound scopes_count=${scopeContext.allowed.length}`);
   }
 
   let transport: StreamableHTTPServerTransport;
@@ -94,9 +94,8 @@ app.post("/bind-context", (req, res) => {
     return;
   }
   bindContext(contextId, scopeContext);
-  console.error(`[mcp] context ${contextId.slice(0, 8)} PRE-BOUND scopes=[${scopeContext.allowed.join(", ")}]`);
+  console.error(`[mcp] context ${contextId.slice(0, 8)} PRE-BOUND scopes_count=${scopeContext.allowed.length}`);
   res.json({ ok: true, contextId, scopes: scopeContext.allowed });
-});
 
 // Add a document to the RAG index. Body: { source?, text, scope? }; scope
 // defaults to "shared".
