@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
