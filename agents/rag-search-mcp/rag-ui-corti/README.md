@@ -35,17 +35,17 @@ cp .env.example .env     # then fill it in (see below)
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `VITE_CORTI_ENV` | yes | Corti environment (`us` or `eu`). |
+| `VITE_CORTI_ENV` | no | Corti environment (`us` or `eu`). Defaults to `us`. |
 | `VITE_CORTI_TENANT` | yes | Your Corti tenant name. |
 | `VITE_CORTI_CLIENT_ID` | yes | OAuth client id for the Corti API. |
 | `VITE_CORTI_CLIENT_SECRET` | yes | OAuth client secret for the Corti API. |
 | `MCP_URL` | **yes** | Public HTTPS URL of the Search Documents MCP (e.g. `https://<tunnel>/mcp`). Must be reachable by Corti. **The server won't start without it.** |
 | `MCP_NAME` | **yes** | Name the MCP server is registered under on the agent; the scope-token DataPart's `mcp_name` must match it. **The server won't start without it.** |
-| `MCP_SCOPE_SECRET` | no | HMAC secret used to sign scope tokens. Must match the same variable in search-documents-mcp. Defaults to a shared dev secret (not safe for real use). |
-| `SYSTEM_PROMPT` | no | Override the orchestrator's system prompt. A sensible default is baked in. |
+| `MCP_SCOPE_SECRET` | **yes** | HMAC secret used to sign scope tokens. Must match the same variable in search-documents-mcp. No default: the server refuses to start if unset, so tokens can't be signed with a guessable key. Generate one with `openssl rand -hex 32`. |
+| `SYSTEM_PROMPT` | **yes** | The orchestrator's system prompt. No default; the server won't start without it. |
 
-`MCP_URL` and `MCP_NAME` are required with no fallback — the server fails fast
-with a clear message if either is missing.
+`MCP_URL`, `MCP_NAME`, `SYSTEM_PROMPT`, and `MCP_SCOPE_SECRET` are required with
+no fallback; the server fails fast with a clear message if any is missing.
 
 ## Running
 
@@ -72,6 +72,10 @@ npm run dev      # frontend only, :5175 (proxies /api to :3003)
 > Each user runs against their own Corti tenant; the setup step provisions the
 > orchestrator *in their tenant*. The MCP URL and secret are owner config (env),
 > so a person you share with mainly supplies their own Corti credentials.
+
+> **Uploads:** the document-upload page calls the MCP's `/ingest`, which is
+> disabled by default. To use it, start the MCP with `ALLOW_INGEST=true` (e.g.
+> `ALLOW_INGEST=true npm run start:http`). Leave it off if you don't need uploads.
 
 ## Hardcoded / mock data
 

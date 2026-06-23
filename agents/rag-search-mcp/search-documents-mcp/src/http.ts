@@ -10,6 +10,13 @@ import { scopeFromAuthHeader, bindContext, scopeForContext } from "./scope.js";
 
 const DOCS_DIR = path.resolve(process.cwd(), "docs");
 
+// The HTTP /ingest endpoint writes arbitrary content to docs/ and the index, and
+// is unauthenticated. It stays disabled unless explicitly opted in, so tunneling
+// the server doesn't accidentally expose a writable endpoint. The local CLI
+// (npm run ingest) is unaffected. Enabling it does NOT add auth; restrict the
+// endpoint before any real deployment.
+const INGEST_ENABLED = process.env.ALLOW_INGEST === "true";
+
 // Stateful: Corti only delivers an authenticated tools/call (carrying the A2A
 // contextId) over a persistent session. Scope is keyed on contextId, not the
 // session, so an unauthenticated session only ever sees shared docs.
@@ -32,7 +39,7 @@ app.post("/mcp", async (req, res) => {
   const scopeContext = scopeFromAuthHeader(req.header("authorization"));
   if (contextId && scopeContext.authed) {
     bindContext(contextId, scopeContext);
-    console.error(`[mcp] context ${contextId.slice(0, 8)} bound scopes_count=${scopeContext.allowed.length}`);
+    console.error(`[mcp] context ${contextId.slice(0, 8)} bound scopes=[${scopeContext.allowed.join(", ")}]`);
   }
 
   let transport: StreamableHTTPServerTransport;
@@ -94,12 +101,17 @@ app.post("/bind-context", (req, res) => {
     return;
   }
   bindContext(contextId, scopeContext);
-  console.error(`[mcp] context ${contextId.slice(0, 8)} PRE-BOUND scopes_count=${scopeContext.allowed.length}`);
+  console.error(`[mcp] context ${contextId.slice(0, 8)} PRE-BOUND scopes=[${scopeContext.allowed.join(", ")}]`);
   res.json({ ok: true, contextId, scopes: scopeContext.allowed });
+});
 
 // Add a document to the RAG index. Body: { source?, text, scope? }; scope
 // defaults to "shared".
 app.post("/ingest", async (req, res) => {
+  if (!INGEST_ENABLED) {
+    res.status(403).json({ error: "Ingest is disabled. Set ALLOW_INGEST=true to enable it." });
+    return;
+  }
   const { source, text, scope } = req.body ?? {};
   if (typeof text !== "string" || !text.trim()) {
     res.status(400).json({ error: "Body must include a non-empty 'text' string." });
@@ -126,4 +138,7 @@ app.post("/ingest", async (req, res) => {
 const PORT = Number(process.env.PORT ?? 3000);
 app.listen(PORT, () => {
   console.error(`MCP HTTP server (stateful) listening on http://localhost:${PORT}/mcp`);
+  if (INGEST_ENABLED) {
+    console.error("[ingest] WARNING: /ingest is ENABLED and unauthenticated; do not expose it publicly without restricting access.");
+  }
 });

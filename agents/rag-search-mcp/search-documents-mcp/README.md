@@ -35,7 +35,7 @@ conversation.
 
 ```bash
 npm install
-cp .env.example .env     # optional — defaults work for a local demo
+cp .env.example .env     # then set MCP_SCOPE_SECRET (required)
 npm run build            # compile src/ (TypeScript) → build/
 npm run reindex          # build the document index from docs/
 ```
@@ -56,7 +56,8 @@ that URL (`https://<tunnel>/mcp`) into rag-ui-corti's `MCP_URL`.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `MCP_SCOPE_SECRET` | `dev-shared-secret-change-me` | HMAC secret used to verify scope tokens. **MUST match the same variable in rag-ui-corti**, or every token is rejected and retrieval falls back to shared docs only. |
+| `MCP_SCOPE_SECRET` | **required** | HMAC secret used to verify scope tokens. No default: the server refuses to start if unset, so tokens can't be forged with a guessable key. **MUST match the same variable in rag-ui-corti**, or every token is rejected and retrieval falls back to shared docs only. Generate one with `openssl rand -hex 32`. |
+| `ALLOW_INGEST` | `false` | Enables the HTTP `/ingest` endpoint (required for rag-ui-corti's upload page). Off by default so a tunneled server doesn't expose an unauthenticated writable endpoint. Enabling adds no auth, so don't expose `/ingest` publicly without restricting access. |
 | `PORT` | `3000` | Port for the HTTP server (`start:http`). |
 
 The token **audience** the server accepts is `search-documents-mcp` (constant in
@@ -73,10 +74,16 @@ npm run reindex     # wipe the index first, then re-ingest (use after deleting
 ```
 
 Ingest is idempotent: re-ingesting the same filename replaces that file's chunks
-rather than duplicating them. The index is written to `data/index.json`. You can
-also add a document at runtime:
+rather than duplicating them. The index is written to `data/index.json`.
+
+You can also add a document at runtime over HTTP, but the `/ingest` endpoint is
+**disabled by default** (it's unauthenticated and writes to disk; the default-off
+state keeps a tunneled server from exposing a writable endpoint). Enable it with
+`ALLOW_INGEST=true` — this is also required for rag-ui-corti's upload page. Never
+expose `/ingest` publicly without restricting access.
 
 ```bash
+ALLOW_INGEST=true npm run start:http
 curl -X POST http://localhost:3000/ingest \
   -H 'content-type: application/json' \
   -d '{"source":"note-1","text":"the document body","scope":"shared"}'

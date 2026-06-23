@@ -1,9 +1,9 @@
 import 'dotenv/config'
 
-// Owner config (env). Required values have no default;
+// Owner config (env). Required values have no default; fail fast if missing
 // rather than starting with a silent fallback that would create a misconfigured
 // agent. All process.env reading lives here.
-const required = ['MCP_URL', 'MCP_NAME', 'SYSTEM_PROMPT']
+const required = ['MCP_URL', 'MCP_NAME', 'SYSTEM_PROMPT', 'VITE_CORTI_TENANT', 'VITE_CORTI_CLIENT_ID', 'VITE_CORTI_CLIENT_SECRET']
 const missing = required.filter((key) => !process.env[key])
 if (missing.length) {
   console.error(`[config] Missing required env var(s): ${missing.join(', ')}. See .env.example.`)
@@ -28,9 +28,9 @@ export const MCP_SERVER_CONFIG = {
 
 export const CORTI = {
   env: process.env.VITE_CORTI_ENV || 'us',
-  tenant: process.env.VITE_CORTI_TENANT || 'base',
-  clientId: process.env.VITE_CORTI_CLIENT_ID || '',
-  clientSecret: process.env.VITE_CORTI_CLIENT_SECRET || '',
+  tenant: process.env.VITE_CORTI_TENANT,
+  clientId: process.env.VITE_CORTI_CLIENT_ID,
+  clientSecret: process.env.VITE_CORTI_CLIENT_SECRET,
 }
 
 export const PORT = 3003

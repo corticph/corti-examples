@@ -1,8 +1,13 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 // Shared HMAC secret; the minter (RAG_UI) and this verifier must use the SAME
-// secret. Production would more typically use asymmetric keys.
-const SECRET = process.env.MCP_SCOPE_SECRET || "dev-shared-secret-change-me";
+// secret. Required with no default, so a deployment can never run with a
+// guessable key (which would make token forging trivial). Production would more
+// typically use asymmetric keys.
+const SECRET: string = process.env.MCP_SCOPE_SECRET ?? "";
+if (!SECRET) {
+  throw new Error("MCP_SCOPE_SECRET must be set (refusing to start with a default secret).");
+}
 
 export interface ScopeClaims {
   sub?: string;
@@ -12,7 +17,7 @@ export interface ScopeClaims {
   names?: Record<string, string>;
   aud?: string;
   iat?: number;
-  exp?: number;
+  exp: number; // required; verifyScopeToken rejects tokens without a numeric exp
 }
 
 function hmac(data: string): string {
@@ -37,6 +42,6 @@ export function verifyScopeToken(token: string, nowSeconds?: number): ScopeClaim
     return null;
   }
   const now = nowSeconds ?? Math.floor(Date.now() / 1000);
-  if (typeof claims.exp === "number" && now >= claims.exp) return null;
+  if (typeof claims.exp !== "number" || now >= claims.exp) return null;
   return claims;
 }

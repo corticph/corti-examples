@@ -1,9 +1,13 @@
 import { createHmac } from 'node:crypto'
 
 // Shared HMAC secret; must match the MCP verifier (search-documents-mcp/src/token.ts).
-// Set MCP_SCOPE_SECRET in both environments for real use. Production would more
-// typically use asymmetric keys; HMAC keeps this local demo dependency-free.
-const SECRET = process.env.MCP_SCOPE_SECRET || 'dev-shared-secret-change-me'
+// Required with no default, so the app can never sign tokens with a guessable
+// key. Production would more typically use asymmetric keys; HMAC keeps this demo
+// dependency-free.
+const SECRET = process.env.MCP_SCOPE_SECRET
+if (!SECRET) {
+  throw new Error('MCP_SCOPE_SECRET must be set (refusing to start with a default secret).')
+}
 
 const base64UrlJson = (value) => Buffer.from(JSON.stringify(value)).toString('base64url')
 const hmac = (data) => createHmac('sha256', SECRET).update(data).digest('base64url')

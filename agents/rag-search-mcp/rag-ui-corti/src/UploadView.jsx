@@ -7,6 +7,7 @@ const SHARED = 'shared'
 
 // Upload a document to the MCP index, scoped to one of the clinician's patients
 // or "shared". The clinician can pick a .txt/.md file (read in-browser) or paste
+// text directly; both feed the same text box.
 export default function UploadView({ clinician, onBack }) {
   const patients = clinician?.patients ?? []
   const [scope,     setScope]     = useState(patients[0] ? `patient:${patients[0].mrn}` : SHARED)

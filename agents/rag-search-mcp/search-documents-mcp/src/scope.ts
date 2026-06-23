@@ -33,15 +33,33 @@ export function scopeFromAuthHeader(authHeader?: string): ScopeContext {
   };
 }
 
-// Process-local scope store keyed by contextId; for horizontal scaling, move
-// to shared storage + a TTL.
-const contextScopes = new Map<string, { allowed: string[]; patientNames: Record<string, string> }>();
+// Process-local scope store keyed by contextId. Entries expire after a TTL so
+// PHI scopes don't outlive their token or accumulate unbounded. For horizontal
+// scaling, move to shared storage (the TTL carries over).
+const SCOPE_TTL_MS = 10 * 60 * 1000; // refreshed on every bind; must exceed the token lifetime
+const contextScopes = new Map<string, { allowed: string[]; patientNames: Record<string, string>; expiresAt: number }>();
+
+// Periodically drop expired entries so abandoned conversations don't leak memory.
+// (Lazy eviction in scopeForContext only covers contexts that are read again.)
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, entry] of contextScopes) if (now > entry.expiresAt) contextScopes.delete(id);
+}, 60 * 1000).unref();
 
 export function bindContext(contextId: string, scopeContext: ScopeContext): void {
-  contextScopes.set(contextId, { allowed: scopeContext.allowed, patientNames: scopeContext.patientNames });
+  contextScopes.set(contextId, {
+    allowed: scopeContext.allowed,
+    patientNames: scopeContext.patientNames,
+    expiresAt: Date.now() + SCOPE_TTL_MS,
+  });
 }
 
 // Resolve the scope for a contextId at tool-call time. Defaults to shared-only.
 export function scopeForContext(contextId?: string) {
-  return (contextId && contextScopes.get(contextId)) || { allowed: [], patientNames: {} };
+  const value = contextId ? contextScopes.get(contextId) : undefined;
+  if (value && Date.now() > value.expiresAt) {
+    contextScopes.delete(contextId!);
+    return { allowed: [], patientNames: {} };
+  }
+  return (value && { allowed: value.allowed, patientNames: value.patientNames }) || { allowed: [], patientNames: {} };
 }
