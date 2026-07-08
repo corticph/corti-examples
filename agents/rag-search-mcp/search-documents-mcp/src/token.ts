@@ -16,7 +16,6 @@ export interface ScopeClaims {
   // Lets the MCP label passages by patient name so the agent can disambiguate by name.
   names?: Record<string, string>;
   aud?: string;
-  iat?: number;
   exp: number; // required; verifyScopeToken rejects tokens without a numeric exp
 }
 

@@ -17,7 +17,7 @@ const hmac = (data) => createHmac('sha256', SECRET).update(data).digest('base64u
 export function signScopeToken(claims, ttlSeconds = 300, nowSeconds) {
   const now = nowSeconds ?? Math.floor(Date.now() / 1000)
   const header = base64UrlJson({ alg: 'HS256', typ: 'JWT' })
-  const payload = base64UrlJson({ ...claims, iat: now, exp: now + ttlSeconds })
+  const payload = base64UrlJson({ ...claims, exp: now + ttlSeconds })
   const data = `${header}.${payload}`
   return `${data}.${hmac(data)}`
 }
