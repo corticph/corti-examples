@@ -149,15 +149,18 @@ data/         index.json (generated)
 
 ## Production considerations
 
-This is a demo, not production-ready: `/ingest` is unauthenticated, the HMAC
-secret has a dev default, and scope state is single-process. To host it for real:
+This is a demo. It already fails safe in key ways — `MCP_SCOPE_SECRET` is
+required (the server refuses to start without it) and `/ingest` is disabled by
+default (returns `403` unless `ALLOW_INGEST=true`). What's still missing for
+production: scope state is single-process, and `/ingest` has no authentication
+once enabled. To host it for real:
 
 **Single instance (minimum):**
 
 - Serve behind a stable HTTPS endpoint / gateway instead of a tunnel.
 - Containerize — pin the Node version and bake in the embedding model.
-- Load `MCP_SCOPE_SECRET` from a secret manager, not a dev default.
-- Authenticate or network-restrict the `/ingest` write endpoint.
+- Load `MCP_SCOPE_SECRET` from a secret manager rather than a `.env` file.
+- Authenticate or network-restrict the `/ingest` endpoint before enabling it.
 - Add `/healthz`, structured logging, and graceful shutdown.
 
 **Horizontal scaling (multiple instances):**
