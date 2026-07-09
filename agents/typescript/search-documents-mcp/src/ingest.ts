@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { addDocument, count, clearIndex } from "./store.js";
+import { addDocument, clearIndex, count } from "./store.js";
 
 // CLI batch ingest: indexes every .txt / .md file in the docs/ folder
 // (relative to the project root). Run with: npm run ingest
@@ -36,7 +36,9 @@ async function main(): Promise<void> {
     total += chunks;
     console.error(`Ingested ${file} → ${chunks} chunks`);
   }
-  console.error(`Done. Added ${total} chunks from ${files.length} file(s). Index now holds ${await count()} chunks.`);
+  console.error(
+    `Done. Added ${total} chunks from ${files.length} file(s). Index now holds ${await count()} chunks.`,
+  );
 }
 
 main().catch((err) => {

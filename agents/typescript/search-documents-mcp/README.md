@@ -3,7 +3,7 @@
 A local [MCP](https://modelcontextprotocol.io) server exposing a single
 document-search (RAG) tool with **per-patient access control**. Embeddings run
 on-device, so document text never leaves the machine. It's the retrieval half of
-a shareable demo; the UI half is [rag-ui-corti](../../react/rag-ui-corti).
+a shareable demo; the UI half is [search-documents-ui](../../react/search-documents-ui).
 
 ## What it does
 
@@ -55,18 +55,18 @@ npm run start:http    # HTTP server on :3000 at /mcp — use with ngrok + Corti
 ```
 
 To connect it to Corti, expose `:3000` publicly (e.g. `ngrok http 3000`) and put
-that URL (`https://<tunnel>/mcp`) into rag-ui-corti's `MCP_URL`.
+that URL (`https://<tunnel>/mcp`) into search-documents-ui's `MCP_URL`.
 
 ## Environment variables
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `MCP_SCOPE_SECRET` | **required** | HMAC secret used to verify scope tokens. No default: the server refuses to start if unset, so tokens can't be forged with a guessable key. **MUST match the same variable in rag-ui-corti**, or every token is rejected and retrieval falls back to shared docs only. Generate one with `openssl rand -hex 32`. |
-| `ALLOW_INGEST` | `false` | Enables the HTTP `/ingest` endpoint (required for rag-ui-corti's upload page). Off by default so a tunneled server doesn't expose an unauthenticated writable endpoint. Enabling adds no auth, so don't expose `/ingest` publicly without restricting access. |
+| `MCP_SCOPE_SECRET` | **required** | HMAC secret used to verify scope tokens. No default: the server refuses to start if unset, so tokens can't be forged with a guessable key. **MUST match the same variable in search-documents-ui**, or every token is rejected and retrieval falls back to shared docs only. Generate one with `openssl rand -hex 32`. |
+| `ALLOW_INGEST` | `false` | Enables the HTTP `/ingest` endpoint (required for search-documents-ui's upload page). Off by default so a tunneled server doesn't expose an unauthenticated writable endpoint. Enabling adds no auth, so don't expose `/ingest` publicly without restricting access. |
 | `PORT` | `3000` | Port for the HTTP server (`start:http`). |
 
 The token **audience** the server accepts is `search-documents-mcp` (constant in
-`src/http.ts`); rag-ui-corti mints tokens with the same audience.
+`src/http.ts`); search-documents-ui mints tokens with the same audience.
 
 ## Adding documents
 
@@ -84,7 +84,7 @@ rather than duplicating them. The index is written to `data/index.json`.
 You can also add a document at runtime over HTTP, but the `/ingest` endpoint is
 **disabled by default** (it's unauthenticated and writes to disk; the default-off
 state keeps a tunneled server from exposing a writable endpoint). Enable it with
-`ALLOW_INGEST=true` — this is also required for rag-ui-corti's upload page. Never
+`ALLOW_INGEST=true` — this is also required for search-documents-ui's upload page. Never
 expose `/ingest` publicly without restricting access.
 
 ```bash
@@ -120,7 +120,7 @@ what binds the conversation's scope. Authorization itself is keyed on that
 verified `contextId`, **not** on session state, so a stray unauthenticated
 session can only ever reach shared docs (never PHI).
 
-rag-ui-corti also calls **`POST /bind-context`** at chat start to pre-bind a
+search-documents-ui also calls **`POST /bind-context`** at chat start to pre-bind a
 conversation's scope (with a verified token) before any tool call races in, so
 the first question is already scoped. Either path binds the same way; the bound
 scopes always come from the verified token, never the request body.
@@ -129,7 +129,7 @@ scopes always come from the verified token, never the request body.
 
 The docs in [docs/](docs/) are fictional sample clinical notes (clearly marked
 MOCK, no real PHI). The patient MRNs (e.g. `000-MOCK-1234`) are deliberately
-matched to the mock patient/clinician directory in rag-ui-corti so the
+matched to the mock patient/clinician directory in search-documents-ui so the
 access-control demo lines up end to end.
 
 ## Layout
@@ -142,7 +142,34 @@ src/
   store.ts    chunking, embedding, persistence, scoped search
   embed.ts    local embedding model (transformers.js)
   ingest.ts   CLI batch ingest of docs/
-  token.ts    scope-token verification (HMAC); rag-ui-corti mints them
+  token.ts    scope-token verification (HMAC); search-documents-ui mints them
 docs/         source documents (scope-tagged)
 data/         index.json (generated)
 ```
+
+## Production considerations
+
+This is a demo, not production-ready: `/ingest` is unauthenticated, the HMAC
+secret has a dev default, and scope state is single-process. To host it for real:
+
+**Single instance (minimum):**
+
+- Serve behind a stable HTTPS endpoint / gateway instead of a tunnel.
+- Containerize — pin the Node version and bake in the embedding model.
+- Load `MCP_SCOPE_SECRET` from a secret manager, not a dev default.
+- Authenticate or network-restrict the `/ingest` write endpoint.
+- Add `/healthz`, structured logging, and graceful shutdown.
+
+**Horizontal scaling (multiple instances):**
+
+- Route sessions stickily by `Mcp-Session-Id` — a transport can't move between instances.
+- Move the per-conversation scope cache to Redis with a TTL, since auth and tool calls may hit different instances.
+- Move the vector index from `data/index.json` to a shared vector DB (pgvector, Qdrant, etc.).
+- Optionally offload embeddings to a hosted or dedicated embedding service.
+
+**Hardening (any deployment):**
+
+- Replace the shared HMAC secret with asymmetric signing keys plus rotation.
+- Restrict `/mcp` to Corti's egress (IP allowlist / mTLS / gateway).
+- Confirm `shared`-tagged docs contain no real PHI.
+- Add metrics and tracing.

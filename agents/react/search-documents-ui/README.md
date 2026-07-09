@@ -1,4 +1,4 @@
-# rag-ui-corti
+# search-documents-ui
 
 A React + Express app that connects to Corti, **provisions an orchestrator agent
 wired to a document-search MCP on first run**, lets a clinician sign in, and

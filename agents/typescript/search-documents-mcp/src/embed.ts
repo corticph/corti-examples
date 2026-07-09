@@ -18,7 +18,9 @@ function getExtractor(): Promise<any> {
 
 // Mean pooling + L2 normalize, so cosine similarity reduces to a plain dot product.
 export async function embed(texts: string[]): Promise<number[][]> {
-  if (texts.length === 0) return [];
+  if (texts.length === 0) {
+    return [];
+  }
   const extractor = await getExtractor();
   const output = await extractor(texts, { pooling: "mean", normalize: true });
   return output.tolist() as number[][];

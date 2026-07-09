@@ -1,13 +1,13 @@
 import "dotenv/config";
-import express from "express";
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import express from "express";
+import { bindContext, scopeForContext, scopeFromAuthHeader } from "./scope.js";
 import { createServer } from "./server.js";
 import { addDocument, count } from "./store.js";
-import { scopeFromAuthHeader, bindContext, scopeForContext } from "./scope.js";
 
 const DOCS_DIR = path.resolve(process.cwd(), "docs");
 
@@ -36,18 +36,24 @@ app.post("/mcp", async (req, res) => {
   // Bind this context's scope from any authenticated call carrying a contextId;
   // scopeForContext reads it back at tool-call time.
   const contextId =
-    typeof req.body?.params?._meta?._contextId === "string" ? req.body.params._meta._contextId : undefined;
+    typeof req.body?.params?._meta?._contextId === "string"
+      ? req.body.params._meta._contextId
+      : undefined;
   const scopeContext = scopeFromAuthHeader(req.header("authorization"));
   if (contextId && scopeContext.authed) {
     bindContext(contextId, scopeContext);
-    console.error(`[mcp] context ${contextId.slice(0, 8)} bound scopes=[${scopeContext.allowed.join(", ")}]`);
+    console.error(
+      `[mcp] context ${contextId.slice(0, 8)} bound scopes=[${scopeContext.allowed.join(", ")}]`,
+    );
   }
 
   let transport: StreamableHTTPServerTransport;
 
   if (sessionId && sessions[sessionId]) {
     transport = sessions[sessionId].transport;
-    console.error(`[mcp] ${method} | session=${sessionId.slice(0, 8)} REUSED | auth=${hasAuth} | ctx=${contextId?.slice(0, 8) ?? "none"}`);
+    console.error(
+      `[mcp] ${method} | session=${sessionId.slice(0, 8)} REUSED | auth=${hasAuth} | ctx=${contextId?.slice(0, 8) ?? "none"}`,
+    );
   } else if (!sessionId && isInitializeRequest(req.body)) {
     console.error(`[mcp] initialize | NEW session | auth=${hasAuth}`);
     transport = new StreamableHTTPServerTransport({
@@ -57,7 +63,9 @@ app.post("/mcp", async (req, res) => {
       },
     });
     transport.onclose = () => {
-      if (transport.sessionId) delete sessions[transport.sessionId];
+      if (transport.sessionId) {
+        delete sessions[transport.sessionId];
+      }
     };
     // Scope is resolved per tool-call by contextId; see scopeForContext.
     const server = createServer({ getScope: scopeForContext });
@@ -102,7 +110,9 @@ app.post("/bind-context", (req, res) => {
     return;
   }
   bindContext(contextId, scopeContext);
-  console.error(`[mcp] context ${contextId.slice(0, 8)} PRE-BOUND scopes=[${scopeContext.allowed.join(", ")}]`);
+  console.error(
+    `[mcp] context ${contextId.slice(0, 8)} PRE-BOUND scopes=[${scopeContext.allowed.join(", ")}]`,
+  );
   res.json({ ok: true, contextId, scopes: scopeContext.allowed });
 });
 
@@ -140,6 +150,8 @@ const PORT = Number(process.env.PORT ?? 3000);
 app.listen(PORT, () => {
   console.error(`MCP HTTP server (stateful) listening on http://localhost:${PORT}/mcp`);
   if (INGEST_ENABLED) {
-    console.error("[ingest] WARNING: /ingest is ENABLED and unauthenticated; do not expose it publicly without restricting access.");
+    console.error(
+      "[ingest] WARNING: /ingest is ENABLED and unauthenticated; do not expose it publicly without restricting access.",
+    );
   }
 });

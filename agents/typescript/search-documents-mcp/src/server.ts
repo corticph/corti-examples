@@ -43,7 +43,8 @@ export function createServer(opts: ServerOptions = {}): McpServer {
     async ({ query, topK }, extra) => {
       // Scope rides in the tool call's _meta contextId; works even when this call
       // is unauthenticated, as long as an earlier call bound the scope.
-      const contextId = typeof extra?._meta?._contextId === "string" ? extra._meta._contextId : undefined;
+      const contextId =
+        typeof extra?._meta?._contextId === "string" ? extra._meta._contextId : undefined;
       const { allowed, patientNames } = getScope(contextId);
       const hits = await search(query, topK ?? 4, allowed);
       console.error(
@@ -77,7 +78,7 @@ export function createServer(opts: ServerOptions = {}): McpServer {
           };
         }),
       };
-    }
+    },
   );
 
   return server;

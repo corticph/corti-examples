@@ -9,7 +9,7 @@
     "start:http": "node build/http.js",
     "ingest": "node build/ingest.js",
     "reindex": "node build/ingest.js --rebuild",
-    "lint": "biome check ."
+    "lint": "biome check src/"
   },
   "files": [
     "build"

@@ -24,7 +24,7 @@ export interface Chunk {
   id: string;
   source: string;
   text: string;
-  scope: string;       // "shared" | "patient:<MRN>"
+  scope: string; // "shared" | "patient:<MRN>"
   embedding: number[]; // precomputed at ingest time
 }
 
@@ -39,7 +39,9 @@ export interface SearchHit {
 let chunks: Chunk[] | null = null;
 
 async function load(): Promise<Chunk[]> {
-  if (chunks) return chunks;
+  if (chunks) {
+    return chunks;
+  }
   try {
     const raw = await fs.readFile(INDEX_PATH, "utf8");
     chunks = JSON.parse(raw) as Chunk[];
@@ -58,12 +60,16 @@ async function persist(): Promise<void> {
 // Size stays well under the model's 256-token cap so chunks aren't truncated.
 function chunkText(text: string, size = 128, overlap = 24): string[] {
   const words = text.split(/\s+/).filter(Boolean);
-  if (words.length === 0) return [];
+  if (words.length === 0) {
+    return [];
+  }
   const out: string[] = [];
   const step = Math.max(1, size - overlap);
   for (let index = 0; index < words.length; index += step) {
     out.push(words.slice(index, index + size).join(" "));
-    if (index + size >= words.length) break;
+    if (index + size >= words.length) {
+      break;
+    }
   }
   return out;
 }
@@ -87,7 +93,9 @@ function cosine(vectorA: number[], vectorB: number[]): number {
 // invisible in rendered markdown) and return the scope plus the body without it.
 function parseScope(text: string): { scope: string | null; body: string } {
   const match = text.match(/<!--\s*scope:\s*(\S+)\s*-->/i);
-  if (!match) return { scope: null, body: text };
+  if (!match) {
+    return { scope: null, body: text };
+  }
   return { scope: match[1], body: text.replace(match[0], "").trimStart() };
 }
 
@@ -98,15 +106,25 @@ export async function addDocument(source: string, text: string, scope?: string):
   const { scope: parsed, body } = parseScope(text);
   const resolvedScope = scope ?? parsed ?? SHARED_SCOPE;
   const pieces = chunkText(body);
-  if (pieces.length === 0) return 0;
+  if (pieces.length === 0) {
+    return 0;
+  }
   const vectors = await embed(pieces);
   // Remove any existing chunks from this source (in place, to keep the cache).
   for (let index = all.length - 1; index >= 0; index--) {
-    if (all[index].source === source) all.splice(index, 1);
+    if (all[index].source === source) {
+      all.splice(index, 1);
+    }
   }
-  pieces.forEach((piece, index) =>
-    all.push({ id: `${source}#${index}`, source, text: piece, scope: resolvedScope, embedding: vectors[index] }),
-  );
+  pieces.forEach((piece, index) => {
+    all.push({
+      id: `${source}#${index}`,
+      source,
+      text: piece,
+      scope: resolvedScope,
+      embedding: vectors[index],
+    });
+  });
   await persist();
   return pieces.length;
 }
@@ -119,12 +137,20 @@ function isVisible(chunk: Chunk, allowed: string[]): boolean {
 
 // Semantic ranking scoped to what the caller may see. Defaults to [] (shared
 // docs only), so PHI is withheld unless explicitly granted: deny by default.
-export async function search(query: string, topK = 4, allowed: string[] = []): Promise<SearchHit[]> {
+export async function search(
+  query: string,
+  topK = 4,
+  allowed: string[] = [],
+): Promise<SearchHit[]> {
   const all = await load();
-  if (all.length === 0) return [];
+  if (all.length === 0) {
+    return [];
+  }
 
   const visible = all.filter((chunk) => isVisible(chunk, allowed));
-  if (visible.length === 0) return [];
+  if (visible.length === 0) {
+    return [];
+  }
 
   const [queryVector] = await embed([query]);
 
