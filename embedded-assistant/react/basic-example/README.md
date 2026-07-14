@@ -7,14 +7,14 @@ Minimal React example showing how to integrate the Corti Embedded Assistant.
 1. **Authenticates** with Corti using ROPC flow via backend
 2. **Configures** app-level UI and interaction options using the current Embedded API
 3. **Creates an interaction** with encounter details
-4. **Navigates** to the session view
-5. **Handles** events and errors from the embedded component
+4. **Navigates** to the session view and waits for `interaction.loaded`
+5. **Handles** lifecycle timeouts, retry, events, and errors from the embedded component
 
 ## What This Example Doesn't Cover
 
 - Customisation
 - Advanced event handling
-- Production error handling patterns
+- Production observability patterns
 - State management
 
 ## Quick Start
@@ -57,7 +57,8 @@ Opens on `http://localhost:8015` with backend at `http://localhost:8013`.
   - **Authentication** - Calls `api.auth()` in `onReady` handler
   - **App configuration** - Calls `api.configureApp()` for app-level UI options
   - **Interaction options** - Calls `api.setInteractionOptions()` before creating the interaction
-  - **Interaction creation** - Creates encounter and navigates to session
+  - **Interaction creation** - Creates encounter and navigates to session while the embed is hidden
+  - **Lifecycle recovery** - Adds timeouts for `embedded.ready` and `interaction.loaded`, then remounts on retry
   - **Event handling** - Handles `onReady`, `onEvent`, and `onError` callbacks
 
 - **[src/lib/auth.ts](src/lib/auth.ts)** - Backend communication helpers:
@@ -78,6 +79,9 @@ Opens on `http://localhost:8015` with backend at `http://localhost:8013`.
 const api = useCortiEmbeddedApi(cortiRef);
 
 // In onReady callback:
+const corti = cortiRef.current;
+corti.hide();
+
 await api.auth(credentials);
 await api.configureApp({
   ui: {
@@ -99,5 +103,8 @@ await api.setInteractionOptions({
   },
 });
 const interaction = await api.createInteraction({ encounter: {...} });
-await api.navigate(`/session/${interaction.id}`);
+await waitForInteractionLoaded(corti, () =>
+  api.navigate({ path: `/session/${interaction.id}` }),
+);
+corti.show();
 ```

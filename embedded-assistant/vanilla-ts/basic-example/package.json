@@ -10,7 +10,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@corti/embedded-web": "^0.3.1",
+    "@corti/embedded-web": "^1.0.0",
     "@corti/sdk": "^0.10.1"
   },
   "devDependencies": {
