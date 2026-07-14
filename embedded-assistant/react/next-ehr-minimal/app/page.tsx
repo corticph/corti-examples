@@ -89,14 +89,14 @@ export default function Home() {
             subtext="Current appointment queue"
           />
           <MetricBox
-            label="Visits this week"
-            value={String(dashboard.totals.completedThisWeek)}
-            subtext="Completed consultations"
+            label="Records this week"
+            value={String(dashboard.totals.recordsThisWeek)}
+            subtext="New longitudinal entries"
           />
           <MetricBox
-            label="Prescriptions this month"
-            value={String(dashboard.totals.prescriptionsThisMonth)}
-            subtext="Medication outcomes recorded"
+            label="Medication actions"
+            value={String(dashboard.totals.medicationActionsThisMonth)}
+            subtext="Started, changed, or renewed this month"
           />
         </section>
 

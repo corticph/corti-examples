@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { appointmentStatusLabel, formatDate, outcomeLabel } from "@/lib/ehr-utils";
+import {
+  appointmentStatusLabel,
+  formatDate,
+  outcomeLabel,
+  recordEntryTypeLabel,
+} from "@/lib/ehr-utils";
 
 describe("ehr utils", () => {
   it("formats dates for the patient-facing summary", () => {
@@ -13,5 +18,10 @@ describe("ehr utils", () => {
 
   it("maps appointment statuses", () => {
     expect(appointmentStatusLabel("checked-in")).toBe("Checked in");
+  });
+
+  it("maps record entry type labels", () => {
+    expect(recordEntryTypeLabel("body-metrics")).toBe("Body data");
+    expect(recordEntryTypeLabel("patient-message")).toBe("Messages");
   });
 });

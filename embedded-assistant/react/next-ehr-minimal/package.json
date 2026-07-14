@@ -14,6 +14,7 @@
   "dependencies": {
     "@corti/embedded-web": "^1.0.0",
     "@corti/sdk": "^0.10.1",
+    "@radix-ui/react-tooltip": "^1.2.12",
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.9.0",
     "lucide-react": "^1.8.0",

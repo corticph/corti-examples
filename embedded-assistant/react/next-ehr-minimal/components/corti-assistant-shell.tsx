@@ -23,9 +23,7 @@ export function CortiAssistantShell({
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
           Corti assistant
         </p>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight">
-          Live consultation workspace
-        </h2>
+        <h2 className="mt-2 text-2xl font-bold tracking-tight">Live consultation workspace</h2>
       </div>
 
       <div

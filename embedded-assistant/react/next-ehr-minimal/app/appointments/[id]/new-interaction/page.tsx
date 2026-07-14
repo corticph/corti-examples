@@ -9,6 +9,7 @@ import { CortiAssistantInteractionData } from "@/components/corti-assistant-type
 import { Suspense } from "react";
 import { CortiAssistantPanel } from "@/components/corti-assistant-panel";
 import { CortiAssistantLoader } from "@/components/corti-assistant-loader";
+import { getConsultationTemplate } from "@/lib/consultation-templates";
 
 export default async function NewInteractionPage({
   params,
@@ -23,6 +24,7 @@ export default async function NewInteractionPage({
   }
 
   const { appointment, patient } = detail;
+  const template = getConsultationTemplate(appointment.consultationType);
 
   const interactionData: CortiAssistantInteractionData = {
     assignedUserId: null,
@@ -45,10 +47,10 @@ export default async function NewInteractionPage({
               New consultation
             </p>
             <h1 className="mt-2 text-3xl font-black tracking-tight">
-              {patient.fullName}
+              {template.label}
             </h1>
             <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
-              {appointment.reason} · {formatDateTime(appointment.startsAt)} ·{" "}
+              {patient.fullName} · {appointment.reason} · {formatDateTime(appointment.startsAt)} ·{" "}
               {appointment.clinician}
             </p>
           </div>
@@ -63,6 +65,8 @@ export default async function NewInteractionPage({
         <SectionCard className="p-5">
           <ConsultationForm
             appointmentId={appointment.id}
+            patientId={patient.id}
+            consultationType={appointment.consultationType}
             clinician={appointment.clinician}
             reason={appointment.reason}
           />

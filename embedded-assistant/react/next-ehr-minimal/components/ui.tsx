@@ -11,10 +11,10 @@ export function PageShell({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-400 min-w-0">
-        <aside className="hidden w-72 shrink-0 border-r border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-background))] px-5 py-6 lg:block">
+        <aside className="hidden w-20 shrink-0 border-r border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-background))] px-3 py-4 lg:block">
           {sidebar}
         </aside>
-        <main className="min-w-0 flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <main className="min-w-0 flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-6">
           {children}
         </main>
       </div>
@@ -39,10 +39,12 @@ export function SectionCard({
 export function SidebarLink({
   href,
   label,
+  icon,
   active = false,
 }: {
   href: string;
   label: string;
+  icon?: ReactNode;
   active?: boolean;
 }) {
   return (
@@ -61,12 +63,14 @@ export function SidebarLink({
             }
       }
       className={[
-        "flex items-center rounded-lg px-3 py-2 text-sm font-semibold transition-opacity hover:opacity-90",
+        "flex h-11 w-11 items-center justify-center rounded-lg text-sm font-semibold transition-opacity hover:opacity-90",
         "border-l-[3px]",
         active ? "sidebar-link-active" : "sidebar-link-inactive",
       ].join(" ")}
+      aria-label={label}
+      title={label}
     >
-      {label}
+      {icon ?? <span className="text-xs">{label.slice(0, 2)}</span>}
     </Link>
   );
 }

@@ -12,8 +12,8 @@ export default function PatientsPage() {
         <header>
           <h1 className="text-3xl font-black tracking-tight">Patients</h1>
           <p className="mt-2 max-w-3xl text-sm text-[hsl(var(--muted-foreground))]">
-            Review patient demographics, background, recent visits, and upcoming
-            appointments.
+            Review patient demographics, background, recent record activity, and
+            upcoming appointments.
           </p>
         </header>
         <PatientList patients={patients} />

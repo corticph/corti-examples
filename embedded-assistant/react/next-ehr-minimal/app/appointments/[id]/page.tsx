@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
 import { CalendarDays, CircleUserRound, FileText } from "lucide-react";
 import { EhrSidebar } from "@/components/ehr-sidebar";
-import { AppointmentActionCard, BackActions, VisitTimeline } from "@/components/ehr-parts";
+import {
+  AppointmentActionCard,
+  BackActions,
+  RecordEntryLedger,
+} from "@/components/ehr-parts";
 import { PageShell, SectionCard, StatusChip } from "@/components/ui";
 import { getAppointmentDetail } from "@/lib/ehr-db";
 import { appointmentStatusLabel, formatDateTime } from "@/lib/ehr-utils";
@@ -18,7 +22,7 @@ export default async function AppointmentDetailPage({
     notFound();
   }
 
-  const { appointment, patient, visits } = detail;
+  const { appointment, patient, recordEntries } = detail;
 
   return (
     <PageShell sidebar={<EhrSidebar activePath="/appointments" />}>
@@ -63,15 +67,18 @@ export default async function AppointmentDetailPage({
               </div>
             </SectionCard>
 
-            <AppointmentActionCard appointmentId={appointment.id} />
+            <AppointmentActionCard
+              appointmentId={appointment.id}
+              consultationType={appointment.consultationType}
+            />
           </div>
 
           <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">Previous visits</h2>
-              <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">Open context before starting the new interaction.</p>
+              <h2 className="text-2xl font-bold tracking-tight">Recent record context</h2>
+              <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">Open longitudinal context before starting the new interaction.</p>
             </div>
-            <VisitTimeline visits={visits} />
+            <RecordEntryLedger entries={recordEntries} />
           </div>
         </div>
       </div>
