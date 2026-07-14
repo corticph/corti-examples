@@ -1,6 +1,7 @@
 export type CortiAssistantStatus = {
   tone: "default" | "error";
   message: string;
+  canRetry?: boolean;
 };
 
 export type CortiAssistantInteractionData = {
