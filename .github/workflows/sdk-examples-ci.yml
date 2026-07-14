@@ -38,6 +38,9 @@ jobs:
             react-next-agent-chat:
               - 'agents/react/next-agent-chat/**'
               - '.github/workflows/sdk-examples-ci.yml'
+            react-api-workflow-builder:
+              - 'tooling/react/api-workflow-builder/**'
+              - '.github/workflows/sdk-examples-ci.yml'
 
   dotnet:
     name: C# format & build
@@ -82,6 +85,8 @@ jobs:
             path: sdk/typescript/next-auth-examples
           - project: react-next-agent-chat
             path: agents/react/next-agent-chat
+          - project: react-api-workflow-builder
+            path: tooling/react/api-workflow-builder
 
     defaults:
       run:

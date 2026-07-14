@@ -53,6 +53,12 @@ covering every group of endpoints: auth flows, interactions, recordings, transcr
 documents, and WebSocket streaming. Not real applications — intended as a practical guide for developers integrating
 the SDK and as a validation tool when upgrading to a new SDK version.
 
+**[Tooling](#tooling)**
+
+Developer tools for hand-testing the Corti API. Not integrations you'd ship to production — they're aimed at engineers
+exploring or debugging the API surface: schema-driven request forms, per-profile OAuth token caching, and a workflow
+builder for chaining calls end-to-end.
+
 ---
 
 ### SDK
@@ -107,3 +113,11 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 | Example                                                                              | Stack                      | Description                                                                                  |
 |--------------------------------------------------------------------------------------|----------------------------|----------------------------------------------------------------------------------------------|
 | [agents/react/next-agent-chat/](agents/react/next-agent-chat/)                       | TypeScript, Next.js, React | AI agent chat interface with A2A streaming, AI SDK integration, and real-time messaging      |
+
+---
+
+### Tooling
+
+| Example                                                                                        | Stack                            | Description                                                                                                       |
+|------------------------------------------------------------------------------------------------|----------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| [tooling/react/api-workflow-builder/](tooling/react/api-workflow-builder/)                     | TypeScript, React, Vite, Express | Hand-testing playground: schema-driven endpoint forms, multi-profile OAuth token caching, chained workflow runner |
