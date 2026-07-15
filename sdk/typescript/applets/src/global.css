@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Corti design system theme.
+   * tailwind.config.ts expects these color variables expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+   * Reference every colour via hsl(var(--token-name)); never hardcode hex/rgb.
+  */
+  :root {
+    /* Backgrounds & Text */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 6%;
+    /* Dotted page canvas behind the cards — slightly off-white so white cards
+       gain contrast. Kept separate from --background so inputs/cards stay pure. */
+    --canvas: 0 0% 95%;
+
+    /* Surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 6%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 6%;
+
+    /* Brand & Accents */
+    --primary: 0 0% 6%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 0 0% 6%;
+    --accent: 0 0% 91%;
+    --accent-foreground: 222 47% 11%;
+
+    /* Muted */
+    --muted: 0 0% 91%;
+    --muted-foreground: 0 0% 41%;
+
+    /* Feedback */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Primitives */
+    --border: 0 0% 93%;
+    --input: 0 0% 90%;
+    --ring: 215 16% 47%;
+    --radius: 0.5rem;
+    --dot: 0 0% 85%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5% 37%;
+    --sidebar-primary: 0 0% 1%;
+    --sidebar-primary-foreground: 0 0% 95%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 1%;
+    --sidebar-border: 0 0% 78%;
+    --sidebar-ring: 0 0% 35%;
+
+    /* Semantic States */
+    --variant-error-bg: 0 100% 97%;
+    --variant-error-border: 0 93% 86%;
+    --variant-error-text: 0 72% 37%;
+    --variant-info-bg: 210 100% 97%;
+    --variant-info-border: 210 100% 88%;
+    --variant-info-text: 215 60% 23%;
+    --variant-success-bg: 142 76% 97%;
+    --variant-success-border: 142 61% 86%;
+    --variant-success-text: 142 70% 28%;
+    --variant-warning-bg: 38 100% 96%;
+    --variant-warning-border: 38 94% 84%;
+    --variant-warning-text: 30 92% 34%;
+
+    /* Charts */
+    --chart-1: 265 65% 46%;
+    --chart-2: 204 86% 49%;
+
+    /* Solid feedback fills (derived from variant text tones) */
+    --success: 142 70% 28%;
+    --success-foreground: 0 0% 100%;
+    --warning: 30 92% 34%;
+    --warning-foreground: 0 0% 100%;
+
+    /* ✦ Corti Signature Brand Colour */
+    --corti-lime: 77 94% 53%;
+    --corti-lime-foreground: 0 0% 6%;
+  }
+
+  .dark {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 90%;
+    --canvas: 0 0% 4%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 90%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 6%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 90%;
+    --accent: 0 0% 16%;
+    --accent-foreground: 0 0% 90%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 65%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+    --ring: 0 0% 100%;
+    --dot: 0 0% 22%;
+    --sidebar-background: 0 0% 12%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 6%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 25%;
+    --sidebar-ring: 0 0% 100%;
+    --variant-error-bg: 0 60% 9%;
+    --variant-error-border: 0 52% 28%;
+    --variant-error-text: 0 68% 82%;
+    --variant-info-bg: 222 67% 10%;
+    --variant-info-border: 222 51% 28%;
+    --variant-info-text: 210 20% 85%;
+    --variant-success-bg: 150 40% 8%;
+    --variant-success-border: 150 35% 28%;
+    --variant-success-text: 140 36% 80%;
+    --variant-warning-bg: 60 100% 6%;
+    --variant-warning-border: 60 100% 18%;
+    --variant-warning-text: 48 96% 78%;
+    --chart-1: 264 97% 62%;
+    --chart-2: 203 100% 60%;
+    --success: 140 36% 80%;
+    --success-foreground: 0 0% 6%;
+    --warning: 48 96% 78%;
+    --warning-foreground: 0 0% 6%;
+    --corti-lime: 77 94% 53%;
+    --corti-lime-foreground: 0 0% 6%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply text-foreground;
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+    background-color: hsl(var(--canvas));
+    font-family:
+      "Inter",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      sans-serif;
+    /* Tiled dot grid in the page whitespace; cards and the nav keep their
+       opaque fill and sit on top, so dots show only in the empty gutters. */
+    background-image: radial-gradient(hsl(var(--dot)) 1px, transparent 1.5px);
+    background-size: 20px 20px;
+    background-position: -10px -10px;
+  }
+
+  html body[data-scroll-locked] {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+    --removed-body-scroll-bar-size: 0px !important;
+  }
+}
+
+@layer components {
+  /* Tympany signature card title: IBM Plex Mono with a lime underline. */
+  .card-title-underline {
+    text-decoration: underline;
+    text-decoration-color: hsl(var(--corti-lime));
+    text-decoration-thickness: 3px;
+    text-underline-offset: 4px;
+  }
+}
