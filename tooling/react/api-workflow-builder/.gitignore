@@ -1,0 +1,27 @@
+# Dependencies & build output
+node_modules
+dist
+.vite
+tsconfig.tsbuildinfo
+
+# Editor / OS noise
+.DS_Store
+*.log
+
+# Secrets — Corti client credentials live here
+.env
+.env.local
+.env.*.local
+
+# Local runtime data (dev server's agent/workflow JSON persistence, file uploads)
+server/data
+server/data/*
+
+# graphify outputs — build artifacts from the /graphify skill
+graphify-out
+.graphify
+.graphify_*
+.graphyfy
+
+# Local Claude Code state
+.claude/

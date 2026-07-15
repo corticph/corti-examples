@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background-color: #f6f6f4;
+    background-image: radial-gradient(rgba(11, 11, 15, 0.06) 1px, transparent 1px);
+    background-size: 22px 22px;
+    background-position: 0 0;
+    color: #0b0b0f;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  code,
+  pre {
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  }
+}
