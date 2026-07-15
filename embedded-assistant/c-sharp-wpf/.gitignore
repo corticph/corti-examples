@@ -1,0 +1,10 @@
+.env
+.dotnet/
+bin/
+obj/
+artifacts/
+.vs/
+*.user
+*.csproj.user
+WebAssets/dist/
+WebAssets/node_modules/
