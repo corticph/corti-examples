@@ -11,15 +11,15 @@
     "lint:fix": "biome check src/ server/ --write --unsafe"
   },
   "dependencies": {
+    "@corti/ambient-web": "latest",
+    "@corti/dictation-web": "latest",
+    "@corti/sdk": "latest",
     "axios": "^1.8.0",
     "dotenv": "^16.0.0",
     "express": "^5.0.0",
     "http-proxy-middleware": "^3.0.0"
   },
   "devDependencies": {
-    "@corti/ambient-web": "0.7.0",
-    "@corti/dictation-web": "0.7.0",
-    "@corti/sdk": "3.0.0",
     "@lit/react": "^1.0.8",
     "@radix-ui/react-dialog": "^1.1.0",
     "@radix-ui/react-label": "^2.1.0",
