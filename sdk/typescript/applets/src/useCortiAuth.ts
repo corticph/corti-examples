@@ -47,19 +47,19 @@ export function useCortiAuth(): CortiAuthState {
       const body = await response.json().catch(() => ({}));
       throw new Error(body.message || `Auth failed: ${response.status}`);
     }
-    const { access_token, expires_in } = await response.json();
-    setAuthToken(access_token);
+    const { accessToken, expiresIn } = await response.json();
+    setAuthToken(accessToken);
     setIsReady(true);
 
     // Proactively refresh ~30s before the token expires.
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    if (expires_in && expires_in > 30) {
+    if (expiresIn && expiresIn > 30) {
       refreshTimerRef.current = setTimeout(() => {
         authenticate().catch(console.error);
-      }, (expires_in - 30) * 1000);
+      }, (expiresIn - 30) * 1000);
     }
 
-    return access_token;
+    return accessToken;
   }, []);
 
   useEffect(() => {

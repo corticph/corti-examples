@@ -1,4 +1,4 @@
-import axios from "axios";
+import { CortiAuth } from "@corti/sdk";
 
 export interface CortiCreds {
   clientId: string;
@@ -49,26 +49,9 @@ export function hasCreds(): boolean {
   }
 }
 
-interface TokenResponse {
-  access_token: string;
-  expires_in: number;
-}
-
-async function mint(scope: string): Promise<TokenResponse> {
-  const { clientId, clientSecret, cluster, tenant } = getCreds();
-  const url = `https://auth.${cluster}.corti.app/realms/${tenant}/protocol/openid-connect/token`;
-
-  const { data } = await axios.post<TokenResponse>(
-    url,
-    new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: clientId,
-      client_secret: clientSecret,
-      scope,
-    }),
-    { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
-  );
-  return data;
+function getAuth(): CortiAuth {
+  const { cluster, tenant } = getCreds();
+  return new CortiAuth({ environment: cluster, tenantName: tenant });
 }
 
 let fullScope: { token: string; expMs: number } | null = null;
@@ -76,10 +59,11 @@ let fullScope: { token: string; expMs: number } | null = null;
 export async function getFullScopeToken(): Promise<string> {
   if (fullScope && Date.now() < fullScope.expMs - 30_000)
     return fullScope.token;
-  const data = await mint("openid");
+  const { clientId, clientSecret } = getCreds();
+  const data = await getAuth().getToken({ clientId, clientSecret });
   fullScope = {
-    token: data.access_token,
-    expMs: Date.now() + data.expires_in * 1000,
+    token: data.accessToken,
+    expMs: Date.now() + data.expiresIn * 1000,
   };
   return fullScope.token;
 }
@@ -88,7 +72,8 @@ export type StreamScope = "transcribe" | "streams";
 
 export async function getScopedToken(
   scopes: StreamScope[],
-): Promise<TokenResponse> {
-  const scope = ["openid", ...scopes].join(" ");
-  return mint(scope);
+): Promise<{ accessToken: string; expiresIn: number }> {
+  const { clientId, clientSecret } = getCreds();
+  const data = await getAuth().getToken({ clientId, clientSecret, scopes });
+  return { accessToken: data.accessToken, expiresIn: data.expiresIn };
 }

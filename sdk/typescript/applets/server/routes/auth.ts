@@ -18,8 +18,8 @@ router.post("/stream-token", async (req, res) => {
       });
     }
 
-    const { access_token, expires_in } = await getScopedToken(scopes);
-    res.json({ access_token, expires_in });
+    const { accessToken, expiresIn } = await getScopedToken(scopes);
+    res.json({ accessToken, expiresIn });
   } catch (error: any) {
     console.error("Stream-token error:", error.message);
     res.status(error.response?.status ?? 500).json({

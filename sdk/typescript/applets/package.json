@@ -14,7 +14,6 @@
     "@corti/ambient-web": "latest",
     "@corti/dictation-web": "latest",
     "@corti/sdk": "latest",
-    "axios": "^1.8.0",
     "dotenv": "^16.0.0",
     "express": "^5.0.0",
     "http-proxy-middleware": "^3.0.0"
