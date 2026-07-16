@@ -36,9 +36,9 @@ function getTokenExp(token: string): number | undefined {
   const parts = token?.split(".");
   if (!parts || parts.length < 2) return undefined;
   try {
-    const payload = JSON.parse(
-      atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
-    );
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+    const payload = JSON.parse(atob(padded));
     return typeof payload.exp === "number" ? payload.exp : undefined;
   } catch {
     return undefined;
