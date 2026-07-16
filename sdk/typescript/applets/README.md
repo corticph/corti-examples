@@ -77,7 +77,7 @@ The applets never import from `useCortiAuth` directly — the host (`App.tsx`) o
 
 ### REST proxy
 
-All REST API calls from the browser go to `/api/corti/*`, which the Express server proxies to `https://api.<cluster>.corti.ai/` with a server-injected `Authorization` header. The `buildApiUrl()` helper in `src/applets/_shared/urls.ts` returns the correct origin-relative prefix.
+All REST API calls from the browser go to `/api/corti/*`, which the Express server proxies to `https://api.<cluster>.corti.app/` with a server-injected `Authorization` header. The `buildApiUrl()` helper in `src/applets/_shared/urls.ts` returns the correct origin-relative prefix.
 
 ### Project structure
 
