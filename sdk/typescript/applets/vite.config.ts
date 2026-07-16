@@ -5,7 +5,7 @@ import { createServer } from "./server/index";
 
 export default defineConfig({
   server: {
-    host: "::",
+    host: "localhost",
     port: 8080,
     fs: {
       allow: [".", "./src"],
