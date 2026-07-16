@@ -26,8 +26,8 @@ cp .env.example .env
 ```
 CORTI_CLIENT_ID=<your-client-id>
 CORTI_CLIENT_SECRET=<your-client-secret>
-CORTI_CLUSTER=<cluster>          # e.g. dev-weu, staging-eu
-CORTI_TENANT=<tenant-name>
+CORTI_ENVIRONMENT=<environment>  # e.g. dev-weu, staging-eu
+CORTI_TENANT_NAME=<tenant-name>
 ```
 
 > **Never commit `.env`.** The `.gitignore` already excludes all `.env*` files.

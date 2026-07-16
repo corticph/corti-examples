@@ -18,13 +18,13 @@ export function getCreds(): CortiCreds {
   const creds: Partial<CortiCreds> = {
     clientId: env.CORTI_CLIENT_ID,
     clientSecret: env.CORTI_CLIENT_SECRET,
-    cluster: env.CORTI_CLUSTER ?? "dev-weu",
-    tenant: env.CORTI_TENANT,
+    cluster: env.CORTI_ENVIRONMENT ?? "dev-weu",
+    tenant: env.CORTI_TENANT_NAME,
   };
 
   if (!creds.clientId || !creds.clientSecret || !creds.tenant) {
     throw new Error(
-      "Missing Corti credentials: set CORTI_CLIENT_ID, CORTI_CLIENT_SECRET, and CORTI_TENANT in .env",
+      "Missing Corti credentials: set CORTI_CLIENT_ID, CORTI_CLIENT_SECRET, and CORTI_TENANT_NAME in .env",
     );
   }
   if (
@@ -32,7 +32,7 @@ export function getCreds(): CortiCreds {
     !SAFE_IDENTIFIER.test(creds.tenant)
   ) {
     throw new Error(
-      "Invalid CORTI_CLUSTER or CORTI_TENANT: must match ^[a-z0-9-]+$",
+      "Invalid CORTI_ENVIRONMENT or CORTI_TENANT_NAME: must match ^[a-z0-9-]+$",
     );
   }
 
