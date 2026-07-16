@@ -32,6 +32,8 @@ CORTI_TENANT_NAME=<tenant-name>
 
 > **Never commit `.env`.** The `.gitignore` already excludes all `.env*` files.
 
+> **Local dev only.** The dev server binds to `localhost`. Do not expose it on a public or shared network — the `/api/corti` proxy uses your client credentials with no additional caller authentication.
+
 ### 3. Start the dev server
 
 ```bash
