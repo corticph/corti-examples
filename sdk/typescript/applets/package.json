@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check src/ server/",
+    "lint:fix": "biome check src/ server/ --write --unsafe"
   },
   "dependencies": {
     "axios": "^1.8.0",
@@ -26,6 +28,7 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-switch": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
+    "@biomejs/biome": "^2.4.6",
     "@swc/core": "^1.10.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
