@@ -116,6 +116,6 @@ server/
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Vite dev server + Express on http://localhost:8080 |
-| `npm run build` | Build client + server bundles |
-| `npm run start` | Run the production build |
+| `npm run build` | Build client bundle |
 | `npm run typecheck` | TypeScript type check (no emit) |
+| `npm run lint` | Biome lint + format check |
