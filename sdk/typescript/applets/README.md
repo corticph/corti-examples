@@ -5,7 +5,7 @@ A set of runnable example applets for the Corti Speech-to-Text APIs. Each applet
 ## Prerequisites
 
 - Node.js 18+
-- A Corti tenant and OAuth client credentials (client ID + secret). Contact Corti support or your account team if you need test credentials.
+- A Corti tenant and OAuth client credentials (client ID + secret) - Corti account and API credentials are available from [Corti Console](https://console.corti.app).
 
 ## Setup
 
