@@ -44,8 +44,8 @@ export function LanguagesDetails() {
       </div>
 
       <p className="rounded-md bg-muted/60 px-2 py-1.5 text-xs text-muted-foreground">
-        Availability is reported per endpoint — a language can be enabled for
-        transcribe but not streams or transcripts. See the{" "}
+        Availability is reported per endpoint — a language can be enabled for transcribe but not
+        streams or transcripts. See the{" "}
         <a
           className="underline"
           href="https://docs.corti.ai/api-reference/languages/list-languages"

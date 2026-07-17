@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  SECOND_PASS_AGENT,
   exportAgent,
   resetPrompt,
+  SECOND_PASS_AGENT,
   savePrompt,
   useSecondPassAgentStore,
 } from "./agent";
@@ -22,13 +22,9 @@ export function SecondPassAgentDetails() {
   return (
     <div className="flex flex-col gap-4 text-sm">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Agent
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agent</p>
         <p className="mt-1 text-foreground">{SECOND_PASS_AGENT.name}</p>
-        <p className="text-xs text-muted-foreground">
-          {SECOND_PASS_AGENT.description}
-        </p>
+        <p className="text-xs text-muted-foreground">{SECOND_PASS_AGENT.description}</p>
       </div>
 
       <div>
@@ -37,11 +33,7 @@ export function SecondPassAgentDetails() {
             System prompt
           </p>
           <span className="text-xs text-muted-foreground">
-            {status === "preparing"
-              ? "Updating agent..."
-              : dirty
-                ? "Unsaved changes"
-                : ""}
+            {status === "preparing" ? "Updating agent..." : dirty ? "Unsaved changes" : ""}
           </span>
         </div>
         <textarea
@@ -67,8 +59,7 @@ export function SecondPassAgentDetails() {
           </Button>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          Saving updates the agent in place; the prompt is stored per API
-          client.
+          Saving updates the agent in place; the prompt is stored per API client.
         </p>
       </div>
     </div>

@@ -4,12 +4,13 @@
  * keypress" (capture a sequence of keystrokes), or "run script" (JavaScript run
  * when the command fires, with access to the editor + command variables).
  */
-import { useEffect, useRef, useState } from "react";
+
 import { X } from "lucide-react";
-import { cn } from "../_shared/utils";
-import { describeSequence, type KeyCombo } from "../_shared/command-dispatch";
-import type { ManagedCommand, ManagedVariable } from "./command-model";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { describeSequence, type KeyCombo } from "../_shared/command-dispatch";
+import { cn } from "../_shared/utils";
+import type { ManagedCommand, ManagedVariable } from "./command-model";
 
 interface DraftVariable {
   key: string;
@@ -51,7 +52,9 @@ function toDraft(command?: ManagedCommand): Draft {
     combos: [],
     code: DEFAULT_SCRIPT,
   };
-  if (!command) return base;
+  if (!command) {
+    return base;
+  }
   return {
     ...base,
     id: command.id,
@@ -67,20 +70,17 @@ function toDraft(command?: ManagedCommand): Draft {
         : command.action.kind === "script"
           ? "script"
           : "insert_text",
-    insertText:
-      command.action.kind === "insert_text" ? command.action.text : "",
+    insertText: command.action.kind === "insert_text" ? command.action.text : "",
     combos: command.action.kind === "keypress" ? command.action.combos : [],
-    code:
-      command.action.kind === "script" ? command.action.code : DEFAULT_SCRIPT,
+    code: command.action.kind === "script" ? command.action.code : DEFAULT_SCRIPT,
   };
 }
 
 const MODIFIER_KEYS = new Set(["Control", "Shift", "Alt", "Meta"]);
 
-function toKeyCombo(e: Pick<
-  KeyboardEvent,
-  "ctrlKey" | "metaKey" | "altKey" | "shiftKey" | "key"
->): KeyCombo {
+function toKeyCombo(
+  e: Pick<KeyboardEvent, "ctrlKey" | "metaKey" | "altKey" | "shiftKey" | "key">,
+): KeyCombo {
   return {
     ctrl: e.ctrlKey,
     meta: e.metaKey,
@@ -102,7 +102,9 @@ function KeySequenceCapture({
   const captureRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!capturing) return;
+    if (!capturing) {
+      return;
+    }
     captureRef.current?.focus();
     const onKeyDown = (e: KeyboardEvent) => {
       if (MODIFIER_KEYS.has(e.key)) {
@@ -120,6 +122,7 @@ function KeySequenceCapture({
 
   return (
     <div className="flex flex-col gap-2">
+      {/* biome-ignore lint/a11y/useSemanticElements: keystroke capture div is not a text editor; role="textbox" signals focus intent to assistive tech */}
       <div
         ref={captureRef}
         tabIndex={0}
@@ -127,15 +130,11 @@ function KeySequenceCapture({
         aria-label="Keystroke capture"
         className={cn(
           "min-h-[2.25rem] rounded-md border px-3 py-1.5 text-sm outline-none",
-          capturing
-            ? "border-corti-lime text-foreground"
-            : "border-border text-muted-foreground",
+          capturing ? "border-corti-lime text-foreground" : "border-border text-muted-foreground",
         )}
       >
         {combos.length > 0 ? (
-          <span className="font-mono text-foreground">
-            {describeSequence(combos)}
-          </span>
+          <span className="font-mono text-foreground">{describeSequence(combos)}</span>
         ) : capturing ? (
           "Type keys... (modifier combinations are captured together)"
         ) : (
@@ -255,9 +254,7 @@ export function CommandEditor({
             </p>
           )}
           {idClash && (
-            <p className="mt-1 text-xs text-variant-error-foreground">
-              That id is already in use.
-            </p>
+            <p className="mt-1 text-xs text-variant-error-foreground">That id is already in use.</p>
           )}
         </Field>
 
@@ -276,12 +273,10 @@ export function CommandEditor({
             {draft.variables.map((v, i) => {
               const patchVar = (patch: Partial<DraftVariable>) =>
                 set({
-                  variables: draft.variables.map((x, j) =>
-                    j === i ? { ...x, ...patch } : x,
-                  ),
+                  variables: draft.variables.map((x, j) => (j === i ? { ...x, ...patch } : x)),
                 });
               return (
-                <div key={i} className="flex items-center gap-2">
+                <div key={v.key || i} className="flex items-center gap-2">
                   <input
                     value={v.key}
                     onChange={(e) => patchVar({ key: e.target.value })}
@@ -331,10 +326,7 @@ export function CommandEditor({
               type="button"
               onClick={() =>
                 set({
-                  variables: [
-                    ...draft.variables,
-                    { key: "", type: "enum", enumCsv: "" },
-                  ],
+                  variables: [...draft.variables, { key: "", type: "enum", enumCsv: "" }],
                 })
               }
               className="self-start text-xs text-muted-foreground hover:text-foreground"
@@ -348,11 +340,10 @@ export function CommandEditor({
             )}
             {draft.variables.some((v) => v.type === "wildcard") && (
               <p className="rounded-md bg-muted/60 px-2 py-1.5 text-xs text-muted-foreground">
-                Wildcard rules: a literal trigger word must precede the variable
-                (a phrase can’t start with one); multiple wildcards need a
-                literal between them; ~2s silence before/after; up to 10 words;
-                enums match before wildcards. Requires SDK wildcard support (PR
-                #202) — emitted via a typed shim until then.
+                Wildcard rules: a literal trigger word must precede the variable (a phrase can’t
+                start with one); multiple wildcards need a literal between them; ~2s silence
+                before/after; up to 10 words; enums match before wildcards. Requires SDK wildcard
+                support (PR #202) — emitted via a typed shim until then.
               </p>
             )}
           </div>
@@ -393,10 +384,7 @@ export function CommandEditor({
               />
             )}
             {draft.actionKind === "keypress" && (
-              <KeySequenceCapture
-                combos={draft.combos}
-                onChange={(combos) => set({ combos })}
-              />
+              <KeySequenceCapture combos={draft.combos} onChange={(combos) => set({ combos })} />
             )}
             {draft.actionKind === "script" && (
               <div className="flex flex-col gap-1">
@@ -408,9 +396,8 @@ export function CommandEditor({
                   className="w-full rounded-md border border-border bg-background px-2 py-1 font-mono text-xs text-foreground outline-none focus:border-corti-lime"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Runs with <code>editor</code>, <code>command</code>, and{" "}
-                  <code>variables</code> in scope; <code>return</code> a string
-                  to show in the debugger.
+                  Runs with <code>editor</code>, <code>command</code>, and <code>variables</code> in
+                  scope; <code>return</code> a string to show in the debugger.
                 </p>
               </div>
             )}
@@ -425,9 +412,7 @@ export function CommandEditor({
             Cancel
           </Button>
           {!valid && disabledReason && (
-            <span className="text-xs text-muted-foreground">
-              {disabledReason}
-            </span>
+            <span className="text-xs text-muted-foreground">{disabledReason}</span>
           )}
         </div>
       </div>
@@ -435,13 +420,7 @@ export function CommandEditor({
   );
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

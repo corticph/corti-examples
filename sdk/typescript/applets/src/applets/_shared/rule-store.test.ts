@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createRuleStore, type RuleBase } from "./rule-store";
 
 interface Item extends RuleBase {

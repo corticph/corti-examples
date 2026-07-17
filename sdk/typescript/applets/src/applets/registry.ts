@@ -2,53 +2,54 @@
  * Applet manifest for the Sandbox page. Each entry is a self-contained example
  * implementation of ONE concept. Adding an applet = add a folder + one entry.
  */
-import type { ComponentType } from "react";
+
 import {
-  MessageSquareCode,
-  MessageCircle,
-  Replace,
-  SpellCheck,
-  Type,
-  Users,
-  Code2,
-  Sparkles,
-  PanelRight,
   AppWindow,
+  Code2,
   Gamepad2,
   HardDrive,
   Languages as LanguagesIcon,
   type LucideIcon,
+  MessageCircle,
+  MessageSquareCode,
+  PanelRight,
+  Replace,
+  Sparkles,
+  SpellCheck,
+  Type,
+  Users,
 } from "lucide-react";
-import { DictationCommands } from "./dictation-commands/DictationCommands";
+import type { ComponentType } from "react";
+import { AmbientDetails } from "./ambient-diarized/AmbientDetails";
+import { AmbientDiarized } from "./ambient-diarized/AmbientDiarized";
+import { AppControl } from "./app-control/AppControl";
+import { AppControlDetails } from "./app-control/AppControlDetails";
+import { ConversationalAgent } from "./conversational-agent/ConversationalAgent";
+import { ConversationalAgentDetails } from "./conversational-agent/ConversationalAgentDetails";
+import { DeviceButtons } from "./device-buttons/DeviceButtons";
+import { DeviceButtonsDetails } from "./device-buttons/DeviceButtonsDetails";
+import { AudioArchiveDetails } from "./dictation-audio-archive/AudioArchiveDetails";
+import { DictationAudioArchive } from "./dictation-audio-archive/DictationAudioArchive";
+import { BoxDetails } from "./dictation-box/BoxDetails";
+import { DictationBox } from "./dictation-box/DictationBox";
 import { CommandManager } from "./dictation-commands/CommandManager";
-import { TextReplacements } from "./text-replacements/TextReplacements";
-import { ReplacementsDetails } from "./text-replacements/ReplacementsDetails";
-import { DictionaryTerms } from "./dictionary-terms/DictionaryTerms";
-import { TermsDetails } from "./dictionary-terms/TermsDetails";
+import { DictationCommands } from "./dictation-commands/DictationCommands";
 import { DictationRichText } from "./dictation-richtext/DictationRichText";
 import { RichTextDetails } from "./dictation-richtext/RichTextDetails";
 import { SegmentComparisonCard } from "./dictation-richtext/SegmentComparisonCard";
-import { AmbientDiarized } from "./ambient-diarized/AmbientDiarized";
-import { AmbientDetails } from "./ambient-diarized/AmbientDetails";
 import { DictationSdk } from "./dictation-sdk/DictationSdk";
 import { SdkDetails } from "./dictation-sdk/SdkDetails";
-import { OnDemandAgent } from "./on-demand-agent/OnDemandAgent";
-import { OnDemandAgentDetails } from "./on-demand-agent/OnDemandAgentDetails";
-import { ConversationalAgent } from "./conversational-agent/ConversationalAgent";
-import { ConversationalAgentDetails } from "./conversational-agent/ConversationalAgentDetails";
-import { DictationBox } from "./dictation-box/DictationBox";
-import { BoxDetails } from "./dictation-box/BoxDetails";
-import { AppControl } from "./app-control/AppControl";
-import { AppControlDetails } from "./app-control/AppControlDetails";
-import { DeviceButtons } from "./device-buttons/DeviceButtons";
-import { DeviceButtonsDetails } from "./device-buttons/DeviceButtonsDetails";
-import { Languages } from "./languages/Languages";
-import { LanguagesDetails } from "./languages/LanguagesDetails";
-import { DictationAudioArchive } from "./dictation-audio-archive/DictationAudioArchive";
-import { AudioArchiveDetails } from "./dictation-audio-archive/AudioArchiveDetails";
-import { SecondPassAgent } from "./second-pass-agent/SecondPassAgent";
+import { DictionaryTerms } from "./dictionary-terms/DictionaryTerms";
+import { TermsDetails } from "./dictionary-terms/TermsDetails";
 import { FileTranscription } from "./file-transcription/FileTranscription";
 import { FileTranscriptionDetails } from "./file-transcription/FileTranscriptionDetails";
+import { Languages } from "./languages/Languages";
+import { LanguagesDetails } from "./languages/LanguagesDetails";
+import { OnDemandAgent } from "./on-demand-agent/OnDemandAgent";
+import { OnDemandAgentDetails } from "./on-demand-agent/OnDemandAgentDetails";
+import { SecondPassAgent } from "./second-pass-agent/SecondPassAgent";
+import { ReplacementsDetails } from "./text-replacements/ReplacementsDetails";
+import { TextReplacements } from "./text-replacements/TextReplacements";
 
 export type WorkflowArea = "dictation" | "ambient" | "agentic";
 

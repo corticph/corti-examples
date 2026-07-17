@@ -5,19 +5,20 @@
  * are protected), plus an inline create/edit form. Configured per applet via
  * `fields` + `describe` + `toExport`.
  */
-import { useEffect, useState } from "react";
+
 import { Download, Pencil, Plus, Trash2 } from "lucide-react";
-import { cn } from "./utils";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import type { RuleBase } from "./rule-store";
+import { cn } from "./utils";
 
 export interface RuleField {
   name: string;
@@ -99,7 +100,7 @@ export function RuleManager<T extends RuleBase>({
   const openEdit = (item: T) => {
     setDraft(
       Object.fromEntries(
-        fields.map((f) => [f.name, String((item as any)[f.name] ?? "")]),
+        fields.map((f) => [f.name, String((item as Record<string, unknown>)[f.name] ?? "")]),
       ),
     );
     setMode({ kind: "edit", id: item.id });
@@ -108,9 +109,7 @@ export function RuleManager<T extends RuleBase>({
   const draftValid = fields.every((f) => draft[f.name]?.trim());
 
   const save = () => {
-    const values = Object.fromEntries(
-      fields.map((f) => [f.name, draft[f.name].trim()]),
-    );
+    const values = Object.fromEntries(fields.map((f) => [f.name, draft[f.name].trim()]));
     const id = mode.kind === "edit" ? mode.id : newId();
     onUpsert({ id, builtin: false, ...values } as unknown as T);
     setMode({ kind: "list" });
@@ -129,11 +128,7 @@ export function RuleManager<T extends RuleBase>({
           <Plus className="h-4 w-4" /> New {noun}
         </Button>
         {mode.kind === "list" && selected && !selected.builtin && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => openEdit(selected)}
-          >
+          <Button size="sm" variant="outline" onClick={() => openEdit(selected)}>
             <Pencil className="h-4 w-4" /> Edit
           </Button>
         )}
@@ -167,9 +162,7 @@ export function RuleManager<T extends RuleBase>({
               </span>
               <input
                 value={draft[f.name] ?? ""}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, [f.name]: e.target.value }))
-                }
+                onChange={(e) => setDraft((d) => ({ ...d, [f.name]: e.target.value }))}
                 placeholder={f.placeholder}
                 className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:border-corti-lime"
               />
@@ -179,11 +172,7 @@ export function RuleManager<T extends RuleBase>({
             <Button size="sm" onClick={save} disabled={!draftValid}>
               {mode.kind === "edit" ? "Save" : `Add ${noun}`}
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setMode({ kind: "list" })}
-            >
+            <Button size="sm" variant="ghost" onClick={() => setMode({ kind: "list" })}>
               Cancel
             </Button>
           </div>
@@ -192,9 +181,7 @@ export function RuleManager<T extends RuleBase>({
 
       <ul className="flex max-h-72 flex-col gap-1 overflow-auto">
         {items.length === 0 && (
-          <li className="px-1 py-2 text-sm text-muted-foreground">
-            No {noun}s yet.
-          </li>
+          <li className="px-1 py-2 text-sm text-muted-foreground">No {noun}s yet.</li>
         )}
         {items.map((item) => (
           <li key={item.id} className="flex items-center gap-2">
@@ -233,10 +220,8 @@ export function RuleManager<T extends RuleBase>({
             <DialogDescription>
               This removes {removable.length} custom {noun}
               {removable.length === 1 ? "" : "s"}
-              {checkedItems.length > removable.length
-                ? " (built-in entries stay)."
-                : "."}{" "}
-              This can’t be undone — export first if you want a copy.
+              {checkedItems.length > removable.length ? " (built-in entries stay)." : "."} This
+              can’t be undone — export first if you want a copy.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

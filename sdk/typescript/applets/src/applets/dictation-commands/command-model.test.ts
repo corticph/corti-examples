@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { toTranscribeCommands, type ManagedCommand } from "./command-model";
+import { describe, expect, it } from "vitest";
+import { type ManagedCommand, toTranscribeCommands } from "./command-model";
 
 const base = (over: Partial<ManagedCommand>): ManagedCommand => ({
   id: "c",
@@ -10,9 +10,7 @@ const base = (over: Partial<ManagedCommand>): ManagedCommand => ({
 
 describe("toTranscribeCommands", () => {
   it("strips the client-side action from the API config", () => {
-    const [out] = toTranscribeCommands([
-      base({ action: { kind: "delete_last" } }),
-    ]);
+    const [out] = toTranscribeCommands([base({ action: { kind: "delete_last" } })]);
     expect(out).toEqual({ id: "c", phrases: ["do it"], variables: undefined });
     expect("action" in out).toBe(false);
   });
@@ -23,9 +21,7 @@ describe("toTranscribeCommands", () => {
         variables: [{ key: "style", type: "enum", enum: ["bold", "italic"] }],
       }),
     ]);
-    expect(out.variables).toEqual([
-      { key: "style", type: "enum", enum: ["bold", "italic"] },
-    ]);
+    expect(out.variables).toEqual([{ key: "style", type: "enum", enum: ["bold", "italic"] }]);
   });
 
   it("emits wildcard variables without an enum field (shim)", () => {

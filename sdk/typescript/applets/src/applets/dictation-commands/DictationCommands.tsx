@@ -7,22 +7,19 @@
  * dictation-segment ranges are kept valid across typing, dictation, and commands
  * via the offset-map. Each executed command is pushed to the debugger log.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CortiDictationComponent } from "../_shared/corti-dictation-react";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+
 import type { Corti } from "@corti/sdk";
-import { useActiveControl } from "../_shared/useActiveControl";
-import { useHidCommandHandler } from "../_shared/useDictationDevice";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { dispatchCommand } from "../_shared/command-dispatch";
-import { diffEdit, transformRanges, type Range } from "../_shared/offset-map";
+import { CortiDictationComponent } from "../_shared/corti-dictation-react";
 import type { EditorAdapter } from "../_shared/editor-adapter";
+import { diffEdit, type Range, transformRanges } from "../_shared/offset-map";
+import { useActiveControl } from "../_shared/useActiveControl";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { useHidCommandHandler } from "../_shared/useDictationDevice";
+import { buildRegistry, TEMPLATES, toTranscribeCommands } from "./command-model";
+import { logCommand, setIdentity, useCommandStore } from "./command-store";
 import { buildDictationConfig } from "./config";
-import {
-  buildRegistry,
-  toTranscribeCommands,
-  TEMPLATES,
-} from "./command-model";
-import { useCommandStore, logCommand, setIdentity } from "./command-store";
 
 const LANGUAGE = "en";
 
@@ -55,16 +52,22 @@ export function DictationCommands() {
   const reconcile = useCallback((a: EditorAdapter) => {
     const next = a.getText();
     const edit = diffEdit(prevTextRef.current, next);
-    if (edit) historyRef.current = transformRanges(historyRef.current, edit);
+    if (edit) {
+      historyRef.current = transformRanges(historyRef.current, edit);
+    }
     prevTextRef.current = next;
   }, []);
 
   const handleTranscript = useCallback(
     (e: CustomEvent) => {
       const data = e.detail?.data;
-      if (!data || Array.isArray(data)) return;
+      if (!data || Array.isArray(data)) {
+        return;
+      }
       const a = adapterRef.current;
-      if (!a) return;
+      if (!a) {
+        return;
+      }
       if (data.isFinal) {
         setInterim("");
         const inserted = a.insert(data.text, { primaryLanguage: LANGUAGE });
@@ -82,7 +85,9 @@ export function DictationCommands() {
     (e: CustomEvent) => {
       const data = e.detail?.data;
       const a = adapterRef.current;
-      if (!data || !a) return;
+      if (!data || !a) {
+        return;
+      }
       const outcome = dispatchCommand(a, data, registryRef.current, {
         history: historyRef.current,
         templates: TEMPLATES,
@@ -103,7 +108,9 @@ export function DictationCommands() {
   const handleHidCommand = useCallback(
     (commandId: string) => {
       const a = adapterRef.current;
-      if (!a) return;
+      if (!a) {
+        return;
+      }
       const data = {
         id: commandId,
         variables: {},
@@ -122,7 +129,9 @@ export function DictationCommands() {
 
   const handleInput = useCallback(() => {
     const a = adapterRef.current;
-    if (a) reconcile(a);
+    if (a) {
+      reconcile(a);
+    }
   }, [reconcile]);
 
   useEffect(() => {
@@ -132,13 +141,10 @@ export function DictationCommands() {
   return (
     <div className="flex flex-col gap-4" ref={containerRef}>
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Executable dictation commands
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Executable dictation commands</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Dictate into the editor, then speak a configured command. Each command
-          maps to a real editor action; manage the full set — and add your own —
-          in the command manager below.
+          Dictate into the editor, then speak a configured command. Each command maps to a real
+          editor action; manage the full set — and add your own — in the command manager below.
         </p>
       </div>
 
@@ -149,15 +155,11 @@ export function DictationCommands() {
           placeholder="Press the microphone and start dictating…"
           className="w-full resize-y rounded-md border border-border bg-background p-3 font-mono text-sm text-foreground outline-none focus:border-corti-lime"
         />
-        {interim && (
-          <p className="mt-1 text-sm italic text-muted-foreground">{interim}</p>
-        )}
+        {interim && <p className="mt-1 text-sm italic text-muted-foreground">{interim}</p>}
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
-          {commands.length} commands configured
-        </span>
+        <span className="text-xs text-muted-foreground">{commands.length} commands configured</span>
         <CortiDictationComponent
           authConfig={authConfig}
           dictationConfig={dictationConfig}

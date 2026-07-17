@@ -19,18 +19,12 @@ export interface FieldHandle {
   pick?(index: number): boolean;
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       {children}
-    </label>
+    </div>
   );
 }
 
@@ -38,11 +32,7 @@ function Field({
 const areaClass =
   "w-full resize-y rounded-md border border-border bg-background p-2 font-mono text-sm text-foreground outline-none focus:border-corti-lime";
 
-export function MockForm({
-  onReady,
-}: {
-  onReady: (fields: FieldHandle[]) => void;
-}) {
+export function MockForm({ onReady }: { onReady: (fields: FieldHandle[]) => void }) {
   const noteOneRef = useRef<HTMLTextAreaElement>(null);
   const noteTwoRef = useRef<HTMLTextAreaElement>(null);
   const severityRef = useRef<DropdownHandle>(null);
@@ -50,7 +40,9 @@ export function MockForm({
 
   useEffect(() => {
     const focusEnd = (el: HTMLTextAreaElement | null) => {
-      if (!el) return;
+      if (!el) {
+        return;
+      }
       el.focus();
       const end = el.value.length;
       el.setSelectionRange(end, end);

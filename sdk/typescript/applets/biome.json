@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!!dist", "!!node_modules", "!!*.config.mjs", "!!*.config.js"]
+    "includes": ["**", "!!dist", "!!node_modules", "!!*.config.mjs", "!!*.config.js", "!!**/*.css"]
   },
   "formatter": {
     "enabled": true,
@@ -22,6 +22,10 @@
         "organizeImports": "on"
       }
     }
+  },
+  "css": {
+    "linter": { "enabled": false },
+    "formatter": { "enabled": false }
   },
   "linter": {
     "enabled": true,

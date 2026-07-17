@@ -8,7 +8,7 @@
  * Note: the Agentic Framework must be enabled for the project/region — an
  * authorized-but-not-entitled client gets a 403; surface that to the user.
  */
-import type { CortiClient, Corti } from "@corti/sdk";
+import type { Corti, CortiClient } from "@corti/sdk";
 
 export interface AgentSpec {
   name: string;
@@ -26,31 +26,32 @@ export interface AgentSendResult {
 }
 
 /** Pull the first text part out of a message:send response. */
-export function extractAgentText(
-  resp: Corti.AgentsMessageSendResponse,
-): string {
+export function extractAgentText(resp: Corti.AgentsMessageSendResponse): string {
   const messages = [resp.task?.status?.message, resp.message];
   for (const msg of messages) {
     for (const part of msg?.parts ?? []) {
-      if (part.kind === "text" && part.text) return part.text;
+      if (part.kind === "text" && part.text) {
+        return part.text;
+      }
     }
   }
   for (const artifact of resp.task?.artifacts ?? []) {
     for (const part of artifact.parts ?? []) {
-      if (part.kind === "text" && part.text) return part.text;
+      if (part.kind === "text" && part.text) {
+        return part.text;
+      }
     }
   }
   return "";
 }
 
 /** Return the id of the agent named `spec.name`, creating it if it doesn't exist. */
-export async function ensureAgent(
-  client: CortiClient,
-  spec: AgentSpec,
-): Promise<string> {
+export async function ensureAgent(client: CortiClient, spec: AgentSpec): Promise<string> {
   const agents = await client.agents.list();
   const existing = agents.find((a) => a.name === spec.name);
-  if (existing) return existing.id;
+  if (existing) {
+    return existing.id;
+  }
   const created = await client.agents.create({
     name: spec.name,
     description: spec.description,

@@ -1,10 +1,5 @@
-import { describe, it, expect } from "vitest";
-import {
-  diffEdit,
-  transformRange,
-  transformRanges,
-  type Edit,
-} from "./offset-map";
+import { describe, expect, it } from "vitest";
+import { diffEdit, type Edit, transformRange, transformRanges } from "./offset-map";
 
 describe("diffEdit", () => {
   it("returns null for identical text", () => {

@@ -5,10 +5,11 @@
  * Notes tab holds a textarea so dictation (the EditorAdapter half) and app
  * command-and-control coexist on one surface.
  */
-import { useEffect, useRef, useState } from "react";
+
 import { Check, PanelRightOpen, Plus, Save } from "lucide-react";
-import { cn } from "../_shared/utils";
+import { useEffect, useRef, useState } from "react";
 import type { AppControlRegistry } from "../_shared/app-control-adapter";
+import { cn } from "../_shared/utils";
 
 const TABS = ["overview", "orders", "notes"] as const;
 type Tab = (typeof TABS)[number];
@@ -52,9 +53,13 @@ export function MockApp({
   // Landing on the Notes tab (by voice or click) focuses the textarea and drops
   // the caret at the end, so dictation flows straight into it.
   useEffect(() => {
-    if (tab !== "notes") return;
+    if (tab !== "notes") {
+      return;
+    }
     const el = notesRef.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     el.focus();
     const end = el.value.length;
     el.setSelectionRange(end, end);
@@ -78,13 +83,7 @@ export function MockApp({
         kind: "toggle",
         aliases: ["details panel"],
         run: (arg) =>
-          setDetailsOpen(
-            arg === "open"
-              ? true
-              : arg === "close"
-                ? false
-                : !detailsRef.current,
-          ),
+          setDetailsOpen(arg === "open" ? true : arg === "close" ? false : !detailsRef.current),
         getState: () => (detailsRef.current ? "open" : "closed"),
       }),
       registry.register({
@@ -118,6 +117,7 @@ export function MockApp({
         run: () => setModalOpen(false),
       }),
     ];
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: forEach cleanup callbacks are intentionally void
     return () => offs.forEach((off) => off());
   }, [registry]);
 
@@ -132,29 +132,16 @@ export function MockApp({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/60 p-2">
         <div className="flex gap-1">
           {TABS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              className={tabBtn(tab === t)}
-              onClick={() => setTab(t)}
-            >
+            <button key={t} type="button" className={tabBtn(tab === t)} onClick={() => setTab(t)}>
               {t}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={actionBtn}
-            onClick={() => setModalOpen(true)}
-          >
+          <button type="button" className={actionBtn} onClick={() => setModalOpen(true)}>
             <Plus className="h-4 w-4" /> New order
           </button>
-          <button
-            type="button"
-            className={actionBtn}
-            onClick={() => setSavedAt(Date.now())}
-          >
+          <button type="button" className={actionBtn} onClick={() => setSavedAt(Date.now())}>
             <Save className="h-4 w-4" /> Save
           </button>
           <button
@@ -174,8 +161,8 @@ export function MockApp({
             <div className="space-y-1 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">Overview</p>
               <p>
-                Drive this workspace by voice: switch tabs, open the details
-                panel, create an order, or save.
+                Drive this workspace by voice: switch tabs, open the details panel, create an order,
+                or save.
               </p>
               {savedAt && (
                 <p className="inline-flex items-center gap-1 font-medium text-lime-600 dark:text-corti-lime">
@@ -221,9 +208,7 @@ export function MockApp({
         {detailsOpen && (
           <aside className="w-48 shrink-0 border-l border-border p-4 text-sm">
             <p className="mb-1 font-medium text-foreground">Details</p>
-            <p className="text-muted-foreground">
-              A side panel toggled by “open/close details”.
-            </p>
+            <p className="text-muted-foreground">A side panel toggled by “open/close details”.</p>
           </aside>
         )}
       </div>
@@ -239,15 +224,9 @@ export function MockApp({
         <div className="absolute inset-0 flex items-center justify-center rounded-md bg-foreground/20 p-4">
           <div className="w-full max-w-xs rounded-lg border border-border bg-card p-4 shadow-lg">
             <p className="text-sm font-medium text-foreground">Create order?</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Say “confirm” or “cancel”.
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Say “confirm” or “cancel”.</p>
             <div className="mt-3 flex justify-end gap-2">
-              <button
-                type="button"
-                className={actionBtn}
-                onClick={() => setModalOpen(false)}
-              >
+              <button type="button" className={actionBtn} onClick={() => setModalOpen(false)}>
                 Cancel
               </button>
               <button

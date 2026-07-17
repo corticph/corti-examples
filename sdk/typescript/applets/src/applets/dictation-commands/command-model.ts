@@ -8,10 +8,10 @@
  */
 import type { Corti } from "@corti/sdk";
 import {
-  executeAction,
-  type KeyCombo,
   type CommandAction,
   type CommandRegistry,
+  executeAction,
+  type KeyCombo,
 } from "../_shared/command-dispatch";
 
 export type ManagedVariable =
@@ -50,9 +50,7 @@ function primaryShortcut(key: string): KeyCombo {
  * variables are cast through `unknown` because `@corti/dictation-web@0.7.0` only
  * types `type: "enum"` — drop the cast once the SDK ships wildcard (PR #202).
  */
-export function toTranscribeCommands(
-  cmds: ManagedCommand[],
-): Corti.TranscribeCommand[] {
+export function toTranscribeCommands(cmds: ManagedCommand[]): Corti.TranscribeCommand[] {
   return cmds.map((c) => ({
     id: c.id,
     phrases: c.phrases,
@@ -71,8 +69,7 @@ export function toTranscribeCommands(
 export function buildRegistry(cmds: ManagedCommand[]): CommandRegistry {
   const registry: CommandRegistry = {};
   for (const c of cmds) {
-    registry[c.id] = (adapter, command, ctx) =>
-      executeAction(adapter, c.action, command, ctx);
+    registry[c.id] = (adapter, command, ctx) => executeAction(adapter, c.action, command, ctx);
   }
   return registry;
 }
@@ -96,9 +93,7 @@ export const CATALOG: ManagedCommand[] = [
   {
     id: "insert_template",
     phrases: ["insert my {template} template", "insert {template} template"],
-    variables: [
-      { key: "template", type: "enum", enum: Object.keys(TEMPLATES) },
-    ],
+    variables: [{ key: "template", type: "enum", enum: Object.keys(TEMPLATES) }],
     action: { kind: "insert_template", variableKey: "template" },
     builtin: true,
     description: "Insert a predefined template (enum variable)",
@@ -123,8 +118,10 @@ export const CATALOG: ManagedCommand[] = [
         "const t = (variables.text || '').trim();",
         "if (!t) return 'no text';",
         "const i = editor.getText().toLowerCase().lastIndexOf(t.toLowerCase());",
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: intentional — this string is evaluated code containing template literals
         'if (i < 0) return `"${t}" not found`;',
         "editor.setSelection(i, i + t.length);",
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: intentional — this string is evaluated code containing template literals
         'return `selected "${t}"`;',
       ].join("\n"),
     },
@@ -175,8 +172,7 @@ export const CATALOG: ManagedCommand[] = [
       combos: [primaryShortcut("ArrowDown")],
     },
     builtin: true,
-    description:
-      "Move the caret to the end of the document (Cmd+Down / Ctrl+End semantics)",
+    description: "Move the caret to the end of the document (Cmd+Down / Ctrl+End semantics)",
   },
   {
     id: "go_to_beginning_of_document",
@@ -186,8 +182,7 @@ export const CATALOG: ManagedCommand[] = [
       combos: [primaryShortcut("ArrowUp")],
     },
     builtin: true,
-    description:
-      "Move the caret to the beginning of the document (Cmd+Up / Ctrl+Home semantics)",
+    description: "Move the caret to the beginning of the document (Cmd+Up / Ctrl+Home semantics)",
   },
   {
     id: "go_to_end_of_line",
@@ -197,8 +192,7 @@ export const CATALOG: ManagedCommand[] = [
       combos: [primaryShortcut("ArrowRight")],
     },
     builtin: true,
-    description:
-      "Move the caret to the end of the current line (Cmd+Right / End semantics)",
+    description: "Move the caret to the end of the current line (Cmd+Right / End semantics)",
   },
   {
     id: "go_to_beginning_of_line",
@@ -208,8 +202,7 @@ export const CATALOG: ManagedCommand[] = [
       combos: [primaryShortcut("ArrowLeft")],
     },
     builtin: true,
-    description:
-      "Move the caret to the beginning of the current line (Cmd+Left / Home semantics)",
+    description: "Move the caret to the beginning of the current line (Cmd+Left / Home semantics)",
   },
   {
     id: "select_all",
@@ -268,8 +261,7 @@ export const CATALOG: ManagedCommand[] = [
       ].join("\n"),
     },
     builtin: true,
-    description:
-      "Jump to the next field placeholder after the caret (wraps to first)",
+    description: "Jump to the next field placeholder after the caret (wraps to first)",
   },
   {
     id: "previous_field",
@@ -296,8 +288,7 @@ export const CATALOG: ManagedCommand[] = [
       ].join("\n"),
     },
     builtin: true,
-    description:
-      "Jump to the previous field placeholder before the caret (wraps to last)",
+    description: "Jump to the previous field placeholder before the caret (wraps to last)",
   },
   {
     id: "first_field",

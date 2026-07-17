@@ -7,9 +7,9 @@
  */
 import { useSyncExternalStore } from "react";
 import {
+  type ConfigStore,
   createLocalConfigStore,
   identityNamespace,
-  type ConfigStore,
 } from "../_shared/config-store";
 import { CATALOG, type ManagedCommand } from "./command-model";
 
@@ -43,7 +43,9 @@ let state: StoreState = {
 
 const listeners = new Set<() => void>();
 function emit() {
-  for (const l of listeners) l();
+  for (const l of listeners) {
+    l();
+  }
 }
 function subscribe(l: () => void) {
   listeners.add(l);
@@ -66,7 +68,9 @@ function persistUser() {
  */
 export function setIdentity(clientId?: string, tenant?: string) {
   const ns = identityNamespace(clientId, tenant);
-  if (ns === namespace) return;
+  if (ns === namespace) {
+    return;
+  }
   namespace = ns;
   store = createLocalConfigStore(ns);
   state = { ...state, commands: [...CATALOG, ...loadUserCommands()] };

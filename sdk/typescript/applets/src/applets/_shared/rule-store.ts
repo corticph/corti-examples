@@ -5,11 +5,7 @@
  * ConfigStore seam; a preloaded catalog is always merged in and never removed.
  */
 import { useSyncExternalStore } from "react";
-import {
-  createLocalConfigStore,
-  identityNamespace,
-  type ConfigStore,
-} from "./config-store";
+import { type ConfigStore, createLocalConfigStore, identityNamespace } from "./config-store";
 
 export interface RuleBase {
   id: string;
@@ -38,6 +34,7 @@ export function createRuleStore<T extends RuleBase>(
   let counter = 0;
 
   const listeners = new Set<() => void>();
+  // biome-ignore lint/suspicious/useIterableCallbackReturn: forEach callbacks are void
   const emit = () => listeners.forEach((l) => l());
   const subscribe = (l: () => void) => {
     listeners.add(l);
@@ -55,10 +52,7 @@ export function createRuleStore<T extends RuleBase>(
     getItems: () => items,
     upsert(item) {
       const idx = items.findIndex((i) => i.id === item.id);
-      items =
-        idx === -1
-          ? [...items, item]
-          : items.map((i, n) => (n === idx ? item : i));
+      items = idx === -1 ? [...items, item] : items.map((i, n) => (n === idx ? item : i));
       persist();
       emit();
     },
@@ -70,7 +64,9 @@ export function createRuleStore<T extends RuleBase>(
     },
     setIdentity(clientId, tenant) {
       const ns = identityNamespace(clientId, tenant);
-      if (ns === namespace) return;
+      if (ns === namespace) {
+        return;
+      }
       namespace = ns;
       store = createLocalConfigStore(ns);
       items = [...catalog, ...loadUser()];

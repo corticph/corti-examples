@@ -10,8 +10,8 @@ import { useEffect, useState } from "react";
 import {
   createEmptyRunState,
   flattenTranscriptForDisplay,
-  resetRunStateForNewRun,
   type InteractionSummary,
+  resetRunStateForNewRun,
   type TranscriptCreateRequest,
   type TranscriptProcessingStatus,
   type TranscriptResponse,
@@ -97,8 +97,7 @@ export interface TranscriptRunner {
 
 export function useTranscriptRunner(): TranscriptRunner {
   const [sourceMode, setSourceMode] = useState<TranscriptSourceMode>("upload");
-  const [uploadInteractionMode, setUploadInteractionMode] =
-    useState<UploadInteractionMode>("new");
+  const [uploadInteractionMode, setUploadInteractionMode] = useState<UploadInteractionMode>("new");
   const [primaryLanguage, setPrimaryLanguage] = useState("en");
   const [isDictation, setIsDictation] = useState(true);
   const [isMultichannel, setIsMultichannel] = useState(false);
@@ -110,12 +109,9 @@ export function useTranscriptRunner(): TranscriptRunner {
   const [recordings, setRecordings] = useState<string[]>([]);
   const [selectedRecordingId, setSelectedRecordingId] = useState("");
 
-  const [runState, setRunState] = useState<TranscriptRunState>(
-    createEmptyRunState(),
-  );
+  const [runState, setRunState] = useState<TranscriptRunState>(createEmptyRunState());
   const [browserError, setBrowserError] = useState<string>();
-  const [isRefreshingInteractions, setIsRefreshingInteractions] =
-    useState(false);
+  const [isRefreshingInteractions, setIsRefreshingInteractions] = useState(false);
   const [isRefreshingRecordings, setIsRefreshingRecordings] = useState(false);
 
   useEffect(() => {
@@ -123,15 +119,15 @@ export function useTranscriptRunner(): TranscriptRunner {
 
     async function load() {
       setRunState((current) =>
-        current.phase === "idle"
-          ? { ...current, phase: "loading_interactions" }
-          : current,
+        current.phase === "idle" ? { ...current, phase: "loading_interactions" } : current,
       );
       setBrowserError(undefined);
       setIsRefreshingInteractions(true);
       try {
         const items = await listInteractions();
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setInteractions(items);
         setSelectedInteractionId((current) => {
           if (current && items.some((item) => item.id === current)) {
@@ -140,16 +136,13 @@ export function useTranscriptRunner(): TranscriptRunner {
           return items[0]?.id || "";
         });
         setRunState((current) =>
-          current.phase === "loading_interactions"
-            ? { ...current, phase: "idle" }
-            : current,
+          current.phase === "loading_interactions" ? { ...current, phase: "idle" } : current,
         );
       } catch (error) {
-        if (cancelled) return;
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load interactions.";
+        if (cancelled) {
+          return;
+        }
+        const message = error instanceof Error ? error.message : "Failed to load interactions.";
         setBrowserError(message);
         setRunState((current) =>
           current.phase === "loading_interactions"
@@ -182,13 +175,13 @@ export function useTranscriptRunner(): TranscriptRunner {
       setIsRefreshingRecordings(true);
       setBrowserError(undefined);
       setRunState((current) =>
-        current.phase === "idle"
-          ? { ...current, phase: "loading_recordings" }
-          : current,
+        current.phase === "idle" ? { ...current, phase: "loading_recordings" } : current,
       );
       try {
         const items = await listRecordings(selectedInteractionId);
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setRecordings(items);
         setSelectedRecordingId((current) => {
           if (current && items.includes(current)) {
@@ -197,14 +190,13 @@ export function useTranscriptRunner(): TranscriptRunner {
           return items[0] || "";
         });
         setRunState((current) =>
-          current.phase === "loading_recordings"
-            ? { ...current, phase: "idle" }
-            : current,
+          current.phase === "loading_recordings" ? { ...current, phase: "idle" } : current,
         );
       } catch (error) {
-        if (cancelled) return;
-        const message =
-          error instanceof Error ? error.message : "Failed to load recordings.";
+        if (cancelled) {
+          return;
+        }
+        const message = error instanceof Error ? error.message : "Failed to load recordings.";
         setBrowserError(message);
         setRunState((current) =>
           current.phase === "loading_recordings"
@@ -237,16 +229,16 @@ export function useTranscriptRunner(): TranscriptRunner {
         return items[0]?.id || "";
       });
     } catch (error) {
-      setBrowserError(
-        error instanceof Error ? error.message : "Failed to load interactions.",
-      );
+      setBrowserError(error instanceof Error ? error.message : "Failed to load interactions.");
     } finally {
       setIsRefreshingInteractions(false);
     }
   }
 
   async function refreshRecordings() {
-    if (!selectedInteractionId) return;
+    if (!selectedInteractionId) {
+      return;
+    }
     setIsRefreshingRecordings(true);
     setBrowserError(undefined);
     try {
@@ -259,9 +251,7 @@ export function useTranscriptRunner(): TranscriptRunner {
         return items[0] || "";
       });
     } catch (error) {
-      setBrowserError(
-        error instanceof Error ? error.message : "Failed to load recordings.",
-      );
+      setBrowserError(error instanceof Error ? error.message : "Failed to load recordings.");
     } finally {
       setIsRefreshingRecordings(false);
     }
@@ -274,17 +264,10 @@ export function useTranscriptRunner(): TranscriptRunner {
     if (sourceMode === "upload" && !file) {
       return "Choose an audio file first.";
     }
-    if (
-      sourceMode === "upload" &&
-      uploadInteractionMode === "existing" &&
-      !selectedInteractionId
-    ) {
+    if (sourceMode === "upload" && uploadInteractionMode === "existing" && !selectedInteractionId) {
       return "Choose an interaction before uploading.";
     }
-    if (
-      sourceMode === "recording" &&
-      (!selectedInteractionId || !selectedRecordingId)
-    ) {
+    if (sourceMode === "recording" && (!selectedInteractionId || !selectedRecordingId)) {
       return "Choose an interaction and recording first.";
     }
     return null;
@@ -310,9 +293,7 @@ export function useTranscriptRunner(): TranscriptRunner {
 
     try {
       setRunState(
-        resetRunStateForNewRun(
-          sourceMode === "upload" ? "uploading" : "creating_transcript",
-        ),
+        resetRunStateForNewRun(sourceMode === "upload" ? "uploading" : "creating_transcript"),
       );
 
       if (sourceMode === "upload") {
@@ -320,6 +301,7 @@ export function useTranscriptRunner(): TranscriptRunner {
           uploadInteractionMode === "new"
             ? await createExamplesInteraction()
             : selectedInteractionId;
+        // biome-ignore lint/style/noNonNullAssertion: file is guaranteed present — form validates before calling generate
         recordingId = await uploadRecording(interactionId, file!);
         setRunState((current) => ({
           ...current,
@@ -357,18 +339,14 @@ export function useTranscriptRunner(): TranscriptRunner {
         phase: "polling",
       }));
 
-      const status = await pollTranscriptUntilReady(
-        interactionId,
-        transcriptId,
-        {
-          onStatus: (nextStatus: TranscriptProcessingStatus) => {
-            setRunState((current) => ({
-              ...current,
-              transcriptStatus: nextStatus,
-            }));
-          },
+      const status = await pollTranscriptUntilReady(interactionId, transcriptId, {
+        onStatus: (nextStatus: TranscriptProcessingStatus) => {
+          setRunState((current) => ({
+            ...current,
+            transcriptStatus: nextStatus,
+          }));
         },
-      );
+      });
 
       if (status === "failed") {
         setRunState((current) => ({
@@ -396,8 +374,7 @@ export function useTranscriptRunner(): TranscriptRunner {
         setRunState((current) => ({ ...current, phase: "done" }));
       }
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Transcript run failed.";
+      const message = error instanceof Error ? error.message : "Transcript run failed.";
       // Functional update preserves any transcript already fetched — a failed
       // second pass leaves the finalized transcript on screen.
       setRunState((current) => ({
@@ -411,16 +388,11 @@ export function useTranscriptRunner(): TranscriptRunner {
     }
   }
 
-  const busy =
-    runState.phase !== "idle" &&
-    runState.phase !== "done" &&
-    runState.phase !== "error";
+  const busy = runState.phase !== "idle" && runState.phase !== "done" && runState.phase !== "error";
 
   const inputsInvalid = validate() !== null;
 
-  const selectedInteraction = interactions.find(
-    (item) => item.id === selectedInteractionId,
-  );
+  const selectedInteraction = interactions.find((item) => item.id === selectedInteractionId);
 
   return {
     sourceMode,

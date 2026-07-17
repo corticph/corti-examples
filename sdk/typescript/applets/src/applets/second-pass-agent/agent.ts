@@ -1,18 +1,18 @@
-import { useSyncExternalStore } from "react";
-import { CortiClient } from "@corti/sdk";
 import type { CortiAuth } from "@corti/sdk";
-import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
+import { CortiClient } from "@corti/sdk";
+import { useSyncExternalStore } from "react";
 import {
+  type ConfigStore,
   createLocalConfigStore,
   identityNamespace,
-  type ConfigStore,
 } from "../_shared/config-store";
 import {
+  type AgentSpec,
   describeAgentError,
   ensureAgent,
   sendAgentMessage,
-  type AgentSpec,
 } from "../_shared/corti-agent";
+import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 
 export const SECOND_PASS_AGENT = {
   name: "Second Pass",
@@ -29,12 +29,7 @@ Return only the final result with no preamble, labels, or markdown fences.`;
 const PROMPT_KEY = "secondPass.systemPrompt";
 const AGENT_ID_KEY = "secondPass.agentId";
 
-export type SecondPassAgentStatus =
-  | "idle"
-  | "preparing"
-  | "ready"
-  | "running"
-  | "error";
+export type SecondPassAgentStatus = "idle" | "preparing" | "ready" | "running" | "error";
 
 interface SecondPassAgentState {
   prompt: string;
@@ -60,7 +55,9 @@ const subscribe = (listener: () => void) => {
   return () => listeners.delete(listener);
 };
 const emit = () => {
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 };
 const set = (patch: Partial<SecondPassAgentState>) => {
   state = { ...state, ...patch };
@@ -73,7 +70,9 @@ const spec = (): AgentSpec => ({
 });
 
 async function prepare() {
-  if (!client) return;
+  if (!client) {
+    return;
+  }
   set({ status: "preparing", error: undefined });
   try {
     if (!agentId) {
@@ -119,7 +118,9 @@ export function configureSecondPassAgent(
 export async function savePrompt(prompt: string) {
   store.set(PROMPT_KEY, prompt);
   set({ prompt });
-  if (!client || !agentId) return;
+  if (!client || !agentId) {
+    return;
+  }
 
   set({ status: "preparing", error: undefined });
   try {

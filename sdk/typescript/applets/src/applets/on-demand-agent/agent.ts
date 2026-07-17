@@ -9,22 +9,23 @@
  * entirely in the system prompt: a MINIMAL spelling/grammar/punctuation pass
  * that preserves wording and content.
  */
-import { useSyncExternalStore } from "react";
-import { CortiClient } from "@corti/sdk";
+
 import type { CortiAuth } from "@corti/sdk";
-import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
+import { CortiClient } from "@corti/sdk";
+import { useSyncExternalStore } from "react";
 import {
+  type ConfigStore,
   createLocalConfigStore,
   identityNamespace,
-  type ConfigStore,
 } from "../_shared/config-store";
 import {
+  type AgentSpec,
   describeAgentError,
   ensureAgent,
   sendAgentMessage,
-  type AgentSpec,
 } from "../_shared/corti-agent";
 import type { EditorAdapter } from "../_shared/editor-adapter";
+import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 
 export const COPY_EDIT_AGENT = {
   name: "Copy Editor",
@@ -42,12 +43,7 @@ export const COPY_EDIT_COMMAND_ID = "copy_edit";
 const PROMPT_KEY = "copyEdit.systemPrompt";
 const AGENT_ID_KEY = "copyEdit.agentId";
 
-export type CopyEditStatus =
-  | "idle"
-  | "preparing"
-  | "ready"
-  | "running"
-  | "error";
+export type CopyEditStatus = "idle" | "preparing" | "ready" | "running" | "error";
 
 interface CopyEditState {
   prompt: string;
@@ -76,6 +72,7 @@ const subscribe = (l: () => void) => {
 };
 const set = (patch: Partial<CopyEditState>) => {
   state = { ...state, ...patch };
+  // biome-ignore lint/suspicious/useIterableCallbackReturn: forEach notify callbacks are intentionally void
   listeners.forEach((l) => l());
 };
 
@@ -85,7 +82,9 @@ const spec = (): AgentSpec => ({
 });
 
 async function prepare() {
-  if (!client) return;
+  if (!client) {
+    return;
+  }
   set({ status: "preparing", error: undefined });
   try {
     if (!agentId) {
@@ -128,7 +127,9 @@ export function configureCopyEdit(
 export async function savePrompt(prompt: string) {
   store.set(PROMPT_KEY, prompt);
   set({ prompt });
-  if (!client || !agentId) return;
+  if (!client || !agentId) {
+    return;
+  }
   set({ status: "preparing", error: undefined });
   try {
     await client.agents.update(agentId, { systemPrompt: prompt });
@@ -160,7 +161,9 @@ export async function runCopyEdit(adapter: EditorAdapter) {
     set({ error: "Nothing to copy-edit — dictate or type some text first." });
     return;
   }
-  if (!client) return;
+  if (!client) {
+    return;
+  }
   set({ status: "running", error: undefined, noChange: false });
   try {
     if (!agentId) {

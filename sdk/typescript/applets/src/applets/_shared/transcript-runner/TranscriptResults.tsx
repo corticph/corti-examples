@@ -4,8 +4,8 @@
  * download actions), and the raw-JSON dialog. All logic-free.
  */
 import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -23,9 +23,13 @@ import {
 } from "./model";
 
 function formatTimestamp(value?: string) {
-  if (!value) return "Unknown";
+  if (!value) {
+    return "Unknown";
+  }
   const timestamp = Date.parse(value);
-  if (Number.isNaN(timestamp)) return value;
+  if (Number.isNaN(timestamp)) {
+    return value;
+  }
   return new Date(timestamp).toLocaleString();
 }
 
@@ -38,14 +42,8 @@ interface MetadataCellProps {
 function MetadataCell({ label, value, mono = true }: MetadataCellProps) {
   return (
     <div className="rounded-lg border border-border bg-background p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p
-        className={`mt-1 text-xs text-foreground${mono ? " break-all font-mono" : ""}`}
-      >
-        {value}
-      </p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-xs text-foreground${mono ? " break-all font-mono" : ""}`}>{value}</p>
     </div>
   );
 }
@@ -63,39 +61,22 @@ export function TranscriptRunMetadata({
     <section className="rounded-xl border border-border bg-card p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">
-            Run metadata
-          </h3>
+          <h3 className="text-sm font-semibold text-foreground">Run metadata</h3>
           <p className="text-xs text-muted-foreground">
             Useful ids and status for debugging transcript jobs.
           </p>
         </div>
-        {runState.transcriptStatus && (
-          <Badge variant="outline">{runState.transcriptStatus}</Badge>
-        )}
+        {runState.transcriptStatus && <Badge variant="outline">{runState.transcriptStatus}</Badge>}
       </div>
 
       <div className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
-        <MetadataCell
-          label="Interaction"
-          value={runState.interactionId || "Not assigned yet"}
-        />
-        <MetadataCell
-          label="Recording"
-          value={runState.recordingId || "Not assigned yet"}
-        />
-        <MetadataCell
-          label="Transcript"
-          value={runState.transcriptId || "Not assigned yet"}
-        />
+        <MetadataCell label="Interaction" value={runState.interactionId || "Not assigned yet"} />
+        <MetadataCell label="Recording" value={runState.recordingId || "Not assigned yet"} />
+        <MetadataCell label="Transcript" value={runState.transcriptId || "Not assigned yet"} />
         <MetadataCell
           label="Selected interaction updated"
           mono={false}
-          value={
-            selectedInteraction
-              ? formatTimestamp(selectedInteraction.updatedAt)
-              : "Unknown"
-          }
+          value={selectedInteraction ? formatTimestamp(selectedInteraction.updatedAt) : "Unknown"}
         />
       </div>
     </section>
@@ -112,11 +93,7 @@ export interface TranscriptOutputCardProps {
   onViewJson: () => void;
 }
 
-function downloadTranscriptJson(
-  transcriptId: string,
-  payload: unknown,
-  prefix?: string,
-) {
+function downloadTranscriptJson(transcriptId: string, payload: unknown, prefix?: string) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
   });
@@ -158,11 +135,7 @@ export function TranscriptOutputCard({
             onClick={() =>
               runState.transcriptJson &&
               runState.transcriptId &&
-              downloadTranscriptJson(
-                runState.transcriptId,
-                runState.transcriptJson,
-                downloadPrefix,
-              )
+              downloadTranscriptJson(runState.transcriptId, runState.transcriptJson, downloadPrefix)
             }
             disabled={!runState.transcriptJson || !runState.transcriptId}
           >

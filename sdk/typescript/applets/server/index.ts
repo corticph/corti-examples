@@ -1,8 +1,8 @@
 import "dotenv/config";
 import express from "express";
+import { getCreds, hasCreds } from "./corti-token";
 import authRouter from "./routes/auth";
 import { cortiProxy } from "./routes/proxy";
-import { getCreds, hasCreds } from "./corti-token";
 
 export function createServer() {
   const app = express();

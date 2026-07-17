@@ -5,12 +5,13 @@
  * to dictate and observe the effect of their config. Keybinding selector is
  * exposed for push/toggle-to-talk.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+
 import type { Corti } from "@corti/sdk";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CortiDictationComponent } from "./corti-dictation-react";
-import { useCortiAccessToken } from "./useCortiAccessToken";
-import { useActiveControl } from "./useActiveControl";
 import type { EditorAdapter } from "./editor-adapter";
+import { useActiveControl } from "./useActiveControl";
+import { useCortiAccessToken } from "./useCortiAccessToken";
 
 export function DictationField({
   dictationConfig,
@@ -33,7 +34,9 @@ export function DictationField({
   const handleTranscript = useCallback(
     (e: CustomEvent) => {
       const data = e.detail?.data;
-      if (!data || Array.isArray(data)) return;
+      if (!data || Array.isArray(data)) {
+        return;
+      }
       if (data.isFinal) {
         setInterim("");
         adapterRef.current?.insert(data.text, { primaryLanguage: language });
@@ -56,9 +59,7 @@ export function DictationField({
           placeholder={placeholder}
           className="w-full resize-y rounded-md border border-border bg-background p-3 font-mono text-sm text-foreground outline-none focus:border-corti-lime"
         />
-        {interim && (
-          <p className="mt-1 text-sm italic text-muted-foreground">{interim}</p>
-        )}
+        {interim && <p className="mt-1 text-sm italic text-muted-foreground">{interim}</p>}
       </div>
       <div className="flex justify-end">
         <CortiDictationComponent

@@ -1,22 +1,22 @@
-import { describe, it, expect, vi } from "vitest";
 import type { Corti } from "@corti/sdk";
-import type { EditorAdapter } from "./editor-adapter";
-import { buildInsertion } from "./text-insertion";
+import { describe, expect, it, vi } from "vitest";
 import {
-  deleteLastSegment,
-  insertParagraph,
+  type CommandRegistry,
   capitalizeLastSegment,
-  insertTemplate,
-  selectEnumRange,
-  selectWildcardText,
-  formatSelection,
+  deleteLastSegment,
+  describeCombo,
   dispatchCommand,
   executeAction,
-  describeCombo,
-  lastWordRange,
+  formatSelection,
+  insertParagraph,
+  insertTemplate,
   lastSentenceRange,
-  type CommandRegistry,
+  lastWordRange,
+  selectEnumRange,
+  selectWildcardText,
 } from "./command-dispatch";
+import type { EditorAdapter } from "./editor-adapter";
+import { buildInsertion } from "./text-insertion";
 
 /** Minimal in-memory adapter for testing handlers without the DOM. */
 function makeFake(initial = "", richText = false) {
@@ -54,10 +54,7 @@ function makeFake(initial = "", richText = false) {
   };
 }
 
-function cmd(
-  id: string,
-  variables?: Record<string, string>,
-): Corti.TranscribeCommandData {
+function cmd(id: string, variables?: Record<string, string>): Corti.TranscribeCommandData {
   return {
     id,
     variables: variables ?? null,
@@ -73,7 +70,7 @@ describe("range helpers", () => {
   });
   it("lastSentenceRange finds the final sentence", () => {
     const r = lastSentenceRange("One. Two three.");
-    expect("One. Two three.".slice(r!.start, r!.end)).toBe("Two three.");
+    expect("One. Two three.".slice(r?.start, r?.end)).toBe("Two three.");
   });
 });
 
@@ -129,11 +126,7 @@ describe("handlers", () => {
 
   it("selectWildcardText selects the spoken text", () => {
     const f = makeFake("the patient is male");
-    selectWildcardText("utterance")(
-      f.adapter,
-      cmd("s", { utterance: "male" }),
-      { history: [] },
-    );
+    selectWildcardText("utterance")(f.adapter, cmd("s", { utterance: "male" }), { history: [] });
     expect(f.adapter.getSelection()).toEqual({ start: 15, end: 19 });
   });
 
@@ -147,13 +140,9 @@ describe("handlers", () => {
 
   it("formatSelection is a no-op on plain editors", () => {
     const f = makeFake("x", false);
-    const out = formatSelection("style")(
-      f.adapter,
-      cmd("f", { style: "bold" }),
-      {
-        history: [],
-      },
-    );
+    const out = formatSelection("style")(f.adapter, cmd("f", { style: "bold" }), {
+      history: [],
+    });
     expect(out.description).toMatch(/not supported/i);
   });
 });
@@ -207,12 +196,9 @@ describe("executeAction", () => {
   it("keypress maps Cmd/Ctrl+A semantics to select all", () => {
     const f = makeFake("alpha beta");
     f.adapter.setSelection(3, 3);
-    executeAction(
-      f.adapter,
-      { kind: "keypress", combos: [{ meta: true, key: "a" }] },
-      cmd("x"),
-      { history: [] },
-    );
+    executeAction(f.adapter, { kind: "keypress", combos: [{ meta: true, key: "a" }] }, cmd("x"), {
+      history: [],
+    });
     expect(f.adapter.getSelection()).toEqual({ start: 0, end: 10 });
   });
 
@@ -292,14 +278,9 @@ describe("executeAction", () => {
 
   it("noop reports its note and changes nothing", () => {
     const f = makeFake("abc");
-    const out = executeAction(
-      f.adapter,
-      { kind: "noop", note: "nav" },
-      cmd("x"),
-      {
-        history: [],
-      },
-    );
+    const out = executeAction(f.adapter, { kind: "noop", note: "nav" }, cmd("x"), {
+      history: [],
+    });
     expect(f.text).toBe("abc");
     expect(out.description).toBe("nav");
   });

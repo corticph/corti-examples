@@ -23,13 +23,11 @@ export function DictionaryTerms() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Dictionary terms
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Dictionary terms</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Terms are custom vocabulary that bias recognition toward domain words
-          (drug names, acronyms, etc.). Configure the term list below, then
-          dictate. {items.length} terms configured.
+          Terms are custom vocabulary that bias recognition toward domain words (drug names,
+          acronyms, etc.). Configure the term list below, then dictate. {items.length} terms
+          configured.
         </p>
       </div>
 

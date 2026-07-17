@@ -1,6 +1,6 @@
 /** Details card: manage replacement rules via the shared RuleManager. */
 import { RuleManager } from "../_shared/RuleManager";
-import { replacementStore, toExport, type Replacement } from "./replacements";
+import { type Replacement, replacementStore, toExport } from "./replacements";
 
 export function ReplacementsDetails() {
   const items = replacementStore.useItems();

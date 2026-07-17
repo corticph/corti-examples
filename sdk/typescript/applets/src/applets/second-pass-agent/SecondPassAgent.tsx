@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Download, RotateCcw, Sparkles, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -21,8 +21,7 @@ import {
 import { flattenTranscriptForAgent } from "./model";
 
 export function SecondPassAgent() {
-  const { authConfig, clientId, tenantName, sdkEnvironment } =
-    useCortiAccessToken();
+  const { authConfig, clientId, tenantName, sdkEnvironment } = useCortiAccessToken();
   const agentStore = useSecondPassAgentStore();
   const [promptDraft, setPromptDraft] = useState(agentStore.prompt);
 
@@ -56,14 +55,11 @@ export function SecondPassAgent() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold text-foreground">
-          Second-pass agent
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Second-pass agent</h2>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Upload an audio file or reuse an existing recording, generate a
-          transcript through <code>/transcripts</code>, then run a second-pass
-          Corti agent over the finalized text. The raw transcript stays visible
-          even if the agent step fails.
+          Upload an audio file or reuse an existing recording, generate a transcript through{" "}
+          <code>/transcripts</code>, then run a second-pass Corti agent over the finalized text. The
+          raw transcript stays visible even if the agent step fails.
         </p>
       </div>
 
@@ -86,9 +82,7 @@ export function SecondPassAgent() {
         <div className="rounded-lg border border-border bg-background p-4">
           <div className="mb-2 flex items-center justify-between gap-3">
             <div>
-              <h4 className="text-sm font-semibold text-foreground">
-                Agent prompt
-              </h4>
+              <h4 className="text-sm font-semibold text-foreground">Agent prompt</h4>
               <p className="text-xs text-muted-foreground">
                 Edit the second-pass prompt before running the agent.
               </p>
@@ -116,11 +110,7 @@ export function SecondPassAgent() {
             >
               Save prompt
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => void resetPrompt()}
-            >
+            <Button size="sm" variant="ghost" onClick={() => void resetPrompt()}>
               <RotateCcw className="h-4 w-4" /> Reset
             </Button>
             <Button size="sm" variant="outline" onClick={exportAgent}>
@@ -146,12 +136,9 @@ export function SecondPassAgent() {
 
         <section className="rounded-xl border border-border bg-card p-4">
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-foreground">
-              Agent second pass
-            </h3>
+            <h3 className="text-sm font-semibold text-foreground">Agent second pass</h3>
             <p className="text-xs text-muted-foreground">
-              Output from the second-pass Corti agent using the stored system
-              prompt.
+              Output from the second-pass Corti agent using the stored system prompt.
             </p>
           </div>
 

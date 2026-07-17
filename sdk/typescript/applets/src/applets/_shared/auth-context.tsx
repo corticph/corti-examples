@@ -17,8 +17,9 @@
  * - authenticate()        — returns a fresh bearer token string (Promise<string>)
  * - isReady               — true once a token is available and the app can connect
  */
-import { createContext, useContext } from "react";
+
 import type { ReactNode } from "react";
+import { createContext, useContext } from "react";
 
 export interface AppletAuthConfig {
   authToken: string;
@@ -42,11 +43,7 @@ export function AppletAuthProvider({
   value: AppletAuthContextValue;
   children: ReactNode;
 }) {
-  return (
-    <AppletAuthContext.Provider value={value}>
-      {children}
-    </AppletAuthContext.Provider>
-  );
+  return <AppletAuthContext.Provider value={value}>{children}</AppletAuthContext.Provider>;
 }
 
 export function useAuth(): AppletAuthContextValue {

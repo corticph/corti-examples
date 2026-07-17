@@ -8,7 +8,7 @@
    * tailwind.config.ts expects these color variables expressed as HSL values.
    * A different format will require also updating the theme in tailwind.config.ts.
    * Reference every colour via hsl(var(--token-name)); never hardcode hex/rgb.
-  */
+   */
   :root {
     /* Backgrounds & Text */
     --background: 0 0% 100%;
@@ -153,12 +153,7 @@
     overflow-y: scroll;
     scrollbar-gutter: stable;
     background-color: hsl(var(--canvas));
-    font-family:
-      "Inter",
-      ui-sans-serif,
-      system-ui,
-      -apple-system,
-      sans-serif;
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
     /* Tiled dot grid in the page whitespace; cards and the nav keep their
        opaque fill and sit on top, so dots show only in the empty gutters. */
     background-image: radial-gradient(hsl(var(--dot)) 1px, transparent 1.5px);
@@ -167,9 +162,9 @@
   }
 
   html body[data-scroll-locked] {
-    margin-right: 0 !important;
-    padding-right: 0 !important;
-    --removed-body-scroll-bar-size: 0px !important;
+    margin-right: 0;
+    padding-right: 0;
+    --removed-body-scroll-bar-size: 0px;
   }
 }
 

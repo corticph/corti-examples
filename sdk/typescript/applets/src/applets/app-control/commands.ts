@@ -7,10 +7,7 @@
  * the spoken label to a registered control and runs it (availability-gated).
  */
 import type { Corti } from "@corti/sdk";
-import type {
-  AppControlOutcome,
-  AppControlRegistry,
-} from "../_shared/app-control-adapter";
+import type { AppControlOutcome, AppControlRegistry } from "../_shared/app-control-adapter";
 
 export const TAB_LABELS = ["overview", "orders", "notes"];
 export const PANEL_LABELS = ["details"];

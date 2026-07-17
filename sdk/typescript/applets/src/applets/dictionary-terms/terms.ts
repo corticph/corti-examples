@@ -5,12 +5,8 @@
  * so the catalog below is a small medical starter set.
  */
 import type { Corti } from "@corti/sdk";
-import type {
-  KeytermsConfig,
-  TranscribeConfiguration,
-  TranscribeTerm,
-} from "../_shared/types";
 import { createRuleStore, type RuleBase } from "../_shared/rule-store";
+import type { KeytermsConfig, TranscribeConfiguration, TranscribeTerm } from "../_shared/types";
 
 export interface Term extends RuleBase {
   term: string;
@@ -25,12 +21,9 @@ export const CATALOG: Term[] = [
 
 export const termStore = createRuleStore<Term>("terms.user", CATALOG);
 
-function buildTermsPayload(
-  items: Term[],
-): Pick<TranscribeConfiguration, "terms" | "keyterms"> {
+function buildTermsPayload(items: Term[]): Pick<TranscribeConfiguration, "terms" | "keyterms"> {
   const terms: TranscribeTerm[] = items.map(({ term }) => ({ term }));
-  const keyterms: KeytermsConfig | undefined =
-    terms.length > 0 ? { terms } : undefined;
+  const keyterms: KeytermsConfig | undefined = terms.length > 0 ? { terms } : undefined;
   return { terms, keyterms };
 }
 
@@ -50,8 +43,7 @@ export function toExport(items: Term[]) {
 export function buildTermsConfig(
   primaryLanguage: string,
   items: Term[],
-): Corti.TranscribeConfig &
-  Pick<TranscribeConfiguration, "terms" | "keyterms"> {
+): Corti.TranscribeConfig & Pick<TranscribeConfiguration, "terms" | "keyterms"> {
   return {
     primaryLanguage,
     interimResults: true,

@@ -22,11 +22,11 @@
  */
 import {
   BUTTON_BIT,
+  type ButtonAction,
+  type ButtonMappings,
   buttonName,
   computeButtonEffects,
   pressedButtonBit,
-  type ButtonAction,
-  type ButtonMappings,
 } from "./hid-recording";
 
 /** Out-of-the-box mapping: the Record button toggles recording. */
@@ -50,15 +50,9 @@ interface DictationDeviceManagerLike {
   shutdown(): Promise<void>;
   getDevices(): DictationDeviceLike[];
   requestDevice(): Promise<DictationDeviceLike[]>;
-  addButtonEventListener(
-    listener: (device: DictationDeviceLike, bitMask: number) => void,
-  ): void;
-  addDeviceConnectedEventListener(
-    listener: (device: DictationDeviceLike) => void,
-  ): void;
-  addDeviceDisconnectedEventListener(
-    listener: (device: DictationDeviceLike) => void,
-  ): void;
+  addButtonEventListener(listener: (device: DictationDeviceLike, bitMask: number) => void): void;
+  addDeviceConnectedEventListener(listener: (device: DictationDeviceLike) => void): void;
+  addDeviceDisconnectedEventListener(listener: (device: DictationDeviceLike) => void): void;
 }
 
 export interface DeviceInfo {
@@ -95,12 +89,10 @@ export interface RecordingTarget {
 /** Receives a command id when a command-mapped button is pressed (local). */
 export type CommandHandler = (commandId: string) => void;
 
-const isWebHidAvailable = () =>
-  typeof navigator !== "undefined" && "hid" in navigator;
+const isWebHidAvailable = () => typeof navigator !== "undefined" && "hid" in navigator;
 
 /** Audio-device label tokens that identify a handheld dictation microphone. */
-const HANDHELD_LABEL_RE =
-  /speechmike|speech ?one|powermic|foot ?control|philips|grundig|nuance/i;
+const HANDHELD_LABEL_RE = /speechmike|speech ?one|powermic|foot ?control|philips|grundig|nuance/i;
 
 function deviceKey(hid: HidDeviceLike): string {
   return `${hid.vendorId ?? 0}:${hid.productId ?? 0}:${hid.productName ?? ""}`;
@@ -108,7 +100,9 @@ function deviceKey(hid: HidDeviceLike): string {
 
 function toDeviceInfo(device: DictationDeviceLike): DeviceInfo | null {
   const hid = device?.hidDevice;
-  if (!hid) return null;
+  if (!hid) {
+    return null;
+  }
   const vendorId = hid.vendorId ?? 0;
   const productId = hid.productId ?? 0;
   return {
@@ -142,7 +136,9 @@ let manager: DictationDeviceManagerLike | null = null;
 let initPromise: Promise<void> | null = null;
 
 function emit() {
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 function patch(next: Partial<DeviceStoreState>) {
@@ -152,10 +148,16 @@ function patch(next: Partial<DeviceStoreState>) {
 
 function dispatchRecord(op: "start" | "stop" | "toggle") {
   const target = targets[targets.length - 1];
-  if (!target) return;
-  if (op === "start") target.start();
-  else if (op === "stop") target.stop();
-  else target.toggle();
+  if (!target) {
+    return;
+  }
+  if (op === "start") {
+    target.start();
+  } else if (op === "stop") {
+    target.stop();
+  } else {
+    target.toggle();
+  }
 }
 
 function dispatchCommand(commandId: string) {
@@ -163,12 +165,12 @@ function dispatchCommand(commandId: string) {
 }
 
 function refreshDevices() {
-  if (!manager) return;
+  if (!manager) {
+    return;
+  }
   try {
     const found = manager.getDevices() ?? [];
-    const devices = found
-      .map(toDeviceInfo)
-      .filter((d): d is DeviceInfo => Boolean(d));
+    const devices = found.map(toDeviceInfo).filter((d): d is DeviceInfo => Boolean(d));
     patch({ devices });
   } catch (err) {
     patch({
@@ -179,7 +181,9 @@ function refreshDevices() {
 
 function handleButtonEvent(device: DictationDeviceLike, bitMask: number) {
   const hid = device?.hidDevice;
-  if (!hid) return;
+  if (!hid) {
+    return;
+  }
   const key = deviceKey(hid);
   const prev = prevMaskByKey.get(key) ?? 0;
   const next = bitMask >>> 0;
@@ -211,10 +215,15 @@ function handleButtonEvent(device: DictationDeviceLike, bitMask: number) {
   }
 
   // Effects fire only when a recording surface is active (SpeechMike selected).
-  if (!targets.length) return;
+  if (!targets.length) {
+    return;
+  }
   for (const effect of computeButtonEffects(prev, next, snapshot.mappings)) {
-    if (effect.kind === "record") dispatchRecord(effect.op);
-    else dispatchCommand(effect.commandId);
+    if (effect.kind === "record") {
+      dispatchRecord(effect.op);
+    } else {
+      dispatchCommand(effect.commandId);
+    }
   }
 }
 
@@ -224,9 +233,15 @@ function nowMs(): number {
 }
 
 async function ensureInit(): Promise<void> {
-  if (!snapshot.isAvailable) return;
-  if (manager) return;
-  if (initPromise) return initPromise;
+  if (!snapshot.isAvailable) {
+    return;
+  }
+  if (manager) {
+    return;
+  }
+  if (initPromise) {
+    return initPromise;
+  }
 
   initPromise = (async () => {
     let mod: { DictationDeviceManager: new () => DictationDeviceManagerLike };
@@ -248,7 +263,9 @@ async function ensureInit(): Promise<void> {
     instance.addDeviceConnectedEventListener(() => refreshDevices());
     instance.addDeviceDisconnectedEventListener((device) => {
       const hid = device?.hidDevice;
-      if (hid) prevMaskByKey.delete(deviceKey(hid));
+      if (hid) {
+        prevMaskByKey.delete(deviceKey(hid));
+      }
       refreshDevices();
     });
     try {
@@ -258,10 +275,7 @@ async function ensureInit(): Promise<void> {
       refreshDevices();
     } catch (err) {
       patch({
-        error:
-          err instanceof Error
-            ? err.message
-            : "Failed to initialize device manager",
+        error: err instanceof Error ? err.message : "Failed to initialize device manager",
       });
       initPromise = null;
     }
@@ -288,11 +302,15 @@ export function setButtonMappings(mappings: ButtonMappings) {
 
 /** Begin capturing the next button press as a new mapping. */
 export function startLearning() {
-  if (snapshot.isAvailable) patch({ learning: true });
+  if (snapshot.isAvailable) {
+    patch({ learning: true });
+  }
 }
 
 export function cancelLearning() {
-  if (snapshot.learning) patch({ learning: false });
+  if (snapshot.learning) {
+    patch({ learning: false });
+  }
 }
 
 /**
@@ -300,9 +318,13 @@ export function cancelLearning() {
  * gesture (a click) — WebHID requires it.
  */
 export async function requestDevice(): Promise<void> {
-  if (!snapshot.isAvailable) return;
+  if (!snapshot.isAvailable) {
+    return;
+  }
   await ensureInit();
-  if (!manager) return;
+  if (!manager) {
+    return;
+  }
   patch({ isRequesting: true, error: null });
   try {
     await manager.requestDevice();
@@ -337,8 +359,12 @@ export function isHandheldMicLabel(label?: string): boolean {
  * so the buttons stay inert while a built-in / regular mic is in use.
  */
 export function isHandheldMicSelected(selectedLabel?: string): boolean {
-  if (!snapshot.devices.length || !selectedLabel) return false;
-  if (HANDHELD_LABEL_RE.test(selectedLabel)) return true;
+  if (!snapshot.devices.length || !selectedLabel) {
+    return false;
+  }
+  if (HANDHELD_LABEL_RE.test(selectedLabel)) {
+    return true;
+  }
   const lower = selectedLabel.toLowerCase();
   return snapshot.devices.some(
     (device) => device.label && lower.includes(device.label.toLowerCase()),
@@ -353,7 +379,9 @@ export function registerRecordingTarget(target: RecordingTarget): () => void {
   targets.push(target);
   return () => {
     const index = targets.lastIndexOf(target);
-    if (index >= 0) targets.splice(index, 1);
+    if (index >= 0) {
+      targets.splice(index, 1);
+    }
   };
 }
 
@@ -366,6 +394,8 @@ export function registerCommandHandler(handler: CommandHandler): () => void {
   commandHandlers.push(handler);
   return () => {
     const index = commandHandlers.lastIndexOf(handler);
-    if (index >= 0) commandHandlers.splice(index, 1);
+    if (index >= 0) {
+      commandHandlers.splice(index, 1);
+    }
   };
 }

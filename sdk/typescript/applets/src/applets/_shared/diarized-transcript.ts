@@ -40,8 +40,12 @@ export function mergeDiarizedSegments(
   incoming: DiarizedSegment[],
 ): DiarizedSegment[] {
   const byKey = new Map<string, DiarizedSegment>();
-  for (const seg of current) byKey.set(segmentKey(seg), seg);
-  for (const seg of incoming) byKey.set(segmentKey(seg), seg);
+  for (const seg of current) {
+    byKey.set(segmentKey(seg), seg);
+  }
+  for (const seg of incoming) {
+    byKey.set(segmentKey(seg), seg);
+  }
   return Array.from(byKey.values()).sort(compareSegments);
 }
 
@@ -56,9 +60,7 @@ export interface SpeakerGroup {
  * render speaker-labelled blocks without interleaving one speaker's words into
  * another's. Input should already be ordered (e.g. via mergeDiarizedSegments).
  */
-export function groupBySpeakerRuns(
-  segments: DiarizedSegment[],
-): SpeakerGroup[] {
+export function groupBySpeakerRuns(segments: DiarizedSegment[]): SpeakerGroup[] {
   const groups: SpeakerGroup[] = [];
   for (const seg of segments) {
     const last = groups[groups.length - 1];

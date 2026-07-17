@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { segmentStore, type SegmentEntry } from "./segment-store";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { spliceSegment } from "../_shared/text-insertion";
+import { type SegmentEntry, segmentStore } from "./segment-store";
 
 const LANGUAGE = "en";
 
@@ -16,24 +16,20 @@ function buildConcatenated(segs: readonly SegmentEntry[]): string {
   return text;
 }
 
-const emptyHint = (
-  <span className="italic text-muted-foreground">No segments yet…</span>
-);
+const emptyHint = <span className="italic text-muted-foreground">No segments yet…</span>;
 
 function NumberedList({ items }: { items: readonly string[] }) {
   return (
     <ol className="list-decimal space-y-1 pl-5 text-foreground">
-      {items.map((item, i) => (
-        <li key={i}>{item}</li>
+      {items.map((item) => (
+        <li key={item}>{item}</li>
       ))}
     </ol>
   );
 }
 
 export function SegmentComparisonCard() {
-  const [segments, setSegments] = useState<readonly SegmentEntry[]>(() =>
-    segmentStore.get(),
-  );
+  const [segments, setSegments] = useState<readonly SegmentEntry[]>(() => segmentStore.get());
 
   useEffect(() => segmentStore.subscribe(setSegments), []);
 
@@ -42,7 +38,9 @@ export function SegmentComparisonCard() {
   const syncingRef = useRef(false);
 
   const syncScroll = useCallback((source: HTMLDivElement, target: HTMLDivElement) => {
-    if (syncingRef.current) return;
+    if (syncingRef.current) {
+      return;
+    }
     syncingRef.current = true;
     target.scrollTop = source.scrollTop;
     syncingRef.current = false;
@@ -51,7 +49,9 @@ export function SegmentComparisonCard() {
   useEffect(() => {
     const left = leftRef.current;
     const right = rightRef.current;
-    if (!left || !right) return;
+    if (!left || !right) {
+      return;
+    }
     const onLeft = () => syncScroll(left, right);
     const onRight = () => syncScroll(right, left);
     left.addEventListener("scroll", onLeft);
@@ -68,13 +68,11 @@ export function SegmentComparisonCard() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Segment comparison
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Segment comparison</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Live view of transcript segments as they arrive. Top: final segments
-          concatenated with the same spacing and casing rules as the editor.
-          Bottom: each final segment (left) next to its raw counterpart (right).
+          Live view of transcript segments as they arrive. Top: final segments concatenated with the
+          same spacing and casing rules as the editor. Bottom: each final segment (left) next to its
+          raw counterpart (right).
         </p>
       </div>
 

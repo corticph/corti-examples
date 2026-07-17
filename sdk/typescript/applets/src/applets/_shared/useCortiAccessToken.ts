@@ -12,8 +12,9 @@
  * token source — anything returning `{ accessToken, expiresIn? }`. Everything
  * else in the applets depends only on the returned `authConfig`.
  */
-import { useCallback, useMemo } from "react";
+
 import type { CortiAuth } from "@corti/sdk";
+import { useCallback, useMemo } from "react";
 import { useAuth } from "./auth-context";
 import { buildWsBaseUrl } from "./urls";
 
@@ -34,7 +35,9 @@ export interface CortiSdkEnvironment {
 /** Decode a JWT's `exp` (seconds since epoch) without verifying the signature. */
 function getTokenExp(token: string): number | undefined {
   const parts = token?.split(".");
-  if (!parts || parts.length < 2) return undefined;
+  if (!parts || parts.length < 2) {
+    return undefined;
+  }
   try {
     const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
     const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
@@ -68,9 +71,7 @@ export function useCortiAccessToken(): CortiAccessToken {
     // into the relative expiresIn the SDK uses to schedule the next refresh.
     const accessToken = await authenticate();
     const exp = getTokenExp(accessToken);
-    const expiresIn = exp
-      ? Math.max(0, exp - Math.floor(Date.now() / 1000))
-      : undefined;
+    const expiresIn = exp ? Math.max(0, exp - Math.floor(Date.now() / 1000)) : undefined;
     return { accessToken, expiresIn };
   }, [authenticate]);
 

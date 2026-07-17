@@ -1,8 +1,6 @@
 import type { Corti } from "@corti/sdk";
 
-export function buildAudioArchiveConfig(
-  primaryLanguage: string,
-): Corti.TranscribeConfig {
+export function buildAudioArchiveConfig(primaryLanguage: string): Corti.TranscribeConfig {
   return {
     primaryLanguage,
     interimResults: true,

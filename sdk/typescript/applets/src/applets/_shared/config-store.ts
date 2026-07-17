@@ -24,7 +24,9 @@ export function createLocalConfigStore(namespace: string): ConfigStore {
   return {
     get(key, fallback) {
       try {
-        if (typeof localStorage === "undefined") return fallback;
+        if (typeof localStorage === "undefined") {
+          return fallback;
+        }
         const raw = localStorage.getItem(prefix + key);
         return raw ? (JSON.parse(raw) as typeof fallback) : fallback;
       } catch {
@@ -33,7 +35,9 @@ export function createLocalConfigStore(namespace: string): ConfigStore {
     },
     set(key, value) {
       try {
-        if (typeof localStorage === "undefined") return;
+        if (typeof localStorage === "undefined") {
+          return;
+        }
         localStorage.setItem(prefix + key, JSON.stringify(value));
       } catch {
         /* ignore quota / serialization errors */

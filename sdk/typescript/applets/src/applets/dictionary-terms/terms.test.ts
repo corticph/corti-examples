@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTermsConfig, toExport, type Term } from "./terms";
+import { buildTermsConfig, type Term, toExport } from "./terms";
 
 const items: Term[] = [
   { id: "t-Corti", term: "Corti" },

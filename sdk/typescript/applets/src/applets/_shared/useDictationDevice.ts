@@ -7,16 +7,10 @@
  *   it — the HID sibling of `useKeybindingPassthrough`.
  * - `useHidCommandHandler(fn)` registers a consumer for command-mapped buttons.
  */
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   cancelLearning,
+  type DeviceStoreState,
   deviceStore,
   initDeviceManager,
   isHandheldMicLabel,
@@ -26,7 +20,6 @@ import {
   requestDevice,
   setButtonMappings,
   startLearning,
-  type DeviceStoreState,
 } from "./dictation-device";
 import type { ButtonMappings } from "./hid-recording";
 
@@ -57,9 +50,7 @@ export function useDictationDevice(): UseDictationDevice {
  * handler receives the mapped command id; an applet typically dispatches it
  * locally against its editor (the API does not execute button commands).
  */
-export function useHidCommandHandler(
-  handler: (commandId: string) => void,
-): void {
+export function useHidCommandHandler(handler: (commandId: string) => void): void {
   const ref = useRef(handler);
   useEffect(() => {
     ref.current = handler;
@@ -110,15 +101,17 @@ export function useHidRecordingControl(
   // available, so a manual switch afterward sticks; re-arms if it disappears.
   const defaultToHandheldMic = useCallback(
     (el: RecordingSurface | null) => {
-      if (!enabled || !el) return;
-      const handheld = (el.devices ?? []).find((d) =>
-        isHandheldMicLabel(d.label),
-      );
+      if (!enabled || !el) {
+        return;
+      }
+      const handheld = (el.devices ?? []).find((d) => isHandheldMicLabel(d.label));
       if (!handheld) {
         autoSelectedRef.current = false;
         return;
       }
-      if (autoSelectedRef.current) return;
+      if (autoSelectedRef.current) {
+        return;
+      }
       autoSelectedRef.current = true;
       if (!isHandheldMicLabel(el.selectedDevice?.label)) {
         el.selectedDevice = handheld;
@@ -131,13 +124,13 @@ export function useHidRecordingControl(
   // Track which microphone this surface currently has selected.
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     setSelectedLabel(el.selectedDevice?.label);
     defaultToHandheldMic(el);
     const handler = (event: Event) => {
-      const detail = (
-        event as CustomEvent<{ selectedDevice?: { label?: string } }>
-      ).detail;
+      const detail = (event as CustomEvent<{ selectedDevice?: { label?: string } }>).detail;
       setSelectedLabel(detail?.selectedDevice?.label);
       defaultToHandheldMic(el);
     };
@@ -152,7 +145,9 @@ export function useHidRecordingControl(
   );
 
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      return;
+    }
     return registerRecordingTarget({
       start: () => ref.current?.startRecording(),
       stop: () => ref.current?.stopRecording(),

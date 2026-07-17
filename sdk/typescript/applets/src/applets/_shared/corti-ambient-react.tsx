@@ -4,10 +4,7 @@
  * Like the dictation wrapper, but for /streams: adds the `facts` event and takes
  * `ambientConfig` (Corti.StreamConfig) + an `interactionId` property.
  */
-import * as React from "react";
-import { createComponent, type EventName } from "@lit/react";
-import { CortiAmbient } from "@corti/ambient-web";
-import { useHidRecordingControl } from "./useDictationDevice";
+
 import type {
   AudioEventEventDetail,
   AudioLevelChangedEventDetail,
@@ -22,6 +19,10 @@ import type {
   UsageEventDetail,
   VirtualModeChangedEventDetail,
 } from "@corti/ambient-web";
+import { CortiAmbient } from "@corti/ambient-web";
+import { createComponent, type EventName } from "@lit/react";
+import * as React from "react";
+import { useHidRecordingControl } from "./useDictationDevice";
 
 const CortiAmbientElement = createComponent({
   react: React,
@@ -36,19 +37,13 @@ const CortiAmbientElement = createComponent({
     onRecordingDevicesChanged: "recording-devices-changed" as EventName<
       CustomEvent<RecordingDevicesChangedEventDetail>
     >,
-    onLanguagesChanged: "languages-changed" as EventName<
-      CustomEvent<LanguagesChangedEventDetail>
-    >,
+    onLanguagesChanged: "languages-changed" as EventName<CustomEvent<LanguagesChangedEventDetail>>,
     onAudioLevelChanged: "audio-level-changed" as EventName<
       CustomEvent<AudioLevelChangedEventDetail>
     >,
-    onAudioEvent: "audio-event" as EventName<
-      CustomEvent<AudioEventEventDetail>
-    >,
+    onAudioEvent: "audio-event" as EventName<CustomEvent<AudioEventEventDetail>>,
     onUsage: "usage" as EventName<CustomEvent<UsageEventDetail>>,
-    onDeltaUsage: "delta-usage" as EventName<
-      CustomEvent<DeltaUsageEventDetail>
-    >,
+    onDeltaUsage: "delta-usage" as EventName<CustomEvent<DeltaUsageEventDetail>>,
     onVirtualModeChanged: "virtual-mode-changed" as EventName<
       CustomEvent<VirtualModeChangedEventDetail>
     >,
@@ -79,8 +74,11 @@ export const CortiAmbientComponent = React.forwardRef<
   const setRef = React.useCallback(
     (el: InstanceType<typeof CortiAmbient> | null) => {
       innerRef.current = el;
-      if (typeof forwardedRef === "function") forwardedRef(el);
-      else if (forwardedRef) forwardedRef.current = el;
+      if (typeof forwardedRef === "function") {
+        forwardedRef(el);
+      } else if (forwardedRef) {
+        forwardedRef.current = el;
+      }
     },
     [forwardedRef],
   );

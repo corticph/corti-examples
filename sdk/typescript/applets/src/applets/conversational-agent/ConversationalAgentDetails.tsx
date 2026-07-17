@@ -1,11 +1,10 @@
+import { Download, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Download, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   CONVERSATIONAL_AGENT,
   clearDebugLog,
-  resetConversation,
   resetPrompt,
   savePrompt,
   useConversationStore,
@@ -25,8 +24,7 @@ function exportAgent(prompt: string) {
 }
 
 export function ConversationalAgentDetails() {
-  const { prompt, status, autoSend, debugLog, contextId, messages } =
-    useConversationStore();
+  const { prompt, status, debugLog } = useConversationStore();
   const [draft, setDraft] = useState(prompt);
 
   useEffect(() => setDraft(prompt), [prompt]);
@@ -35,15 +33,14 @@ export function ConversationalAgentDetails() {
 
   return (
     <div className="flex flex-col gap-4 text-sm">
-            <div>
+      <div>
         <div className="mb-2 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               STT debug log
             </p>
             <p className="text-xs text-muted-foreground">
-              Final transcript events and matched commands only. No interim
-              results are shown here.
+              Final transcript events and matched commands only. No interim results are shown here.
             </p>
           </div>
           <Button size="sm" variant="ghost" onClick={clearDebugLog}>
@@ -58,10 +55,7 @@ export function ConversationalAgentDetails() {
               </p>
             ) : (
               debugLog.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="rounded-md border border-border bg-card px-3 py-2"
-                >
+                <div key={entry.id} className="rounded-md border border-border bg-card px-3 py-2">
                   <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-wide text-muted-foreground">
                     <span>{entry.type}</span>
                     <span>{new Date(entry.at).toLocaleTimeString()}</span>
@@ -80,15 +74,11 @@ export function ConversationalAgentDetails() {
           </div>
         </ScrollArea>
       </div>
-      
+
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Agent
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agent</p>
         <p className="mt-1 text-foreground">{CONVERSATIONAL_AGENT.name}</p>
-        <p className="text-xs text-muted-foreground">
-          {CONVERSATIONAL_AGENT.description}
-        </p>
+        <p className="text-xs text-muted-foreground">{CONVERSATIONAL_AGENT.description}</p>
       </div>
 
       <div>
@@ -97,11 +87,7 @@ export function ConversationalAgentDetails() {
             System prompt
           </p>
           <span className="text-xs text-muted-foreground">
-            {status === "preparing"
-              ? "Updating agent..."
-              : dirty
-                ? "Unsaved changes"
-                : ""}
+            {status === "preparing" ? "Updating agent..." : dirty ? "Unsaved changes" : ""}
           </span>
         </div>
         <textarea
@@ -122,16 +108,11 @@ export function ConversationalAgentDetails() {
           <Button size="sm" variant="ghost" onClick={() => resetPrompt()}>
             Reset to default
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => exportAgent(prompt)}
-          >
+          <Button size="sm" variant="outline" onClick={() => exportAgent(prompt)}>
             <Download className="h-4 w-4" /> Export
           </Button>
         </div>
       </div>
-
     </div>
   );
 }

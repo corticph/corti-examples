@@ -5,10 +5,10 @@
  * against the live cluster. Results render as a per-endpoint availability table
  * or as the raw JSON body.
  */
-import { useState } from "react";
+
 import { Check, Copy, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -16,19 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "../_shared/utils";
 import {
   ENDPOINT_FILTERS,
-  fetchLanguages,
-  toRows,
   type EndpointFilter,
+  fetchLanguages,
   type LanguagesResponse,
+  toRows,
 } from "./languages-api";
 
 type Filter = EndpointFilter | "all";
@@ -37,10 +33,7 @@ const COLUMNS: EndpointFilter[] = ENDPOINT_FILTERS;
 
 function AvailabilityCell({ enabled }: { enabled: boolean }) {
   return enabled ? (
-    <Check
-      className="mx-auto h-4 w-4 text-lime-600 dark:text-corti-lime"
-      aria-label="enabled"
-    />
+    <Check className="mx-auto h-4 w-4 text-lime-600 dark:text-corti-lime" aria-label="enabled" />
   ) : (
     <span className="sr-only">not enabled</span>
   );
@@ -56,9 +49,7 @@ export function Languages() {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchLanguages(
-        filter === "all" ? undefined : filter,
-      );
+      const result = await fetchLanguages(filter === "all" ? undefined : filter);
       setData(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -73,22 +64,15 @@ export function Languages() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Languages (GET /v2/languages)
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Languages (GET /v2/languages)</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          List the languages Corti speech to text supports, with which endpoints
-          each is enabled for. Optionally filter to a single endpoint, then
-          fetch.
+          List the languages Corti speech to text supports, with which endpoints each is enabled
+          for. Optionally filter to a single endpoint, then fetch.
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Select
-          value={filter}
-          onValueChange={(v) => setFilter(v as Filter)}
-          disabled={loading}
-        >
+        <Select value={filter} onValueChange={(v) => setFilter(v as Filter)} disabled={loading}>
           <SelectTrigger className="w-48">
             <SelectValue />
           </SelectTrigger>
@@ -107,14 +91,11 @@ export function Languages() {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-sm text-variant-error-foreground">{error}</p>
-      )}
+      {error && <p className="text-sm text-variant-error-foreground">{error}</p>}
 
       {!data && !error && (
         <p className="text-sm text-muted-foreground">
-          No results yet — pick an endpoint filter (or leave on “All endpoints”)
-          and fetch.
+          No results yet — pick an endpoint filter (or leave on “All endpoints”) and fetch.
         </p>
       )}
 
@@ -127,9 +108,7 @@ export function Languages() {
 
           <TabsContent value="table">
             {rows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No languages returned.
-              </p>
+              <p className="text-sm text-muted-foreground">No languages returned.</p>
             ) : (
               <div className="overflow-x-auto rounded-md border border-border">
                 <table className="w-full text-sm">
@@ -137,10 +116,7 @@ export function Languages() {
                     <tr className="border-b border-border bg-muted text-left">
                       <th className="px-3 py-2 font-bold">Language</th>
                       {COLUMNS.map((col) => (
-                        <th
-                          key={col}
-                          className="px-3 py-2 text-center font-bold"
-                        >
+                        <th key={col} className="px-3 py-2 text-center font-bold">
                           {col}
                         </th>
                       ))}
@@ -155,9 +131,7 @@ export function Languages() {
                           i % 2 === 1 ? "bg-muted" : "bg-background",
                         )}
                       >
-                        <td className="px-3 py-2 font-mono text-foreground">
-                          {row.code}
-                        </td>
+                        <td className="px-3 py-2 font-mono text-foreground">{row.code}</td>
                         <td className="px-3 py-2">
                           <AvailabilityCell enabled={row.transcribe} />
                         </td>
@@ -180,9 +154,7 @@ export function Languages() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() =>
-                  navigator.clipboard.writeText(JSON.stringify(data, null, 2))
-                }
+                onClick={() => navigator.clipboard.writeText(JSON.stringify(data, null, 2))}
               >
                 <Copy className="h-4 w-4" /> Copy JSON
               </Button>

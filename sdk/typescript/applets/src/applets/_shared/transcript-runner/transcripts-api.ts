@@ -51,10 +51,7 @@ interface TranscriptStatusResponse {
   status?: TranscriptProcessingStatus;
 }
 
-function getApiErrorMessage(
-  response: Response,
-  body: ApiErrorBody | null | undefined,
-): string {
+function getApiErrorMessage(response: Response, body: ApiErrorBody | null | undefined): string {
   return (
     body?.detail ||
     body?.message ||
@@ -142,10 +139,7 @@ export async function listRecordings(interactionId: string): Promise<string[]> {
   return data.recordings || [];
 }
 
-export async function uploadRecording(
-  interactionId: string,
-  file: File,
-): Promise<string> {
+export async function uploadRecording(interactionId: string, file: File): Promise<string> {
   const response = await fetch(
     `${API_BASE}/interactions/${encodeURIComponent(interactionId)}/recordings/`,
     {
@@ -175,19 +169,16 @@ export async function createTranscript(
       body: JSON.stringify(request),
     },
   );
-  const body = await readJsonBody<Partial<TranscriptResponse> & ApiErrorBody>(
-    response,
-  ).catch(() => null);
+  const body = await readJsonBody<Partial<TranscriptResponse> & ApiErrorBody>(response).catch(
+    () => null,
+  );
 
   if (!response.ok) {
     throw new Error(getApiErrorMessage(response, body));
   }
 
   return {
-    transcriptId: resolveTranscriptIdFromCreateResponse(
-      body,
-      response.headers.get("Location"),
-    ),
+    transcriptId: resolveTranscriptIdFromCreateResponse(body, response.headers.get("Location")),
     status: body?.status || "processing",
   };
 }
@@ -200,11 +191,7 @@ export async function getTranscriptStatus(
     `${API_BASE}/interactions/${encodeURIComponent(interactionId)}/transcripts/${encodeURIComponent(transcriptId)}/status`,
   );
   const data = await expectOkJson<TranscriptStatusResponse>(response);
-  if (
-    data.status !== "processing" &&
-    data.status !== "completed" &&
-    data.status !== "failed"
-  ) {
+  if (data.status !== "processing" && data.status !== "completed" && data.status !== "failed") {
     throw new Error("Transcript status response was missing a valid status.");
   }
   return data.status;

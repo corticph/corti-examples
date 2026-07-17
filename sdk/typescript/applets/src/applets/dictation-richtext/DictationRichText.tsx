@@ -10,15 +10,16 @@
  * The contenteditable here is a deliberately minimal stand-in — the reusable
  * part is the STT integration (adapter + insertion rules), not the editor.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+
 import { Bold, Italic } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CortiDictationComponent } from "../_shared/corti-dictation-react";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
-import { useActiveControl } from "../_shared/useActiveControl";
 import type { EditorAdapter } from "../_shared/editor-adapter";
+import { useActiveControl } from "../_shared/useActiveControl";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { cn } from "../_shared/utils";
 import { buildDictationConfig } from "./config";
 import { segmentStore } from "./segment-store";
-import { cn } from "../_shared/utils";
 
 const LANGUAGE = "en";
 
@@ -32,7 +33,9 @@ export function DictationRichText() {
 
   const handleTranscript = useCallback((e: CustomEvent) => {
     const data = e.detail?.data;
-    if (!data || Array.isArray(data)) return;
+    if (!data || Array.isArray(data)) {
+      return;
+    }
     if (data.isFinal) {
       setInterim("");
       adapterRef.current?.insert(data.text, { primaryLanguage: LANGUAGE });
@@ -54,13 +57,11 @@ export function DictationRichText() {
   return (
     <div className="flex flex-col gap-4" ref={containerRef}>
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Insertion into rich text
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Insertion into rich text</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Dictated text is spliced at the caret with correct spacing and
-          sentence casing, inheriting any bold/italic formatting active at the
-          cursor. Place your caret, toggle formatting, and dictate.
+          Dictated text is spliced at the caret with correct spacing and sentence casing, inheriting
+          any bold/italic formatting active at the cursor. Place your caret, toggle formatting, and
+          dictate.
         </p>
       </div>
 
@@ -92,9 +93,7 @@ export function DictationRichText() {
           "[&:empty]:before:text-muted-foreground [&:empty]:before:content-['Place_your_caret_and_start_dictating…']",
         )}
       />
-      {interim && (
-        <p className="text-sm italic text-muted-foreground">{interim}</p>
-      )}
+      {interim && <p className="text-sm italic text-muted-foreground">{interim}</p>}
 
       <div className="flex justify-end">
         <CortiDictationComponent

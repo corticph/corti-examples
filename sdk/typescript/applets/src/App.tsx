@@ -1,13 +1,13 @@
-import { useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { AppletAuthProvider } from "./applets/_shared/auth-context";
 import {
-  getAppletsForWorkflow,
   type AppletDefinition,
+  getAppletsForWorkflow,
   type WorkflowArea,
 } from "./applets/registry";
-import { useCortiAuth } from "./useCortiAuth";
 import { cn } from "./lib/utils";
+import { useCortiAuth } from "./useCortiAuth";
 
 const WORKFLOWS: Array<{ id: WorkflowArea; label: string }> = [
   { id: "dictation", label: "Dictation" },
@@ -16,8 +16,7 @@ const WORKFLOWS: Array<{ id: WorkflowArea; label: string }> = [
 ];
 
 export default function App() {
-  const { authConfig, authenticate, isReady, isConfigured, error } =
-    useCortiAuth();
+  const { authConfig, authenticate, isReady, isConfigured, error } = useCortiAuth();
   const [workflow, setWorkflow] = useState<WorkflowArea>("dictation");
   const [activeAppletId, setActiveAppletId] = useState<string>(
     () => getAppletsForWorkflow("dictation")[0]?.id ?? "",
@@ -90,12 +89,7 @@ function Header({
           </span>
         )}
       </div>
-      <AuthBadge
-        isReady={isReady}
-        isConfigured={isConfigured}
-        error={error}
-        onRetry={onRetry}
-      />
+      <AuthBadge isReady={isReady} isConfigured={isConfigured} error={error} onRetry={onRetry} />
     </header>
   );
 }
@@ -204,6 +198,7 @@ function LoadingState({
             <AlertCircle className="h-8 w-8 text-destructive" />
             <p className="text-sm text-muted-foreground">{error}</p>
             <button
+              type="button"
               onClick={() => onRetry().catch(() => {})}
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
             >
@@ -237,6 +232,7 @@ function AuthBadge({
   if (error) {
     return (
       <button
+        type="button"
         onClick={() => onRetry().catch(() => {})}
         className="inline-flex items-center gap-1.5 rounded-full border border-variant-error-border bg-variant-error-bg px-2.5 py-0.5 text-xs font-semibold text-variant-error-text hover:opacity-80 transition-opacity"
       >

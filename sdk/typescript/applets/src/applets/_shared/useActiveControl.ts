@@ -17,9 +17,12 @@ import {
 /** Resolve an event target to the editable host element, if any. */
 function editableHost(node: EventTarget | null): HTMLElement | null {
   let el = node instanceof HTMLElement ? node : null;
-  if (!el && node instanceof Node && node.parentElement)
+  if (!el && node instanceof Node && node.parentElement) {
     el = node.parentElement;
-  if (!el) return null;
+  }
+  if (!el) {
+    return null;
+  }
   if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
     return el;
   }
@@ -28,11 +31,15 @@ function editableHost(node: EventTarget | null): HTMLElement | null {
 }
 
 function adapterFor(el: HTMLElement | null): EditorAdapter | null {
-  if (!el) return null;
+  if (!el) {
+    return null;
+  }
   if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
     return createTextareaAdapter(el);
   }
-  if (el.isContentEditable) return createContentEditableAdapter(el);
+  if (el.isContentEditable) {
+    return createContentEditableAdapter(el);
+  }
   return null;
 }
 
@@ -43,9 +50,7 @@ export interface ActiveControl {
   element: HTMLElement | null;
 }
 
-export function useActiveControl(
-  containerRef: React.RefObject<HTMLElement>,
-): ActiveControl {
+export function useActiveControl(containerRef: React.RefObject<HTMLElement>): ActiveControl {
   const [element, setElement] = useState<HTMLElement | null>(null);
   const elementRef = useRef<HTMLElement | null>(null);
 
@@ -58,14 +63,16 @@ export function useActiveControl(
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
     const onFocusIn = (e: FocusEvent) => remember(editableHost(e.target));
     container.addEventListener("focusin", onFocusIn);
     // Seed with the first editable control already present, if any.
-    const first = container.querySelector<HTMLElement>(
-      "textarea, input, [contenteditable='true']",
-    );
-    if (first) remember(first);
+    const first = container.querySelector<HTMLElement>("textarea, input, [contenteditable='true']");
+    if (first) {
+      remember(first);
+    }
     return () => container.removeEventListener("focusin", onFocusIn);
   }, [containerRef, remember]);
 

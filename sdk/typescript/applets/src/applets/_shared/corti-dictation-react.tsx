@@ -6,10 +6,7 @@
  * element's properties (e.g. dictationConfig, authConfig). Mirrors the pattern
  * used by corti-api-console.
  */
-import * as React from "react";
-import { createComponent, type EventName } from "@lit/react";
-import { CortiDictation } from "@corti/dictation-web";
-import { useHidRecordingControl } from "./useDictationDevice";
+
 import type {
   AudioEventEventDetail,
   AudioLevelChangedEventDetail,
@@ -23,6 +20,10 @@ import type {
   TranscriptEventDetail,
   UsageEventDetail,
 } from "@corti/dictation-web";
+import { CortiDictation } from "@corti/dictation-web";
+import { createComponent, type EventName } from "@lit/react";
+import * as React from "react";
+import { useHidRecordingControl } from "./useDictationDevice";
 
 const CortiDictationElement = createComponent({
   react: React,
@@ -37,19 +38,13 @@ const CortiDictationElement = createComponent({
     onRecordingDevicesChanged: "recording-devices-changed" as EventName<
       CustomEvent<RecordingDevicesChangedEventDetail>
     >,
-    onLanguagesChanged: "languages-changed" as EventName<
-      CustomEvent<LanguagesChangedEventDetail>
-    >,
+    onLanguagesChanged: "languages-changed" as EventName<CustomEvent<LanguagesChangedEventDetail>>,
     onAudioLevelChanged: "audio-level-changed" as EventName<
       CustomEvent<AudioLevelChangedEventDetail>
     >,
-    onAudioEvent: "audio-event" as EventName<
-      CustomEvent<AudioEventEventDetail>
-    >,
+    onAudioEvent: "audio-event" as EventName<CustomEvent<AudioEventEventDetail>>,
     onUsage: "usage" as EventName<CustomEvent<UsageEventDetail>>,
-    onDeltaUsage: "delta-usage" as EventName<
-      CustomEvent<DeltaUsageEventDetail>
-    >,
+    onDeltaUsage: "delta-usage" as EventName<CustomEvent<DeltaUsageEventDetail>>,
     onKeybindingChanged: "keybinding-changed" as EventName<
       CustomEvent<KeybindingChangedEventDetail>
     >,
@@ -70,27 +65,29 @@ const CortiDictationElement = createComponent({
 export const DEFAULT_PUSH_TO_TALK_KEY = "`";
 export const DEFAULT_TOGGLE_TO_TALK_KEY = "~";
 
-type CortiDictationProps = React.ComponentProps<
-  typeof CortiDictationElement
-> & {
+type CortiDictationProps = React.ComponentProps<typeof CortiDictationElement> & {
   /** Let the handheld-mic Record button drive this surface (default true). */
   hidRecordingControl?: boolean;
 };
 
 function isEditable(el: Element | null): boolean {
-  if (!el) return false;
+  if (!el) {
+    return false;
+  }
   const tag = el.tagName;
   return (
-    tag === "INPUT" ||
-    tag === "TEXTAREA" ||
-    (el instanceof HTMLElement && el.isContentEditable)
+    tag === "INPUT" || tag === "TEXTAREA" || (el instanceof HTMLElement && el.isContentEditable)
   );
 }
 
 /** Match a KeyboardEvent against a single-key keybinding (e.g. "`", "~", "Space"). */
 function keyMatches(e: KeyboardEvent, keybinding: string | null | undefined) {
-  if (!keybinding) return false;
-  if (keybinding === "Space") return e.key === " ";
+  if (!keybinding) {
+    return false;
+  }
+  if (keybinding === "Space") {
+    return e.key === " ";
+  }
   return e.key.toLowerCase() === keybinding.toLowerCase();
 }
 
@@ -118,13 +115,17 @@ function useKeybindingPassthrough(
     const pressed = { current: false };
     const onKeyDown = (e: KeyboardEvent) => {
       const el = ref.current;
-      if (!el || !isEditable(document.activeElement)) return;
+      if (!el || !isEditable(document.activeElement)) {
+        return;
+      }
       // Always preventDefault a matched key — INCLUDING auto-repeat while held —
       // so the push-to-talk key never types into the field; only trigger the
       // recording action on the first (non-repeat) press.
       if (keyMatches(e, keys.toggle.current)) {
         e.preventDefault();
-        if (!e.repeat) el.toggleRecording();
+        if (!e.repeat) {
+          el.toggleRecording();
+        }
       } else if (keyMatches(e, keys.push.current)) {
         e.preventDefault();
         if (!e.repeat && !pressed.current) {
@@ -154,40 +155,35 @@ export const CortiDictationComponent = React.forwardRef<
   CortiDictationProps
 >(function CortiDictationComponent(props, forwardedRef) {
   const { onKeybindingChanged, hidRecordingControl = true, ...rest } = props;
-  const innerRef = React.useRef<InstanceType<typeof CortiDictation> | null>(
-    null,
-  );
+  const innerRef = React.useRef<InstanceType<typeof CortiDictation> | null>(null);
   const setRef = React.useCallback(
     (el: InstanceType<typeof CortiDictation> | null) => {
       innerRef.current = el;
-      if (typeof forwardedRef === "function") forwardedRef(el);
-      else if (forwardedRef) forwardedRef.current = el;
+      if (typeof forwardedRef === "function") {
+        forwardedRef(el);
+      } else if (forwardedRef) {
+        forwardedRef.current = el;
+      }
     },
     [forwardedRef],
   );
 
   // Locked keys, seeded from the (possibly overridden) defaults and kept in sync
   // with the component's keybinding-changed event when the user re-binds.
-  const pushKeyRef = React.useRef(
-    props.pushToTalkKeybinding ?? DEFAULT_PUSH_TO_TALK_KEY,
-  );
-  const toggleKeyRef = React.useRef(
-    props.toggleToTalkKeybinding ?? DEFAULT_TOGGLE_TO_TALK_KEY,
-  );
-  const keys = React.useMemo(
-    () => ({ push: pushKeyRef, toggle: toggleKeyRef }),
-    [],
-  );
+  const pushKeyRef = React.useRef(props.pushToTalkKeybinding ?? DEFAULT_PUSH_TO_TALK_KEY);
+  const toggleKeyRef = React.useRef(props.toggleToTalkKeybinding ?? DEFAULT_TOGGLE_TO_TALK_KEY);
+  const keys = React.useMemo(() => ({ push: pushKeyRef, toggle: toggleKeyRef }), []);
   useKeybindingPassthrough(innerRef, keys);
   useHidRecordingControl(innerRef, hidRecordingControl);
 
   const handleKeybindingChanged = React.useCallback(
     (e: CustomEvent<KeybindingChangedEventDetail>) => {
       const detail = e.detail;
-      if (detail?.type === "push-to-talk")
+      if (detail?.type === "push-to-talk") {
         pushKeyRef.current = detail.keybinding;
-      else if (detail?.type === "toggle-to-talk")
+      } else if (detail?.type === "toggle-to-talk") {
         toggleKeyRef.current = detail.keybinding;
+      }
       onKeybindingChanged?.(e);
     },
     [onKeybindingChanged],

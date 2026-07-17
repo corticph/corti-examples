@@ -11,12 +11,7 @@ describe("buildConversationalConfig", () => {
     expect(config.commands).toHaveLength(1);
     expect(config.commands?.[0]).toMatchObject({
       id: "conversational_agent_wake",
-      phrases: [
-        "ok Corti {intent}",
-        "okay Corti {intent}",
-        "hey Corti {intent}",
-        "Corti {intent}",
-      ],
+      phrases: ["ok Corti {intent}", "okay Corti {intent}", "hey Corti {intent}", "Corti {intent}"],
     });
   });
 });

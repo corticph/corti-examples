@@ -17,32 +17,37 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CortiDictationComponent } from "../_shared/corti-dictation-react";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
-import { useActiveControl } from "../_shared/useActiveControl";
 import {
   createContentEditableAdapter,
   createTextareaAdapter,
   type EditorAdapter,
 } from "../_shared/editor-adapter";
 import { buildInsertion } from "../_shared/text-insertion";
+import { useActiveControl } from "../_shared/useActiveControl";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
-import { MockForm, type FieldHandle } from "./MockForm";
+import { type BoxActions, handleBoxCommand } from "./commands";
 import { buildDictationConfig } from "./config";
-import { handleBoxCommand, type BoxActions } from "./commands";
+import { type FieldHandle, MockForm } from "./MockForm";
 
 const LANGUAGE = "en";
 
 /** Adapter for any editable form element (text input / textarea / contenteditable). */
 function formAdapter(el: HTMLElement | null): EditorAdapter | null {
-  if (!el) return null;
+  if (!el) {
+    return null;
+  }
   if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
     return createTextareaAdapter(el);
   }
-  if (el.isContentEditable) return createContentEditableAdapter(el);
+  if (el.isContentEditable) {
+    return createContentEditableAdapter(el);
+  }
   return null;
 }
 
 interface LogEntry {
+  at: number;
   id: string;
   description: string;
 }
@@ -68,18 +73,21 @@ function normalizeField(s: string): string {
 }
 
 /** Resolve a spoken field name to a field handle (exact, then contains-match). */
-function resolveField(
-  fields: Map<string, FieldHandle>,
-  spoken: string,
-): FieldHandle | null {
+function resolveField(fields: Map<string, FieldHandle>, spoken: string): FieldHandle | null {
   const target = normalizeField(spoken);
-  if (!target) return null;
+  if (!target) {
+    return null;
+  }
   for (const handle of fields.values()) {
-    if (normalizeField(handle.label) === target) return handle;
+    if (normalizeField(handle.label) === target) {
+      return handle;
+    }
   }
   for (const handle of fields.values()) {
     const n = normalizeField(handle.label);
-    if (target.includes(n) || n.includes(target)) return handle;
+    if (target.includes(n) || n.includes(target)) {
+      return handle;
+    }
   }
   return null;
 }
@@ -122,14 +130,22 @@ export function DictationBox() {
   /** Track the last-active non-box editable; focusing a field clears the override. */
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
     const onFocusIn = (e: FocusEvent) => {
       const el = e.target as HTMLElement | null;
-      if (!el || el === boxRef.current) return;
+      if (!el || el === boxRef.current) {
+        return;
+      }
       const a = formAdapter(el);
-      if (!a) return;
+      if (!a) {
+        return;
+      }
       lastFormControlRef.current = a;
-      if (targetBoxRef.current) setOverride(false);
+      if (targetBoxRef.current) {
+        setOverride(false);
+      }
     };
     container.addEventListener("focusin", onFocusIn);
     return () => container.removeEventListener("focusin", onFocusIn);
@@ -138,7 +154,9 @@ export function DictationBox() {
   /** Append a segment to the end of the box WITHOUT moving focus. */
   const appendToBox = useCallback((text: string) => {
     const el = boxRef.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     const seg = buildInsertion(el.value, el.value.length, text, {
       primaryLanguage: LANGUAGE,
     });
@@ -148,7 +166,9 @@ export function DictationBox() {
   const handleTranscript = useCallback(
     (e: CustomEvent) => {
       const data = e.detail?.data;
-      if (!data || Array.isArray(data)) return;
+      if (!data || Array.isArray(data)) {
+        return;
+      }
       if (!data.isFinal) {
         setInterim(data.text);
         return;
@@ -167,7 +187,9 @@ export function DictationBox() {
     () => ({
       showBox() {
         const el = boxRef.current;
-        if (!el) return "No dictation box";
+        if (!el) {
+          return "No dictation box";
+        }
         const already = document.activeElement === el;
         el.focus();
         if (!already) {
@@ -185,29 +207,37 @@ export function DictationBox() {
       },
       transfer() {
         const text = boxRef.current?.value ?? "";
-        if (!text.trim()) return "Dictation box is empty";
+        if (!text.trim()) {
+          return "Dictation box is empty";
+        }
         const target = lastFormControlRef.current;
-        if (!target) return "No form field to transfer into";
+        if (!target) {
+          return "No form field to transfer into";
+        }
         target.focus();
         target.insert(text, { primaryLanguage: LANGUAGE });
-        if (boxRef.current) boxRef.current.value = "";
+        if (boxRef.current) {
+          boxRef.current.value = "";
+        }
         setOverride(false);
         return "Transferred box text to the active field";
       },
       goToField(field) {
         setOverride(false);
         const f = resolveField(fieldsRef.current, field);
-        if (!f) return `Unknown field: ${field}`;
+        if (!f) {
+          return `Unknown field: ${field}`;
+        }
         f.goTo();
         lastDropdownRef.current = f.kind === "dropdown" ? f : null;
         return `Went to ${f.label}`;
       },
       pickOption(index) {
         const f = lastDropdownRef.current;
-        if (!f?.pick) return "No open dropdown to pick from";
-        return f.pick(index)
-          ? `Picked option ${index}`
-          : `Option ${index} is out of range`;
+        if (!f?.pick) {
+          return "No open dropdown to pick from";
+        }
+        return f.pick(index) ? `Picked option ${index}` : `Option ${index} is out of range`;
       },
     }),
     [setOverride],
@@ -218,9 +248,11 @@ export function DictationBox() {
   const handleCommand = useCallback(
     (e: CustomEvent) => {
       const data = e.detail?.data;
-      if (!data) return;
+      if (!data) {
+        return;
+      }
       const outcome = handleBoxCommand(data, actionsRef.current);
-      pushLog({ id: data.id, description: outcome.description });
+      pushLog({ at: Date.now(), id: data.id, description: outcome.description });
     },
     [pushLog],
   );
@@ -232,9 +264,8 @@ export function DictationBox() {
           Dictation box &amp; active control
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Dictate into whichever field has focus — or say a command to route
-          text to the scratch box, transfer it into a form field, and navigate
-          the form by voice.
+          Dictate into whichever field has focus — or say a command to route text to the scratch
+          box, transfer it into a form field, and navigate the form by voice.
         </p>
       </div>
 
@@ -260,15 +291,11 @@ export function DictationBox() {
           <div
             className={cn(
               "rounded-md border bg-background p-3 transition-colors",
-              targetBox
-                ? "border-corti-lime ring-1 ring-corti-lime"
-                : "border-border",
+              targetBox ? "border-corti-lime ring-1 ring-corti-lime" : "border-border",
             )}
           >
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">
-                Dictation box
-              </span>
+              <span className="text-xs font-medium text-muted-foreground">Dictation box</span>
               {targetBox && (
                 <span className="rounded-full bg-corti-lime/20 px-2 py-0.5 text-xs font-medium text-foreground">
                   Receiving dictation
@@ -281,33 +308,21 @@ export function DictationBox() {
               placeholder="Say “target dictation box”, dictate, then “transfer text”…"
               className="w-full resize-y rounded-md border border-border bg-background p-2 font-mono text-sm text-foreground outline-none focus:border-corti-lime"
             />
-            {interim && (
-              <p className="mt-1 text-sm italic text-muted-foreground">
-                {interim}
-              </p>
-            )}
+            {interim && <p className="mt-1 text-sm italic text-muted-foreground">{interim}</p>}
 
-            <p className="mt-4 text-sm font-semibold text-foreground">
-              Commands
-            </p>
+            <p className="mt-4 text-sm font-semibold text-foreground">Commands</p>
             <ul className="space-y-1 text-xs text-muted-foreground">
               <li>
-                <span className="font-medium text-foreground">
-                  “show dictation box”
-                </span>{" "}
-                — focus the box (caret to end).
+                <span className="font-medium text-foreground">“show dictation box”</span> — focus
+                the box (caret to end).
               </li>
               <li>
-                <span className="font-medium text-foreground">
-                  “target dictation box”
-                </span>{" "}
-                — route dictation to the box without moving focus.
+                <span className="font-medium text-foreground">“target dictation box”</span> — route
+                dictation to the box without moving focus.
               </li>
               <li>
-                <span className="font-medium text-foreground">
-                  “transfer text”
-                </span>{" "}
-                — paste the box into the last field you used.
+                <span className="font-medium text-foreground">“transfer text”</span> — paste the box
+                into the last field you used.
               </li>
               <li>
                 <span className="font-medium text-foreground">
@@ -324,17 +339,14 @@ export function DictationBox() {
             </ul>
             {log.length > 0 && (
               <div className="mt-3 border-t border-border pt-2">
-                <span className="text-xs font-medium text-muted-foreground">
-                  Recent commands
-                </span>
+                <span className="text-xs font-medium text-muted-foreground">Recent commands</span>
                 <ul className="mt-1 space-y-0.5">
-                  {log.map((entry, i) => (
+                  {log.map((entry) => (
                     <li
-                      key={`${entry.id}-${i}`}
+                      key={`${entry.at}-${entry.id}`}
                       className="font-mono text-xs text-muted-foreground"
                     >
-                      <span className="text-foreground">{entry.id}</span> —{" "}
-                      {entry.description}
+                      <span className="text-foreground">{entry.id}</span> — {entry.description}
                     </li>
                   ))}
                 </ul>

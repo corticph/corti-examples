@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   buildInsertion,
-  spliceSegment,
-  getLeadingSeparator,
   capitalizeForContext,
+  getLeadingSeparator,
+  spliceSegment,
 } from "./text-insertion";
 
 const NBSP = "\u00A0";
@@ -60,9 +60,7 @@ describe("buildInsertion", () => {
     expect(buildInsertion("pain", 4, ",")).toBe(",");
   });
   it("can disable casing (e.g. automaticPunctuation on)", () => {
-    expect(buildInsertion("", 0, "patient", { capitalize: false })).toBe(
-      "patient",
-    );
+    expect(buildInsertion("", 0, "patient", { capitalize: false })).toBe("patient");
   });
   it("returns empty for an empty segment", () => {
     expect(buildInsertion("abc", 3, "")).toBe("");

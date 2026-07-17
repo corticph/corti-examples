@@ -1,16 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { CortiClient } from "@corti/sdk";
 import { Download, Mic, Square, Trash2, X } from "lucide-react";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { AudioArchiveEndReason, AudioArchiveListItem } from "../_shared/audio-archive";
 import { identityNamespace } from "../_shared/config-store";
-import {
-  type AudioArchiveEndReason,
-  type AudioArchiveListItem,
-} from "../_shared/audio-archive";
-import { useAudioArchive } from "../_shared/useAudioArchive";
 import { spliceSegment } from "../_shared/text-insertion";
-import { buildAudioArchiveConfig } from "./config";
+import { useAudioArchive } from "../_shared/useAudioArchive";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
+import { buildAudioArchiveConfig } from "./config";
 
 const LANGUAGE = "en";
 const TIMESLICE_MS = 250;
@@ -50,8 +47,7 @@ function displayCaptureMime(
 }
 
 export function DictationAudioArchive() {
-  const { refreshAccessToken, sdkEnvironment, clientId, tenantName } =
-    useCortiAccessToken();
+  const { refreshAccessToken, sdkEnvironment, clientId, tenantName } = useCortiAccessToken();
   const namespace = identityNamespace(clientId, tenantName);
   const {
     archives,
@@ -74,9 +70,7 @@ export function DictationAudioArchive() {
   const [error, setError] = useState<string>();
 
   const phaseRef = useRef<Phase>("idle");
-  const socketRef = useRef<Awaited<
-    ReturnType<CortiClient["transcribe"]["connect"]>
-  > | null>(null);
+  const socketRef = useRef<Awaited<ReturnType<CortiClient["transcribe"]["connect"]>> | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -100,10 +94,7 @@ export function DictationAudioArchive() {
   }, []);
 
   const clearPendingSocketWait = useCallback(
-    (
-      ref: typeof pendingSocketFlushRef | typeof pendingSocketEndRef,
-      error?: Error,
-    ) => {
+    (ref: typeof pendingSocketFlushRef | typeof pendingSocketEndRef, error?: Error) => {
       const pending = ref.current;
       if (!pending) {
         return;
@@ -129,6 +120,7 @@ export function DictationAudioArchive() {
 
   const releaseMedia = useCallback(async () => {
     recorderRef.current = null;
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: forEach cleanup callbacks are intentionally void
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     stopAudioMeter();
@@ -159,15 +151,9 @@ export function DictationAudioArchive() {
   }, []);
 
   const waitForSocketSignal = useCallback(
-    (
-      kind: "flush" | "ended",
-      ref: typeof pendingSocketFlushRef | typeof pendingSocketEndRef,
-    ) => {
+    (kind: "flush" | "ended", ref: typeof pendingSocketFlushRef | typeof pendingSocketEndRef) => {
       return new Promise<void>((resolve, reject) => {
-        clearPendingSocketWait(
-          ref,
-          new Error(`Replaced pending ${kind} waiter.`),
-        );
+        clearPendingSocketWait(ref, new Error(`Replaced pending ${kind} waiter.`));
         ref.current = {
           resolve,
           reject,
@@ -183,7 +169,7 @@ export function DictationAudioArchive() {
 
   const flushRecorderBuffer = useCallback(async () => {
     const recorder = recorderRef.current;
-    if (!recorder || recorder.state !== "recording") {
+    if (recorder?.state !== "recording") {
       if (pendingChunkPromiseRef.current) {
         await pendingChunkPromiseRef.current;
       }
@@ -237,9 +223,7 @@ export function DictationAudioArchive() {
       setPhaseState("paused");
     } catch (pauseError) {
       setError(
-        pauseError instanceof Error
-          ? pauseError.message
-          : "Failed to pause and flush recording.",
+        pauseError instanceof Error ? pauseError.message : "Failed to pause and flush recording.",
       );
       setPhaseState("paused");
     }
@@ -286,9 +270,7 @@ export function DictationAudioArchive() {
         await finalizeActiveArchive(endReason);
       } catch (sessionError) {
         setError(
-          sessionError instanceof Error
-            ? sessionError.message
-            : "Failed to close the session.",
+          sessionError instanceof Error ? sessionError.message : "Failed to close the session.",
         );
         await discardActiveArchive();
       } finally {
@@ -327,7 +309,7 @@ export function DictationAudioArchive() {
 
     if (phaseRef.current === "paused") {
       const recorder = recorderRef.current;
-      if (!recorder || recorder.state !== "paused") {
+      if (recorder?.state !== "paused") {
         setError("Session is paused but the recorder is not resumable.");
         return;
       }
@@ -423,9 +405,7 @@ export function DictationAudioArchive() {
         })()
           .catch((chunkError) => {
             setError(
-              chunkError instanceof Error
-                ? chunkError.message
-                : "Failed to process audio chunk.",
+              chunkError instanceof Error ? chunkError.message : "Failed to process audio chunk.",
             );
           })
           .finally(() => {
@@ -443,9 +423,7 @@ export function DictationAudioArchive() {
       recorder.start(TIMESLICE_MS);
       setPhaseState("recording");
     } catch (startError) {
-      setError(
-        startError instanceof Error ? startError.message : "Failed to start.",
-      );
+      setError(startError instanceof Error ? startError.message : "Failed to start.");
       socketRef.current?.close();
       socketRef.current = null;
       await releaseMedia();
@@ -473,14 +451,11 @@ export function DictationAudioArchive() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Dictation audio archive
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Dictation audio archive</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Raw SDK example: the host owns MediaRecorder, streams audio to Corti,
-          and saves the same microphone blobs locally for playback and download.
-          Stop recording pauses + flushes the current session; end session
-          closes it.
+          Raw SDK example: the host owns MediaRecorder, streams audio to Corti, and saves the same
+          microphone blobs locally for playback and download. Stop recording pauses + flushes the
+          current session; end session closes it.
         </p>
       </div>
 
@@ -494,14 +469,10 @@ export function DictationAudioArchive() {
         />
 
         <div className="min-h-6">
-          {interim ? (
-            <p className="text-sm italic text-muted-foreground">{interim}</p>
-          ) : null}
+          {interim ? <p className="text-sm italic text-muted-foreground">{interim}</p> : null}
         </div>
 
-        {error && (
-          <p className="text-sm text-variant-error-foreground">{error}</p>
-        )}
+        {error && <p className="text-sm text-variant-error-foreground">{error}</p>}
 
         <div className="flex flex-wrap items-center gap-4">
           <button
@@ -522,11 +493,7 @@ export function DictationAudioArchive() {
             ) : (
               <>
                 <Mic className="h-4 w-4" />{" "}
-                {phase === "connecting"
-                  ? "Connecting…"
-                  : paused
-                    ? "Resume recording"
-                    : "Record"}
+                {phase === "connecting" ? "Connecting…" : paused ? "Resume recording" : "Record"}
               </>
             )}
           </button>
@@ -563,13 +530,10 @@ export function DictationAudioArchive() {
         <section className="rounded-md border border-border bg-background p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">
-                Session audio
-              </h3>
+              <h3 className="text-sm font-semibold text-foreground">Session audio</h3>
               <p className="mt-1 text-xs text-muted-foreground">
-                Connection-scoped archive. Interaction ID is optional and not
-                attached in this raw transcribe example. One websocket session
-                can contain many pause/resume segments.
+                Connection-scoped archive. Interaction ID is optional and not attached in this raw
+                transcribe example. One websocket session can contain many pause/resume segments.
               </p>
             </div>
             {archives.length > 0 && (
@@ -583,14 +547,12 @@ export function DictationAudioArchive() {
             )}
           </div>
 
-            <div className="mt-4 rounded-md border border-border/70 bg-muted/20 p-3 text-sm">
+          <div className="mt-4 rounded-md border border-border/70 bg-muted/20 p-3 text-sm">
             <div className="font-medium text-foreground">
               {activeArchive ? "Archiving current connection" : "No active archive"}
             </div>
             <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-              <div>
-                Session state: {recording ? "recording" : paused ? "paused" : "idle"}
-              </div>
+              <div>Session state: {recording ? "recording" : paused ? "paused" : "idle"}</div>
               <div>
                 Capture MIME:{" "}
                 {displayCaptureMime(
@@ -598,15 +560,9 @@ export function DictationAudioArchive() {
                   activeArchive?.configuredCaptureMime,
                 )}
               </div>
-              <div>
-                Device: {activeArchive?.deviceLabel || "Uses browser-selected mic"}
-              </div>
-              <div>
-                Segments recorded: {activeArchive?.segments.length || 0}
-              </div>
-              <div>
-                Chunks recorded: {activeArchive?.chunkCount || 0}
-              </div>
+              <div>Device: {activeArchive?.deviceLabel || "Uses browser-selected mic"}</div>
+              <div>Segments recorded: {activeArchive?.segments.length || 0}</div>
+              <div>Chunks recorded: {activeArchive?.chunkCount || 0}</div>
             </div>
           </div>
 
@@ -618,16 +574,12 @@ export function DictationAudioArchive() {
 
           {archives.length === 0 ? (
             <div className="mt-4 rounded-md border border-dashed border-border/70 p-4 text-sm text-muted-foreground">
-              Saved microphone archives will appear here after a recording is
-              stopped.
+              Saved microphone archives will appear here after a recording is stopped.
             </div>
           ) : (
             <div className="mt-4 space-y-3">
               {archives.map((archive) => (
-                <div
-                  key={archive.id}
-                  className="rounded-md border border-border/70 p-3"
-                >
+                <div key={archive.id} className="rounded-md border border-border/70 p-3">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="font-medium text-foreground">
@@ -635,8 +587,7 @@ export function DictationAudioArchive() {
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
                         {formatDuration(archive.durationMs)} ·{" "}
-                        {(archive.sizeBytes / 1024).toFixed(1)} KB ·{" "}
-                        {archive.segmentCount} segment
+                        {(archive.sizeBytes / 1024).toFixed(1)} KB · {archive.segmentCount} segment
                         {archive.segmentCount === 1 ? "" : "s"}
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
@@ -670,6 +621,7 @@ export function DictationAudioArchive() {
                     </div>
                   </div>
 
+                  {/* biome-ignore lint/a11y/useMediaCaption: diagnostic audio player — recordings are already transcribed */}
                   <audio
                     className="mt-3 w-full"
                     controls
@@ -681,8 +633,7 @@ export function DictationAudioArchive() {
                     <div className="mt-3 space-y-1 text-xs text-muted-foreground">
                       {archive.segments.map((segment, index) => (
                         <div key={segment.id}>
-                          Segment {index + 1}:{" "}
-                          {formatDuration(segment.durationMs ?? 0)} ·{" "}
+                          Segment {index + 1}: {formatDuration(segment.durationMs ?? 0)} ·{" "}
                           {segment.startReason}
                           {segment.endReason ? ` → ${segment.endReason}` : ""}
                         </div>

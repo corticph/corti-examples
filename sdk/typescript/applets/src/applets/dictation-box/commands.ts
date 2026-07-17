@@ -23,10 +23,14 @@ export const NUMBER_ENUM = [...NUMBER_WORDS, "1", "2", "3", "4", "5", "6"];
 
 /** Resolve a spoken `{number}` ("two" / "2") to a 1-based index, or null. */
 export function parseOrdinal(value: string | undefined): number | null {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
   const v = value.trim().toLowerCase();
   const digit = Number.parseInt(v, 10);
-  if (Number.isFinite(digit) && digit > 0) return digit;
+  if (Number.isFinite(digit) && digit > 0) {
+    return digit;
+  }
   const word = NUMBER_WORDS.indexOf(v);
   return word === -1 ? null : word + 1;
 }
@@ -89,7 +93,9 @@ export function handleBoxCommand(
       return { handled: true, description: actions.transfer() };
     case "go_to_field": {
       const field = (command.variables?.field ?? "").toLowerCase();
-      if (!field) return { handled: true, description: "No field named" };
+      if (!field) {
+        return { handled: true, description: "No field named" };
+      }
       return { handled: true, description: actions.goToField(field) };
     }
     case "pick_option": {

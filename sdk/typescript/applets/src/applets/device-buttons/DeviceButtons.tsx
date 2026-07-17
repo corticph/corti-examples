@@ -10,15 +10,9 @@
  * Buttons are learned by pressing them (press → captured by name), which only
  * surfaces the buttons a device actually has.
  */
+
+import { CircleAlert, Gamepad2, Loader2, Plug, Plus, Trash2 } from "lucide-react";
 import { useEffect } from "react";
-import {
-  Gamepad2,
-  Plug,
-  Loader2,
-  CircleAlert,
-  Trash2,
-  Plus,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -27,16 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "../_shared/utils";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { initDeviceManager } from "../_shared/dictation-device";
-import { useDictationDevice } from "../_shared/useDictationDevice";
 import {
-  DEVICE_BUTTONS,
-  buttonName,
   type ButtonAction,
   type ButtonMappings,
+  buttonName,
+  DEVICE_BUTTONS,
 } from "../_shared/hid-recording";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { useDictationDevice } from "../_shared/useDictationDevice";
+import { cn } from "../_shared/utils";
 import {
   setIdentity as setCommandStoreIdentity,
   useCommandStore,
@@ -53,9 +47,7 @@ const ACTION_LABELS: Record<ActionKind, string> = {
 /** Mapped bits in catalog order, with any unknown bits appended. */
 function orderedBits(mappings: ButtonMappings): number[] {
   const mapped = Object.keys(mappings).map(Number);
-  const known = DEVICE_BUTTONS.map((b) => b.bit).filter((bit) =>
-    mapped.includes(bit),
-  );
+  const known = DEVICE_BUTTONS.map((b) => b.bit).filter((bit) => mapped.includes(bit));
   const unknown = mapped.filter((bit) => !known.includes(bit));
   return [...known, ...unknown];
 }
@@ -94,9 +86,8 @@ export function DeviceButtons() {
         <div className="space-y-1">
           <p className="font-medium">WebHID not available</p>
           <p>
-            Handheld-mic buttons use the WebHID API, supported in Chromium
-            browsers (Chrome, Edge) over a secure context. Open this page in
-            Chrome or Edge to configure a device.
+            Handheld-mic buttons use the WebHID API, supported in Chromium browsers (Chrome, Edge)
+            over a secure context. Open this page in Chrome or Edge to configure a device.
           </p>
         </div>
       </div>
@@ -112,10 +103,7 @@ export function DeviceButtons() {
       kind === "command"
         ? {
             type: "command",
-            commandId:
-              current?.type === "command"
-                ? current.commandId
-                : (commands[0]?.id ?? ""),
+            commandId: current?.type === "command" ? current.commandId : (commands[0]?.id ?? ""),
           }
         : { type: kind };
     setMappings({ ...mappings, [bit]: action });
@@ -138,10 +126,9 @@ export function DeviceButtons() {
           Handheld mic buttons
         </div>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Map buttons on a Philips SpeechMike (or Foot Control / PowerMic) to
-          recording or commands. Mappings apply in every dictation and ambient
-          applet, and activate on a surface once you pick the device as its
-          microphone.
+          Map buttons on a Philips SpeechMike (or Foot Control / PowerMic) to recording or commands.
+          Mappings apply in every dictation and ambient applet, and activate on a surface once you
+          pick the device as its microphone.
         </p>
       </div>
 
@@ -172,17 +159,13 @@ export function DeviceButtons() {
               connected ? "bg-variant-success-text" : "bg-muted-foreground/50",
             )}
           />
-          {connected
-            ? devices.map((d) => d.label).join(", ")
-            : "No device connected"}
+          {connected ? devices.map((d) => d.label).join(", ") : "No device connected"}
         </span>
       </div>
 
       {/* Mappings */}
       <div className="space-y-2">
-        <div className="text-sm font-medium text-foreground">
-          Button mappings
-        </div>
+        <div className="text-sm font-medium text-foreground">Button mappings</div>
         {bits.length === 0 ? (
           <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
             No buttons mapped. Add one below.
@@ -192,10 +175,7 @@ export function DeviceButtons() {
             {bits.map((bit) => {
               const action = mappings[bit];
               return (
-                <div
-                  key={bit}
-                  className="flex flex-wrap items-center gap-3 px-4 py-3"
-                >
+                <div key={bit} className="flex flex-wrap items-center gap-3 px-4 py-3">
                   <span className="w-24 shrink-0 text-sm font-medium text-foreground">
                     {buttonName(bit)}
                   </span>
@@ -207,20 +187,15 @@ export function DeviceButtons() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {(Object.keys(ACTION_LABELS) as ActionKind[]).map(
-                        (kind) => (
-                          <SelectItem key={kind} value={kind}>
-                            {ACTION_LABELS[kind]}
-                          </SelectItem>
-                        ),
-                      )}
+                      {(Object.keys(ACTION_LABELS) as ActionKind[]).map((kind) => (
+                        <SelectItem key={kind} value={kind}>
+                          {ACTION_LABELS[kind]}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   {action.type === "command" && (
-                    <Select
-                      value={action.commandId}
-                      onValueChange={(v) => setCommandId(bit, v)}
-                    >
+                    <Select value={action.commandId} onValueChange={(v) => setCommandId(bit, v)}>
                       <SelectTrigger className="h-8 w-52">
                         <SelectValue placeholder="Select command…" />
                       </SelectTrigger>
@@ -263,12 +238,7 @@ export function DeviceButtons() {
             </Button>
           </div>
         ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={startLearning}
-            disabled={!connected}
-          >
+          <Button variant="outline" size="sm" onClick={startLearning} disabled={!connected}>
             <Plus className="mr-1.5 h-3.5 w-3.5" />
             Add mapping
           </Button>
@@ -283,9 +253,7 @@ export function DeviceButtons() {
             {lastButton.label}
           </span>
         ) : (
-          <span className="italic">
-            press a button on the device to test the connection
-          </span>
+          <span className="italic">press a button on the device to test the connection</span>
         )}
       </div>
 

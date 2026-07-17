@@ -12,7 +12,9 @@ const SAFE_IDENTIFIER = /^[a-z0-9-]+$/;
 let credsCache: CortiCreds | null = null;
 
 export function getCreds(): CortiCreds {
-  if (credsCache) return credsCache;
+  if (credsCache) {
+    return credsCache;
+  }
 
   const env = process.env;
   const creds: Partial<CortiCreds> = {
@@ -22,18 +24,13 @@ export function getCreds(): CortiCreds {
     tenant: env.CORTI_TENANT_NAME,
   };
 
-  if (!creds.clientId || !creds.clientSecret || !creds.tenant) {
+  if (!creds.clientId || !creds.clientSecret || !creds.tenant || !creds.cluster) {
     throw new Error(
       "Missing Corti credentials: set CORTI_CLIENT_ID, CORTI_CLIENT_SECRET, and CORTI_TENANT_NAME in .env",
     );
   }
-  if (
-    !SAFE_IDENTIFIER.test(creds.cluster!) ||
-    !SAFE_IDENTIFIER.test(creds.tenant)
-  ) {
-    throw new Error(
-      "Invalid CORTI_ENVIRONMENT or CORTI_TENANT_NAME: must match ^[a-z0-9-]+$",
-    );
+  if (!SAFE_IDENTIFIER.test(creds.cluster) || !SAFE_IDENTIFIER.test(creds.tenant)) {
+    throw new Error("Invalid CORTI_ENVIRONMENT or CORTI_TENANT_NAME: must match ^[a-z0-9-]+$");
   }
 
   credsCache = creds as CortiCreds;
@@ -57,8 +54,9 @@ function getAuth(): CortiAuth {
 let fullScope: { token: string; expMs: number } | null = null;
 
 export async function getFullScopeToken(): Promise<string> {
-  if (fullScope && Date.now() < fullScope.expMs - 30_000)
+  if (fullScope && Date.now() < fullScope.expMs - 30_000) {
     return fullScope.token;
+  }
   const { clientId, clientSecret } = getCreds();
   const data = await getAuth().getToken({ clientId, clientSecret });
   fullScope = {

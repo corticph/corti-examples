@@ -7,13 +7,14 @@
  * the dictation web component. Transcript text is inserted with the shared
  * spacing/casing helper.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, Square } from "lucide-react";
+
 import { CortiClient } from "@corti/sdk";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { Mic, Square } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { spliceSegment } from "../_shared/text-insertion";
-import { buildDictationConfig } from "./config";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
+import { buildDictationConfig } from "./config";
 
 const LANGUAGE = "en";
 const TIMESLICE_MS = 250;
@@ -27,9 +28,7 @@ export function DictationSdk() {
   const [level, setLevel] = useState(0);
   const [error, setError] = useState<string>();
 
-  const socketRef = useRef<Awaited<
-    ReturnType<CortiClient["transcribe"]["connect"]>
-  > | null>(null);
+  const socketRef = useRef<Awaited<ReturnType<CortiClient["transcribe"]["connect"]>> | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -38,9 +37,12 @@ export function DictationSdk() {
   const teardown = useCallback(() => {
     recorderRef.current?.state !== "inactive" && recorderRef.current?.stop();
     recorderRef.current = null;
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: forEach cleanup callbacks are intentionally void
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
     audioCtxRef.current?.close().catch(() => {});
     audioCtxRef.current = null;
     socketRef.current?.close();
@@ -61,7 +63,9 @@ export function DictationSdk() {
     const tick = () => {
       analyser.getByteTimeDomainData(buf);
       let peak = 0;
-      for (const v of buf) peak = Math.max(peak, Math.abs(v - 128));
+      for (const v of buf) {
+        peak = Math.max(peak, Math.abs(v - 128));
+      }
       setLevel(Math.min(1, peak / 128));
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -87,15 +91,9 @@ export function DictationSdk() {
         if (message.type === "transcript" && message.data.isFinal) {
           const seg = message.data.text;
           setText((prev) => {
-            const { text: next } = spliceSegment(
-              prev,
-              prev.length,
-              prev.length,
-              seg,
-              {
-                primaryLanguage: LANGUAGE,
-              },
-            );
+            const { text: next } = spliceSegment(prev, prev.length, prev.length, seg, {
+              primaryLanguage: LANGUAGE,
+            });
             return next;
           });
         }
@@ -115,8 +113,8 @@ export function DictationSdk() {
       };
       recorder.start(TIMESLICE_MS);
       setPhase("recording");
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to start");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to start");
       teardown();
       setPhase("idle");
     }
@@ -133,12 +131,10 @@ export function DictationSdk() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Raw SDK with host-managed mic
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Raw SDK with host-managed mic</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          No web component. The host captures audio with MediaRecorder and
-          streams frames via the SDK socket, only after CONFIG_ACCEPTED.
+          No web component. The host captures audio with MediaRecorder and streams frames via the
+          SDK socket, only after CONFIG_ACCEPTED.
         </p>
       </div>
 
@@ -150,9 +146,7 @@ export function DictationSdk() {
         className="w-full resize-y rounded-md border border-border bg-background p-3 font-mono text-sm text-foreground outline-none focus:border-corti-lime"
       />
 
-      {error && (
-        <p className="text-sm text-variant-error-foreground">{error}</p>
-      )}
+      {error && <p className="text-sm text-variant-error-foreground">{error}</p>}
 
       <div className="flex items-center gap-4">
         <button
@@ -172,8 +166,7 @@ export function DictationSdk() {
             </>
           ) : (
             <>
-              <Mic className="h-4 w-4" />{" "}
-              {phase === "connecting" ? "Connecting…" : "Record"}
+              <Mic className="h-4 w-4" /> {phase === "connecting" ? "Connecting…" : "Record"}
             </>
           )}
         </button>

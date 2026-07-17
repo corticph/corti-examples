@@ -13,7 +13,7 @@ const STEPS: { label: string; detail: string }[] = [
     label: "2. Record, pause, flush",
     detail:
       "Record starts or resumes the same websocket session. Stop recording pauses the microphone, flushes the recorder buffer, and sends a websocket flush so the session stays open for the next push-to-talk segment.",
-    },
+  },
   {
     label: "3. Fan out each blob",
     detail:

@@ -102,10 +102,7 @@ export function createEmptyRunState(): TranscriptRunState {
 }
 
 export function resetRunStateForNewRun(
-  phase: Extract<
-    TranscriptPhase,
-    "uploading" | "creating_transcript" | "polling" | "second_pass"
-  >,
+  phase: Extract<TranscriptPhase, "uploading" | "creating_transcript" | "polling" | "second_pass">,
 ): TranscriptRunState {
   return {
     ...createEmptyRunState(),
@@ -113,9 +110,7 @@ export function resetRunStateForNewRun(
   };
 }
 
-export function normalizeTranscriptText(
-  text: string | null | undefined,
-): string {
+export function normalizeTranscriptText(text: string | null | undefined): string {
   return (text || "").replace(/\s+/g, " ").trim();
 }
 
@@ -135,11 +130,8 @@ export function flattenTranscriptForDisplay(
     .join(" ");
 }
 
-export function formatInteractionLabel(
-  interaction: InteractionSummary,
-): string {
-  const primary =
-    interaction.title || interaction.patientName || interaction.id;
+export function formatInteractionLabel(interaction: InteractionSummary): string {
+  const primary = interaction.title || interaction.patientName || interaction.id;
   const secondary =
     interaction.patientName && interaction.patientName !== primary
       ? ` · ${interaction.patientName}`
@@ -168,9 +160,7 @@ export function resolveTranscriptIdFromCreateResponse(
 
   const location = locationHeader?.trim();
   if (location) {
-    const match = location.match(
-      /\/transcripts\/([^/?#]+)(?:\/status)?(?:[/?#]|$)/,
-    );
+    const match = location.match(/\/transcripts\/([^/?#]+)(?:\/status)?(?:[/?#]|$)/);
     if (match?.[1]) {
       return decodeURIComponent(match[1]);
     }

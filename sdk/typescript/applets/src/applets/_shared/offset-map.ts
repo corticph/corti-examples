@@ -25,17 +25,20 @@ export interface Edit {
 
 /** Derive the minimal single-span edit between two strings (prefix/suffix diff). */
 export function diffEdit(oldText: string, newText: string): Edit | null {
-  if (oldText === newText) return null;
+  if (oldText === newText) {
+    return null;
+  }
   const maxPrefix = Math.min(oldText.length, newText.length);
   let prefix = 0;
-  while (prefix < maxPrefix && oldText[prefix] === newText[prefix]) prefix++;
+  while (prefix < maxPrefix && oldText[prefix] === newText[prefix]) {
+    prefix++;
+  }
 
   let suffix = 0;
   const maxSuffix = Math.min(oldText.length - prefix, newText.length - prefix);
   while (
     suffix < maxSuffix &&
-    oldText[oldText.length - 1 - suffix] ===
-      newText[newText.length - 1 - suffix]
+    oldText[oldText.length - 1 - suffix] === newText[newText.length - 1 - suffix]
   ) {
     suffix++;
   }
@@ -59,14 +62,14 @@ export function transformRange(range: Range, edit: Edit): Range | null {
   const delta = edit.newLength - (edit.end - edit.start);
   const replacementEnd = edit.start + edit.newLength;
 
-  const mapStart = (p: number) =>
-    p <= edit.start ? p : p >= edit.end ? p + delta : edit.start;
-  const mapEnd = (p: number) =>
-    p <= edit.start ? p : p >= edit.end ? p + delta : replacementEnd;
+  const mapStart = (p: number) => (p <= edit.start ? p : p >= edit.end ? p + delta : edit.start);
+  const mapEnd = (p: number) => (p <= edit.start ? p : p >= edit.end ? p + delta : replacementEnd);
 
   const start = mapStart(range.start);
   const end = mapEnd(range.end);
-  if (end <= start) return null;
+  if (end <= start) {
+    return null;
+  }
   return { start, end };
 }
 
@@ -75,7 +78,9 @@ export function transformRanges(ranges: Range[], edit: Edit): Range[] {
   const out: Range[] = [];
   for (const r of ranges) {
     const t = transformRange(r, edit);
-    if (t) out.push(t);
+    if (t) {
+      out.push(t);
+    }
   }
   return out;
 }

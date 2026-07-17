@@ -1,12 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  createAppControlRegistry,
-  type AppControl,
-} from "./app-control-adapter";
+import { type AppControl, createAppControlRegistry } from "./app-control-adapter";
 
-function ctrl(
-  over: Partial<AppControl> & Pick<AppControl, "id" | "label">,
-): AppControl {
+function ctrl(over: Partial<AppControl> & Pick<AppControl, "id" | "label">): AppControl {
   return { kind: "action", run: vi.fn(), ...over };
 }
 
@@ -34,9 +29,7 @@ describe("createAppControlRegistry", () => {
   it("gates on isAvailable without running", () => {
     const run = vi.fn();
     const r = createAppControlRegistry();
-    r.register(
-      ctrl({ id: "confirm", label: "confirm", run, isAvailable: () => false }),
-    );
+    r.register(ctrl({ id: "confirm", label: "confirm", run, isAvailable: () => false }));
     const out = r.run("confirm");
     expect(run).not.toHaveBeenCalled();
     expect(out.handled).toBe(true);

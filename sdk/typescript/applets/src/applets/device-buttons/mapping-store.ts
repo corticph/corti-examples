@@ -8,9 +8,9 @@
  * persists every subsequent mapping change from the shared device store.
  */
 import {
+  type ConfigStore,
   createLocalConfigStore,
   identityNamespace,
-  type ConfigStore,
 } from "../_shared/config-store";
 import { deviceStore, setButtonMappings } from "../_shared/dictation-device";
 import { BUTTON_BIT, type ButtonMappings } from "../_shared/hid-recording";
@@ -27,10 +27,14 @@ let loadedNamespace: string | null = null;
 let subscribed = false;
 
 function ensurePersistenceSubscription() {
-  if (subscribed) return;
+  if (subscribed) {
+    return;
+  }
   subscribed = true;
   deviceStore.subscribe(() => {
-    if (loadedNamespace !== namespace) return;
+    if (loadedNamespace !== namespace) {
+      return;
+    }
     store.set(MAPPINGS_KEY, deviceStore.getSnapshot().mappings);
   });
 }
@@ -42,7 +46,9 @@ function ensurePersistenceSubscription() {
 export function configureButtonMappings(clientId?: string, tenant?: string) {
   ensurePersistenceSubscription();
   const nextNamespace = identityNamespace(clientId, tenant);
-  if (nextNamespace === loadedNamespace) return;
+  if (nextNamespace === loadedNamespace) {
+    return;
+  }
   namespace = nextNamespace;
   store = createLocalConfigStore(nextNamespace);
   loadedNamespace = nextNamespace;

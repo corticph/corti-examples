@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   BUTTON_BIT,
+  type ButtonMappings,
   buttonName,
   computeButtonEffects,
   pressedButtonBit,
-  type ButtonMappings,
 } from "./hid-recording";
 
 const { RECORD, STOP, PLAY, F1 } = BUTTON_BIT;
@@ -13,9 +13,7 @@ describe("computeButtonEffects", () => {
   describe("toggle mapping", () => {
     const m: ButtonMappings = { [RECORD]: { type: "toggle" } };
     it("toggles on press", () => {
-      expect(computeButtonEffects(0, RECORD, m)).toEqual([
-        { kind: "record", op: "toggle" },
-      ]);
+      expect(computeButtonEffects(0, RECORD, m)).toEqual([{ kind: "record", op: "toggle" }]);
     });
     it("ignores release", () => {
       expect(computeButtonEffects(RECORD, 0, m)).toEqual([]);
@@ -28,12 +26,8 @@ describe("computeButtonEffects", () => {
   describe("push mapping", () => {
     const m: ButtonMappings = { [RECORD]: { type: "push" } };
     it("starts on down, stops on up", () => {
-      expect(computeButtonEffects(0, RECORD, m)).toEqual([
-        { kind: "record", op: "start" },
-      ]);
-      expect(computeButtonEffects(RECORD, 0, m)).toEqual([
-        { kind: "record", op: "stop" },
-      ]);
+      expect(computeButtonEffects(0, RECORD, m)).toEqual([{ kind: "record", op: "start" }]);
+      expect(computeButtonEffects(RECORD, 0, m)).toEqual([{ kind: "record", op: "stop" }]);
     });
   });
 

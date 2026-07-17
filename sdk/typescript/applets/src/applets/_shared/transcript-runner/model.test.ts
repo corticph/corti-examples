@@ -39,9 +39,7 @@ describe("transcript display flattening", () => {
 
 describe("transcript create-response parsing", () => {
   it("reads the transcript id from a completed create response body", () => {
-    expect(resolveTranscriptIdFromCreateResponse({ id: "abc-123" })).toBe(
-      "abc-123",
-    );
+    expect(resolveTranscriptIdFromCreateResponse({ id: "abc-123" })).toBe("abc-123");
   });
 
   it("reads the transcript id from an async location header", () => {
@@ -69,14 +67,12 @@ describe("run-state helpers", () => {
   });
 
   it("builds a transcript download filename with the default prefix", () => {
-    expect(buildTranscriptJsonFilename("abc")).toBe(
-      "corti-transcript-abc.json",
-    );
+    expect(buildTranscriptJsonFilename("abc")).toBe("corti-transcript-abc.json");
   });
 
   it("namespaces the download filename with a custom prefix", () => {
-    expect(
-      buildTranscriptJsonFilename("abc", "corti-second-pass-transcript"),
-    ).toBe("corti-second-pass-transcript-abc.json");
+    expect(buildTranscriptJsonFilename("abc", "corti-second-pass-transcript")).toBe(
+      "corti-second-pass-transcript-abc.json",
+    );
   });
 });

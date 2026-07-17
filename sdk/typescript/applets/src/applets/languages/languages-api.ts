@@ -9,11 +9,7 @@ import { buildApiUrl } from "../_shared/urls";
 export type EndpointFilter = "transcribe" | "streams" | "transcripts";
 
 /** Dropdown options, in the order the app talks about the endpoints. */
-export const ENDPOINT_FILTERS: EndpointFilter[] = [
-  "transcribe",
-  "streams",
-  "transcripts",
-];
+export const ENDPOINT_FILTERS: EndpointFilter[] = ["transcribe", "streams", "transcripts"];
 
 interface EndpointAvailability {
   enabled: boolean;
@@ -51,12 +47,12 @@ interface ApiErrorBody {
  * appends `?endpoint=<value>` so the API returns only languages enabled for that
  * endpoint; omitting it returns the full map.
  */
-export async function fetchLanguages(
-  endpoint?: EndpointFilter,
-): Promise<LanguagesResponse> {
+export async function fetchLanguages(endpoint?: EndpointFilter): Promise<LanguagesResponse> {
   // Routed through the REST proxy, which injects Authorization + Tenant-Name.
   let url = `${buildApiUrl()}/v2/languages/`;
-  if (endpoint) url += `?endpoint=${encodeURIComponent(endpoint)}`;
+  if (endpoint) {
+    url += `?endpoint=${encodeURIComponent(endpoint)}`;
+  }
 
   const response = await fetch(url);
 
@@ -68,9 +64,7 @@ export async function fetchLanguages(
       /* non-JSON error body — fall through to the status message */
     }
     const message =
-      body?.detail ||
-      body?.type ||
-      `${response.status} ${response.statusText}`.trim();
+      body?.detail || body?.type || `${response.status} ${response.statusText}`.trim();
     throw new Error(message || `HTTP ${response.status}`);
   }
 
@@ -79,7 +73,9 @@ export async function fetchLanguages(
 
 /** Flatten the `languages` map into rows sorted by language code. */
 export function toRows(resp: LanguagesResponse | null): LanguageRow[] {
-  if (!resp?.languages) return [];
+  if (!resp?.languages) {
+    return [];
+  }
   return Object.entries(resp.languages)
     .map(([code, entry]) => ({
       code,

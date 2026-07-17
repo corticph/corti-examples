@@ -11,8 +11,7 @@ function createIndexedDbError() {
 function requestToPromise<T>(request: IDBRequest<T>) {
   return new Promise<T>((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () =>
-      reject(request.error ?? new Error("IndexedDB request failed"));
+    request.onerror = () => reject(request.error ?? new Error("IndexedDB request failed"));
   });
 }
 
@@ -42,8 +41,7 @@ async function openAudioArchiveDb(namespace: string) {
     };
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () =>
-      reject(request.error ?? new Error("Failed to open IndexedDB"));
+    request.onerror = () => reject(request.error ?? new Error("Failed to open IndexedDB"));
   });
 }
 
@@ -52,9 +50,7 @@ export async function listStoredAudioArchives(namespace: string) {
   try {
     const transaction = db.transaction(STORE_NAME, "readonly");
     const store = transaction.objectStore(STORE_NAME);
-    const archives = (await requestToPromise(
-      store.getAll(),
-    )) as StoredAudioArchive[];
+    const archives = (await requestToPromise(store.getAll())) as StoredAudioArchive[];
     await transactionToPromise(transaction);
     return archives.sort((a, b) => b.finalizedAt - a.finalizedAt);
   } finally {
@@ -62,10 +58,7 @@ export async function listStoredAudioArchives(namespace: string) {
   }
 }
 
-export async function putStoredAudioArchive(
-  namespace: string,
-  archive: StoredAudioArchive,
-) {
+export async function putStoredAudioArchive(namespace: string, archive: StoredAudioArchive) {
   const db = await openAudioArchiveDb(namespace);
   try {
     const transaction = db.transaction(STORE_NAME, "readwrite");
@@ -76,10 +69,7 @@ export async function putStoredAudioArchive(
   }
 }
 
-export async function deleteStoredAudioArchive(
-  namespace: string,
-  archiveId: string,
-) {
+export async function deleteStoredAudioArchive(namespace: string, archiveId: string) {
   const db = await openAudioArchiveDb(namespace);
   try {
     const transaction = db.transaction(STORE_NAME, "readwrite");

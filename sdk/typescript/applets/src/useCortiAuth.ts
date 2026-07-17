@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ServerConfig {
   cluster: string;
@@ -29,7 +29,11 @@ export function useCortiAuth(): CortiAuthState {
   useEffect(() => {
     fetch("/api/config")
       .then((r) => {
-        if (!r.ok) throw new Error(`Server responded ${r.status} — is the dev server running and CORTI_* env vars set?`);
+        if (!r.ok) {
+          throw new Error(
+            `Server responded ${r.status} — is the dev server running and CORTI_* env vars set?`,
+          );
+        }
         return r.json() as Promise<ServerConfig>;
       })
       .then(setConfig)
@@ -52,11 +56,16 @@ export function useCortiAuth(): CortiAuthState {
     setIsReady(true);
 
     // Proactively refresh ~30s before the token expires.
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    if (refreshTimerRef.current) {
+      clearTimeout(refreshTimerRef.current);
+    }
     if (expiresIn && expiresIn > 30) {
-      refreshTimerRef.current = setTimeout(() => {
-        authenticate().catch(console.error);
-      }, (expiresIn - 30) * 1000);
+      refreshTimerRef.current = setTimeout(
+        () => {
+          authenticate().catch(console.error);
+        },
+        (expiresIn - 30) * 1000,
+      );
     }
 
     return accessToken;
@@ -70,7 +79,9 @@ export function useCortiAuth(): CortiAuthState {
 
   useEffect(() => {
     return () => {
-      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
     };
   }, []);
 

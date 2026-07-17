@@ -5,14 +5,9 @@
  * imperatively. Trigger button + popover list, open state owned here, exposed via
  * an imperative handle so the applet's command handlers can open/pick.
  */
-import {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useState,
-  type Ref,
-} from "react";
+
 import { Check, ChevronDown } from "lucide-react";
+import { forwardRef, type Ref, useImperativeHandle, useRef, useState } from "react";
 import { cn } from "../_shared/utils";
 
 export interface DropdownHandle {
@@ -51,7 +46,9 @@ export const Dropdown = forwardRef(function Dropdown(
     close: () => setOpen(false),
     pick: (index: number) => {
       const option = options[index - 1];
-      if (option === undefined) return false;
+      if (option === undefined) {
+        return false;
+      }
       onChange(option);
       setOpen(false);
       return true;
@@ -69,18 +66,14 @@ export const Dropdown = forwardRef(function Dropdown(
         onBlur={() => setOpen(false)}
         className="flex w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-left text-sm text-foreground outline-none focus:border-corti-lime focus:ring-1 focus:ring-corti-lime"
       >
-        <span className={cn(!value && "text-muted-foreground")}>
-          {value || `Select ${label}…`}
-        </span>
+        <span className={cn(!value && "text-muted-foreground")}>{value || `Select ${label}…`}</span>
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
       {open && (
-        <ul
-          role="listbox"
-          className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-border bg-card shadow-md"
-        >
+        <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-border bg-card shadow-md">
           {options.map((option, i) => (
-            <li key={option} role="option" aria-selected={option === value}>
+            // biome-ignore lint/a11y/useAriaPropsSupportedByRole: custom dropdown; aria-selected signals selection state for assistive tech
+            <li key={option} aria-selected={option === value}>
               {/* onMouseDown so the trigger's onBlur doesn't close before select */}
               <button
                 type="button"
@@ -92,14 +85,10 @@ export const Dropdown = forwardRef(function Dropdown(
                 className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
               >
                 <span>
-                  <span className="mr-2 text-xs text-muted-foreground">
-                    {i + 1}
-                  </span>
+                  <span className="mr-2 text-xs text-muted-foreground">{i + 1}</span>
                   {option}
                 </span>
-                {option === value && (
-                  <Check className="h-4 w-4 text-corti-lime" />
-                )}
+                {option === value && <Check className="h-4 w-4 text-corti-lime" />}
               </button>
             </li>
           ))}

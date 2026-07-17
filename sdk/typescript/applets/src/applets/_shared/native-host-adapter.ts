@@ -60,14 +60,10 @@ export interface NativeHostAdapter {
  * last `listControls()` snapshot and refreshes it on `subscribe`, exposing the
  * cached values synchronously and firing `invoke` fire-and-forget.
  */
-export declare function bridgeNativeHost(
-  host: NativeHostAdapter,
-): AppControlRegistry;
+export declare function bridgeNativeHost(host: NativeHostAdapter): AppControlRegistry;
 
 /** The cached descriptor → snapshot-entry projection a bridge would use. */
-export function toSnapshotEntry(
-  d: NativeControlDescriptor,
-): AppControlSnapshotEntry {
+export function toSnapshotEntry(d: NativeControlDescriptor): AppControlSnapshotEntry {
   return {
     id: d.id,
     label: d.label,

@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  type AudioArchiveDraft,
+  type AudioArchiveEndpoint,
+  type AudioArchiveEndReason,
+  type AudioArchiveListItem,
+  type AudioArchiveStartReason,
   buildAudioArchiveFileName,
   closeOpenAudioArchiveSegment,
   createAudioArchiveId,
   createAudioArchiveSegmentId,
-  type AudioArchiveDraft,
-  type AudioArchiveEndReason,
-  type AudioArchiveEndpoint,
-  type AudioArchiveListItem,
-  type AudioArchiveStartReason,
   type StoredAudioArchive,
 } from "./audio-archive";
 import {
@@ -24,9 +24,7 @@ function archiveDurationMs(segments: AudioArchiveDraft["segments"]) {
 
 export function useAudioArchive(namespace: string) {
   const [archives, setArchives] = useState<AudioArchiveListItem[]>([]);
-  const [activeArchive, setActiveArchive] = useState<AudioArchiveDraft | null>(
-    null,
-  );
+  const [activeArchive, setActiveArchive] = useState<AudioArchiveDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const activeArchiveRef = useRef<AudioArchiveDraft | null>(null);
@@ -35,9 +33,7 @@ export function useAudioArchive(namespace: string) {
 
   const syncArchiveItems = useCallback((nextArchives: StoredAudioArchive[]) => {
     setArchives((previous) => {
-      const previousUrls = new Map(
-        previous.map((archive) => [archive.id, archive.playbackUrl]),
-      );
+      const previousUrls = new Map(previous.map((archive) => [archive.id, archive.playbackUrl]));
       const nextUrlMap = new Map<string, string>();
 
       const items = nextArchives.map((archive) => {
@@ -75,18 +71,16 @@ export function useAudioArchive(namespace: string) {
   useEffect(() => {
     void refreshArchives();
     return () => {
+      // biome-ignore lint/suspicious/useIterableCallbackReturn: forEach cleanup callbacks are intentionally void
       objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       objectUrlsRef.current.clear();
     };
   }, [refreshArchives]);
 
-  const updateActiveArchive = useCallback(
-    (nextArchive: AudioArchiveDraft | null) => {
-      activeArchiveRef.current = nextArchive;
-      setActiveArchive(nextArchive);
-    },
-    [],
-  );
+  const updateActiveArchive = useCallback((nextArchive: AudioArchiveDraft | null) => {
+    activeArchiveRef.current = nextArchive;
+    setActiveArchive(nextArchive);
+  }, []);
 
   const startArchive = useCallback(
     async (params: {
@@ -200,10 +194,7 @@ export function useAudioArchive(namespace: string) {
       if (!current) {
         return;
       }
-      const nextSegments = closeOpenAudioArchiveSegment(
-        current.segments,
-        endReason,
-      );
+      const nextSegments = closeOpenAudioArchiveSegment(current.segments, endReason);
       if (nextSegments === current.segments) {
         return;
       }
@@ -226,9 +217,7 @@ export function useAudioArchive(namespace: string) {
 
       const segments = closeOpenAudioArchiveSegment(current.segments, endReason);
       const mimeType =
-        current.actualCaptureMime ||
-        current.configuredCaptureMime ||
-        "application/octet-stream";
+        current.actualCaptureMime || current.configuredCaptureMime || "application/octet-stream";
       const blob = new Blob(chunkBlobsRef.current, {
         type: mimeType || undefined,
       });

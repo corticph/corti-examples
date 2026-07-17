@@ -2,12 +2,7 @@ export type AudioArchiveEndpoint = "transcribe" | "dictation";
 
 export type AudioArchiveStartReason = "start" | "resume";
 
-export type AudioArchiveEndReason =
-  | "pause"
-  | "stop"
-  | "disconnect"
-  | "ended"
-  | "error";
+export type AudioArchiveEndReason = "pause" | "stop" | "disconnect" | "ended" | "error";
 
 export interface AudioArchiveSegment {
   id: string;
@@ -81,7 +76,6 @@ export function getAudioFileExtension(mimeType: string) {
       return "ogg";
     case "audio/wav":
       return "wav";
-    case "audio/webm":
     default:
       return "webm";
   }

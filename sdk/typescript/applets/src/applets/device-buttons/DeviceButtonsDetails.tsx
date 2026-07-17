@@ -39,8 +39,8 @@ export function DeviceButtonsDetails() {
         ))}
       </ol>
       <p className="text-xs text-muted-foreground">
-        Requires a Chromium browser (Chrome / Edge) over a secure context;
-        WebHID is unavailable in Firefox and Safari.
+        Requires a Chromium browser (Chrome / Edge) over a secure context; WebHID is unavailable in
+        Firefox and Safari.
       </p>
     </div>
   );

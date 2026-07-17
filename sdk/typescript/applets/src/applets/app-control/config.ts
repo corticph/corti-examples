@@ -6,9 +6,7 @@
 import type { Corti } from "@corti/sdk";
 import { APP_COMMANDS } from "./commands";
 
-export function buildDictationConfig(
-  primaryLanguage: string,
-): Corti.TranscribeConfig {
+export function buildDictationConfig(primaryLanguage: string): Corti.TranscribeConfig {
   return {
     primaryLanguage,
     interimResults: true,

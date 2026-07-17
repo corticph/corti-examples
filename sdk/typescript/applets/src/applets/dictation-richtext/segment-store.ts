@@ -10,6 +10,7 @@ const listeners = new Set<Listener>();
 
 function notify() {
   const snap = [...segments];
+  // biome-ignore lint/suspicious/useIterableCallbackReturn: forEach notify callbacks are intentionally void
   listeners.forEach((l) => l(snap));
 }
 

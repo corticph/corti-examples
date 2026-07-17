@@ -1,9 +1,5 @@
 import type { Corti } from "@corti/sdk";
-import type {
-  KeytermsConfig,
-  TranscribeConfiguration,
-  TranscribeTerm,
-} from "../_shared/types";
+import type { KeytermsConfig, TranscribeConfiguration, TranscribeTerm } from "../_shared/types";
 import { WAKE_COMMAND_ID } from "./model";
 
 const WAKE_PHRASES = [
@@ -17,8 +13,7 @@ const KEYTERM_WORDS = ["Corti"] as const;
 
 export function buildConversationalConfig(
   primaryLanguage: string,
-): Corti.TranscribeConfig &
-  Pick<TranscribeConfiguration, "terms" | "keyterms"> {
+): Corti.TranscribeConfig & Pick<TranscribeConfiguration, "terms" | "keyterms"> {
   const terms: TranscribeTerm[] = KEYTERM_WORDS.map((term) => ({ term }));
   const keyterms: KeytermsConfig = { terms };
 

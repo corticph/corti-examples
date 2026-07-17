@@ -5,8 +5,9 @@
  * `useTranscriptRunner`. Render extra controls (e.g. an agent prompt editor)
  * via `children`; they appear between the switches and the action button.
  */
-import type { ReactNode } from "react";
+
 import { Loader2, RefreshCw } from "lucide-react";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,11 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import type {
-  TranscriptPhase,
-  TranscriptSourceMode,
-  UploadInteractionMode,
-} from "./model";
+import type { TranscriptPhase, TranscriptSourceMode, UploadInteractionMode } from "./model";
 import type { TranscriptRunner } from "./useTranscriptRunner";
 
 const DEFAULT_PHASE_LABEL: Record<TranscriptPhase, string> = {
@@ -63,10 +60,7 @@ function InteractionPicker({ idPrefix, runner }: InteractionPickerProps) {
           Refresh
         </Button>
       </div>
-      <Select
-        value={runner.selectedInteractionId}
-        onValueChange={runner.setSelectedInteractionId}
-      >
+      <Select value={runner.selectedInteractionId} onValueChange={runner.setSelectedInteractionId}>
         <SelectTrigger id={id} className="font-mono text-xs">
           <SelectValue placeholder="Select an interaction ID" />
         </SelectTrigger>
@@ -137,18 +131,14 @@ export function TranscriptRunnerForm({
             <Label htmlFor={`${idPrefix}-source-mode`}>Source</Label>
             <Select
               value={runner.sourceMode}
-              onValueChange={(value: TranscriptSourceMode) =>
-                runner.setSourceMode(value)
-              }
+              onValueChange={(value: TranscriptSourceMode) => runner.setSourceMode(value)}
             >
               <SelectTrigger id={`${idPrefix}-source-mode`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="item-aligned">
                 <SelectItem value="upload">Upload audio file</SelectItem>
-                <SelectItem value="recording">
-                  Existing interaction recording
-                </SelectItem>
+                <SelectItem value="recording">Existing interaction recording</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -169,9 +159,7 @@ export function TranscriptRunnerForm({
           <div className="space-y-4 rounded-lg border border-border/80 bg-muted/30 p-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor={`${idPrefix}-upload-mode`}>
-                  Upload target interaction
-                </Label>
+                <Label htmlFor={`${idPrefix}-upload-mode`}>Upload target interaction</Label>
                 <Select
                   value={runner.uploadInteractionMode}
                   onValueChange={(value: UploadInteractionMode) =>
@@ -183,9 +171,7 @@ export function TranscriptRunnerForm({
                   </SelectTrigger>
                   <SelectContent position="item-aligned">
                     <SelectItem value="new">Create new interaction</SelectItem>
-                    <SelectItem value="existing">
-                      Use existing interaction
-                    </SelectItem>
+                    <SelectItem value="existing">Use existing interaction</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -217,10 +203,7 @@ export function TranscriptRunnerForm({
                   size="sm"
                   variant="ghost"
                   onClick={() => void runner.refreshRecordings()}
-                  disabled={
-                    !runner.selectedInteractionId ||
-                    runner.isRefreshingRecordings
-                  }
+                  disabled={!runner.selectedInteractionId || runner.isRefreshingRecordings}
                 >
                   {runner.isRefreshingRecordings ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -234,10 +217,7 @@ export function TranscriptRunnerForm({
                 value={runner.selectedRecordingId}
                 onValueChange={runner.setSelectedRecordingId}
               >
-                <SelectTrigger
-                  id={`${idPrefix}-recording`}
-                  className="font-mono text-xs"
-                >
+                <SelectTrigger id={`${idPrefix}-recording`} className="font-mono text-xs">
                   <SelectValue placeholder="Select a recording ID" />
                 </SelectTrigger>
                 <SelectContent position="item-aligned">
@@ -259,41 +239,33 @@ export function TranscriptRunnerForm({
         )}
 
         <div className="grid gap-4 md:grid-cols-3">
-          <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 text-sm">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 text-sm">
             <span>
-              <span className="block font-medium text-foreground">
-                Dictation punctuation
-              </span>
+              <span className="block font-medium text-foreground">Dictation punctuation</span>
               <span className="block text-xs text-muted-foreground">
                 Enable spoken punctuation interpretation
               </span>
             </span>
             <Switch
               checked={runner.isDictation}
-              onCheckedChange={(checked) =>
-                runner.setIsDictation(Boolean(checked))
-              }
+              onCheckedChange={(checked) => runner.setIsDictation(Boolean(checked))}
             />
-          </label>
+          </div>
 
-          <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 text-sm">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 text-sm">
             <span>
-              <span className="block font-medium text-foreground">
-                Multichannel
-              </span>
+              <span className="block font-medium text-foreground">Multichannel</span>
               <span className="block text-xs text-muted-foreground">
                 Transcribe each channel independently
               </span>
             </span>
             <Switch
               checked={runner.isMultichannel}
-              onCheckedChange={(checked) =>
-                runner.setIsMultichannel(Boolean(checked))
-              }
+              onCheckedChange={(checked) => runner.setIsMultichannel(Boolean(checked))}
             />
-          </label>
+          </div>
 
-          <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 text-sm">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 text-sm">
             <span>
               <span className="block font-medium text-foreground">Diarize</span>
               <span className="block text-xs text-muted-foreground">
@@ -304,7 +276,7 @@ export function TranscriptRunnerForm({
               checked={runner.diarize}
               onCheckedChange={(checked) => runner.setDiarize(Boolean(checked))}
             />
-          </label>
+          </div>
         </div>
 
         {children}
@@ -312,25 +284,17 @@ export function TranscriptRunnerForm({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={onGenerate} disabled={disabled}>
-              {runner.busy ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                actionIcon
-              )}
+              {runner.busy ? <Loader2 className="h-4 w-4 animate-spin" /> : actionIcon}
               {actionLabel}
             </Button>
             {runner.runState.error && (
-              <span className="text-sm text-variant-error-foreground">
-                {runner.runState.error}
-              </span>
+              <span className="text-sm text-variant-error-foreground">{runner.runState.error}</span>
             )}
           </div>
         </div>
 
         {runner.browserError && (
-          <p className="text-sm text-variant-error-foreground">
-            {runner.browserError}
-          </p>
+          <p className="text-sm text-variant-error-foreground">{runner.browserError}</p>
         )}
       </div>
     </section>

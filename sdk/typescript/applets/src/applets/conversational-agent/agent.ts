@@ -1,25 +1,25 @@
-import { useSyncExternalStore } from "react";
-import { CortiClient } from "@corti/sdk";
 import type { Corti, CortiAuth } from "@corti/sdk";
-import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
+import { CortiClient } from "@corti/sdk";
+import { useSyncExternalStore } from "react";
 import {
+  type ConfigStore,
   createLocalConfigStore,
   identityNamespace,
-  type ConfigStore,
 } from "../_shared/config-store";
 import {
+  type AgentSpec,
   describeAgentError,
   ensureAgent,
   sendAgentMessageWithContext,
-  type AgentSpec,
 } from "../_shared/corti-agent";
+import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 import {
   appendDebugEntry,
-  clearConversationState,
-  extractWakeIntent,
   type ConversationMessage,
   type ConversationSource,
+  clearConversationState,
   type DebugEntry,
+  extractWakeIntent,
 } from "./model";
 
 export const CONVERSATIONAL_AGENT = {
@@ -41,13 +41,7 @@ const AUTO_SEND_KEY = "conversationalAgent.autoSend";
 const CONTEXT_ID_KEY = "conversationalAgent.contextId";
 const MESSAGES_KEY = "conversationalAgent.messages";
 
-export type ConversationStatus =
-  | "idle"
-  | "preparing"
-  | "ready"
-  | "running"
-  | "resetting"
-  | "error";
+export type ConversationStatus = "idle" | "preparing" | "ready" | "running" | "resetting" | "error";
 
 interface ConversationState {
   prompt: string;
@@ -83,7 +77,9 @@ const subscribe = (listener: () => void) => {
   return () => listeners.delete(listener);
 };
 const emit = () => {
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 };
 const set = (patch: Partial<ConversationState>) => {
   state = { ...state, ...patch };
@@ -115,11 +111,7 @@ function loadStateFromStore() {
   };
 }
 
-function appendMessage(
-  role: "user" | "assistant",
-  text: string,
-  source: ConversationSource,
-) {
+function appendMessage(role: "user" | "assistant", text: string, source: ConversationSource) {
   state = {
     ...state,
     messages: [
@@ -137,9 +129,7 @@ function appendMessage(
   emit();
 }
 
-function logDebug(
-  entry: Omit<DebugEntry, "id" | "at">,
-) {
+function logDebug(entry: Omit<DebugEntry, "id" | "at">) {
   state = {
     ...state,
     debugLog: appendDebugEntry(state.debugLog, entry),
@@ -152,7 +142,9 @@ function isBusy(status: ConversationStatus) {
 }
 
 async function prepare() {
-  if (!client) return;
+  if (!client) {
+    return;
+  }
   set({ status: "preparing", error: undefined });
   try {
     if (!agentId) {
@@ -195,7 +187,9 @@ export function configureConversation(
 export async function savePrompt(prompt: string) {
   store.set(PROMPT_KEY, prompt);
   set({ prompt });
-  if (!client || !agentId) return;
+  if (!client || !agentId) {
+    return;
+  }
 
   set({ status: "preparing", error: undefined });
   try {
@@ -219,13 +213,17 @@ export function setAutoSend(autoSend: boolean) {
 }
 
 export function clearConversationError() {
-  if (!state.error) return;
+  if (!state.error) {
+    return;
+  }
   set({ error: undefined });
 }
 
 export function logFinalTranscript(text: string) {
   const normalized = text.trim();
-  if (!normalized) return;
+  if (!normalized) {
+    return;
+  }
   logDebug({ type: "transcript", text: normalized });
 }
 
@@ -241,16 +239,15 @@ export function clearDebugLog() {
   set({ debugLog: [] });
 }
 
-export async function sendText(
-  text: string,
-  source: ConversationSource,
-): Promise<boolean> {
+export async function sendText(text: string, source: ConversationSource): Promise<boolean> {
   const normalized = text.trim();
   if (!normalized) {
     set({ error: "Nothing to send yet." });
     return false;
   }
-  if (!client) return false;
+  if (!client) {
+    return false;
+  }
   if (isBusy(state.status)) {
     set({ error: "Wait for the current response before sending another turn." });
     return false;
@@ -266,6 +263,7 @@ export async function sendText(
     }
 
     let retriedWithoutContext = false;
+    // biome-ignore lint/suspicious/noImplicitAnyLet: typed by the awaited assignment below
     let result;
 
     try {
@@ -316,21 +314,20 @@ export async function sendComposer(): Promise<boolean> {
   return sendText(state.composer, "typed");
 }
 
-export async function handleWakeCommand(
-  command: Corti.TranscribeCommandData,
-): Promise<void> {
+export async function handleWakeCommand(command: Corti.TranscribeCommandData): Promise<void> {
   const intent = extractWakeIntent(command);
   if (!intent) {
     set({
-      error:
-        'Wake phrase recognized, but no intent was captured after "Corti".',
+      error: 'Wake phrase recognized, but no intent was captured after "Corti".',
     });
     return;
   }
 
   if (state.autoSend) {
     const sent = await sendText(intent, "voice");
-    if (!sent) setComposer(intent);
+    if (!sent) {
+      setComposer(intent);
+    }
     return;
   }
 

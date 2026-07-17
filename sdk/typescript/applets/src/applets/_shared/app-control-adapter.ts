@@ -73,16 +73,26 @@ export function createAppControlRegistry(): AppControlRegistry {
   const controls = new Map<string, AppControl>();
 
   const resolve = (spoken: string): AppControl | undefined => {
-    if (controls.has(spoken)) return controls.get(spoken);
+    if (controls.has(spoken)) {
+      return controls.get(spoken);
+    }
     const target = normalize(spoken);
-    if (!target) return undefined;
+    if (!target) {
+      return undefined;
+    }
     for (const c of controls.values()) {
-      if (normalize(c.label) === target) return c;
-      if (c.aliases?.some((a) => normalize(a) === target)) return c;
+      if (normalize(c.label) === target) {
+        return c;
+      }
+      if (c.aliases?.some((a) => normalize(a) === target)) {
+        return c;
+      }
     }
     for (const c of controls.values()) {
       const n = normalize(c.label);
-      if (n && (target.includes(n) || n.includes(target))) return c;
+      if (n && (target.includes(n) || n.includes(target))) {
+        return c;
+      }
     }
     return undefined;
   };
@@ -92,7 +102,9 @@ export function createAppControlRegistry(): AppControlRegistry {
       controls.set(control.id, control);
       return () => {
         // Only remove if it's still the same registration.
-        if (controls.get(control.id) === control) controls.delete(control.id);
+        if (controls.get(control.id) === control) {
+          controls.delete(control.id);
+        }
       };
     },
     get: (id) => controls.get(id),

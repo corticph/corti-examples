@@ -53,9 +53,7 @@ export interface EditorAdapter {
 /* textarea / input                                                    */
 /* ------------------------------------------------------------------ */
 
-export function createTextareaAdapter(
-  el: HTMLTextAreaElement | HTMLInputElement,
-): EditorAdapter {
+export function createTextareaAdapter(el: HTMLTextAreaElement | HTMLInputElement): EditorAdapter {
   const getSelection = (): EditorSelection => ({
     start: el.selectionStart ?? el.value.length,
     end: el.selectionEnd ?? el.value.length,
@@ -93,11 +91,7 @@ export function createTextareaAdapter(
 /* ------------------------------------------------------------------ */
 
 /** Absolute text offset of a (node, offset) DOM point within `root`. */
-function pointToOffset(
-  root: HTMLElement,
-  node: Node,
-  nodeOffset: number,
-): number {
+function pointToOffset(root: HTMLElement, node: Node, nodeOffset: number): number {
   const range = document.createRange();
   range.selectNodeContents(root);
   range.setEnd(node, nodeOffset);
@@ -105,10 +99,7 @@ function pointToOffset(
 }
 
 /** Resolve an absolute text offset to a DOM (node, offset) point within `root`. */
-function offsetToPoint(
-  root: HTMLElement,
-  offset: number,
-): { node: Node; offset: number } {
+function offsetToPoint(root: HTMLElement, offset: number): { node: Node; offset: number } {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let remaining = offset;
   let lastText: Text | null = null;
@@ -116,13 +107,16 @@ function offsetToPoint(
   while (current) {
     lastText = current;
     const len = current.textContent?.length ?? 0;
-    if (remaining <= len) return { node: current, offset: remaining };
+    if (remaining <= len) {
+      return { node: current, offset: remaining };
+    }
     remaining -= len;
     current = walker.nextNode() as Text | null;
   }
   // Past the end — clamp to the end of the last text node (or root itself).
-  if (lastText)
+  if (lastText) {
     return { node: lastText, offset: lastText.textContent?.length ?? 0 };
+  }
   return { node: root, offset: 0 };
 }
 
@@ -147,7 +141,9 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
   const setSelection = (start: number, end: number) => {
     el.focus();
     const sel = window.getSelection();
-    if (!sel) return;
+    if (!sel) {
+      return;
+    }
     const from = offsetToPoint(el, start);
     const to = offsetToPoint(el, end);
     const range = document.createRange();
@@ -160,7 +156,9 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
   const insertTextAtSelection = (text: string): InsertResult => {
     const sel = window.getSelection();
     const { start } = getSelection();
-    if (!sel || sel.rangeCount === 0) return { start, end: start };
+    if (!sel || sel.rangeCount === 0) {
+      return { start, end: start };
+    }
     const range = sel.getRangeAt(0);
     range.deleteContents();
 
@@ -197,10 +195,13 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
   /** True when the cursor is positioned immediately after a <br> element. */
   const isAfterBr = (): boolean => {
     const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return false;
-    const { startContainer, startOffset } = sel.getRangeAt(0);
-    if (startContainer.nodeType !== Node.ELEMENT_NODE || startOffset === 0)
+    if (!sel || sel.rangeCount === 0) {
       return false;
+    }
+    const { startContainer, startOffset } = sel.getRangeAt(0);
+    if (startContainer.nodeType !== Node.ELEMENT_NODE || startOffset === 0) {
+      return false;
+    }
     return (startContainer as Element).childNodes[startOffset - 1]?.nodeName === "BR";
   };
 
@@ -215,7 +216,7 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
       // el.textContent has no \n for <br> nodes; if cursor is right after a <br>,
       // append a synthetic \n so getLeadingSeparator suppresses the leading space.
       const raw = (el.textContent ?? "").slice(0, start);
-      const before = isAfterBr() ? raw + "\n" : raw;
+      const before = isAfterBr() ? `${raw}\n` : raw;
       const insertion = buildInsertion(before, before.length, segment, options);
       return insertTextAtSelection(insertion);
     },

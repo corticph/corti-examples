@@ -25,10 +25,7 @@ export const CATALOG: Replacement[] = [
   { id: "rn-two", find: "Roman numeral two", replace: "ii", builtin: true },
 ];
 
-export const replacementStore = createRuleStore<Replacement>(
-  "replacements.user",
-  CATALOG,
-);
+export const replacementStore = createRuleStore<Replacement>("replacements.user", CATALOG);
 
 /** Export in the corti-examples config shape so it round-trips with the catalog. */
 export function toExport(items: Replacement[]) {

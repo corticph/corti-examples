@@ -32,7 +32,9 @@ const SENTENCE_END = new Set([".", "!", "?"]);
  * certain punctuation. Match on the base language subtag only.
  */
 function isFrench(primaryLanguage?: string): boolean {
-  if (!primaryLanguage) return false;
+  if (!primaryLanguage) {
+    return false;
+  }
   const lang = primaryLanguage.toLowerCase();
   return lang === "fr" || (lang.startsWith("fr") && lang !== "fr-ch");
 }
@@ -48,18 +50,28 @@ export function getLeadingSeparator(
   primaryLanguage?: string,
 ): string {
   // Start of field — never lead with a space.
-  if (!prevChar) return "";
+  if (!prevChar) {
+    return "";
+  }
   // Already separated, or previous char forbids a following space.
-  if (WHITESPACE.has(prevChar)) return "";
-  if (NO_SPACE_AFTER.has(prevChar)) return "";
+  if (WHITESPACE.has(prevChar)) {
+    return "";
+  }
+  if (NO_SPACE_AFTER.has(prevChar)) {
+    return "";
+  }
   // Incoming text already starts with whitespace.
-  if (WHITESPACE.has(nextChar)) return "";
+  if (WHITESPACE.has(nextChar)) {
+    return "";
+  }
   // French punctuation gets a non-breaking space before it.
   if (isFrench(primaryLanguage) && FRENCH_NBSP_BEFORE.has(nextChar)) {
     return NBSP;
   }
   // Left-attaching punctuation hugs the preceding word.
-  if (LEFT_ATTACH.has(nextChar)) return "";
+  if (LEFT_ATTACH.has(nextChar)) {
+    return "";
+  }
   return " ";
 }
 
@@ -69,20 +81,17 @@ export function getLeadingSeparator(
  * punctuation. Casing is client-owned unless `automaticPunctuation` is enabled
  * server-side (in which case callers should pass `capitalize: false`).
  */
-export function capitalizeForContext(
-  textBeforeCursor: string,
-  segment: string,
-): string {
-  if (!segment) return segment;
+export function capitalizeForContext(textBeforeCursor: string, segment: string): string {
+  if (!segment) {
+    return segment;
+  }
   const trimmedBefore = textBeforeCursor.replace(/[\s ]+$/, "");
   const atSentenceStart =
-    trimmedBefore.length === 0 ||
-    SENTENCE_END.has(trimmedBefore[trimmedBefore.length - 1]);
-  if (!atSentenceStart) return segment;
-  return segment.replace(
-    /^(\s*)(\p{L})/u,
-    (_m, ws, ch) => ws + ch.toUpperCase(),
-  );
+    trimmedBefore.length === 0 || SENTENCE_END.has(trimmedBefore[trimmedBefore.length - 1]);
+  if (!atSentenceStart) {
+    return segment;
+  }
+  return segment.replace(/^(\s*)(\p{L})/u, (_m, ws, ch) => ws + ch.toUpperCase());
 }
 
 export interface InsertionOptions {
@@ -102,13 +111,13 @@ export function buildInsertion(
   segment: string,
   options: InsertionOptions = {},
 ): string {
-  if (!segment) return "";
+  if (!segment) {
+    return "";
+  }
   const { primaryLanguage, capitalize = true } = options;
   const prevChar = cursor > 0 ? text[cursor - 1] : null;
   const lead = getLeadingSeparator(prevChar, segment[0], primaryLanguage);
-  const cased = capitalize
-    ? capitalizeForContext(text.slice(0, cursor), segment)
-    : segment;
+  const cased = capitalize ? capitalizeForContext(text.slice(0, cursor), segment) : segment;
   return lead + cased;
 }
 
@@ -132,7 +141,6 @@ export function spliceSegment(
   options: InsertionOptions = {},
 ): SpliceResult {
   const insertion = buildInsertion(text, selectionStart, segment, options);
-  const next =
-    text.slice(0, selectionStart) + insertion + text.slice(selectionEnd);
+  const next = text.slice(0, selectionStart) + insertion + text.slice(selectionEnd);
   return { text: next, cursor: selectionStart + insertion.length };
 }

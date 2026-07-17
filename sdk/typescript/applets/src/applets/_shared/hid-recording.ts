@@ -62,9 +62,7 @@ export const DEVICE_BUTTONS: DeviceButton[] = [
 ];
 
 export function buttonName(bit: number): string {
-  return (
-    DEVICE_BUTTONS.find((b) => b.bit === bit)?.name ?? `0x${bit.toString(16)}`
-  );
+  return DEVICE_BUTTONS.find((b) => b.bit === bit)?.name ?? `0x${bit.toString(16)}`;
 }
 
 /** What a button does when pressed. */
@@ -106,17 +104,20 @@ export function computeButtonEffects(
   for (const key of Object.keys(mappings)) {
     const bit = Number(key);
     const action = mappings[bit];
-    if (!bit || !action) continue;
+    if (!bit || !action) {
+      continue;
+    }
 
     if (action.type === "command") {
       if (rising(prev, next, bit)) {
         effects.push({ kind: "command", commandId: action.commandId });
       }
     } else if (action.type === "push") {
-      if (rising(prev, next, bit))
+      if (rising(prev, next, bit)) {
         effects.push({ kind: "record", op: "start" });
-      else if (falling(prev, next, bit))
+      } else if (falling(prev, next, bit)) {
         effects.push({ kind: "record", op: "stop" });
+      }
     } else if (rising(prev, next, bit)) {
       effects.push({ kind: "record", op: "toggle" });
     }
@@ -131,9 +132,13 @@ export function computeButtonEffects(
  */
 export function pressedButtonBit(prevMask: number, nextMask: number): number {
   const pressed = (nextMask >>> 0) & ~(prevMask >>> 0);
-  if (pressed === 0) return 0;
+  if (pressed === 0) {
+    return 0;
+  }
   for (const { bit } of DEVICE_BUTTONS) {
-    if (pressed & bit) return bit;
+    if (pressed & bit) {
+      return bit;
+    }
   }
   return (pressed & -pressed) >>> 0; // lowest set bit
 }

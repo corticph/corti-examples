@@ -36,12 +36,11 @@ export function extractWakeIntent(
   command: Pick<Corti.TranscribeCommandData, "variables" | "rawTranscriptText">,
 ): string {
   const variable = command.variables?.intent?.trim();
-  if (variable) return variable;
+  if (variable) {
+    return variable;
+  }
 
-  return command.rawTranscriptText
-    .replace(WAKE_PREFIX_RE, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return command.rawTranscriptText.replace(WAKE_PREFIX_RE, "").replace(/\s+/g, " ").trim();
 }
 
 export function appendDebugEntry(
@@ -58,9 +57,7 @@ export function appendDebugEntry(
   ].slice(0, DEBUG_LOG_LIMIT);
 }
 
-export function clearConversationState<T extends ResettableConversationState>(
-  state: T,
-): T {
+export function clearConversationState<T extends ResettableConversationState>(state: T): T {
   return {
     ...state,
     composer: "",

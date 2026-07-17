@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createAppControlRegistry } from "../_shared/app-control-adapter";
 import { APP_COMMANDS, handleAppCommand } from "./commands";
 
@@ -24,23 +24,17 @@ function registryWithSpies() {
 describe("handleAppCommand", () => {
   it("switch_tab resolves the tab label to its control", () => {
     const { r, calls } = registryWithSpies();
-    handleAppCommand(
-      { id: "switch_tab", variables: { tab: "notes" } } as any,
-      r,
-    );
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture cast — partial command shape
+    handleAppCommand({ id: "switch_tab", variables: { tab: "notes" } } as any, r);
     expect(calls).toEqual([{ id: "tab-notes", arg: undefined }]);
   });
 
   it("open_panel / close_panel pass the open/close arg", () => {
     const { r, calls } = registryWithSpies();
-    handleAppCommand(
-      { id: "open_panel", variables: { panel: "details" } } as any,
-      r,
-    );
-    handleAppCommand(
-      { id: "close_panel", variables: { panel: "details" } } as any,
-      r,
-    );
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture cast — partial command shape
+    handleAppCommand({ id: "open_panel", variables: { panel: "details" } } as any, r);
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture cast — partial command shape
+    handleAppCommand({ id: "close_panel", variables: { panel: "details" } } as any, r);
     expect(calls).toEqual([
       { id: "details", arg: "open" },
       { id: "details", arg: "close" },
@@ -49,7 +43,9 @@ describe("handleAppCommand", () => {
 
   it("new_order / save_note run their buttons by id", () => {
     const { r, calls } = registryWithSpies();
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture cast — partial command shape
     handleAppCommand({ id: "new_order" } as any, r);
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture cast — partial command shape
     handleAppCommand({ id: "save_note" } as any, r);
     expect(calls).toEqual([
       { id: "new-order", arg: undefined },
@@ -59,6 +55,7 @@ describe("handleAppCommand", () => {
 
   it("confirm is gated by isAvailable and does not run when closed", () => {
     const { r, calls } = registryWithSpies();
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture cast — partial command shape
     const out = handleAppCommand({ id: "confirm_dialog" } as any, r);
     expect(calls).toEqual([]);
     expect(out.description).toContain("not available");
@@ -66,6 +63,7 @@ describe("handleAppCommand", () => {
 
   it("unknown command is unhandled", () => {
     const { r } = registryWithSpies();
+    // biome-ignore lint/suspicious/noExplicitAny: test fixture cast — partial command shape
     expect(handleAppCommand({ id: "nope" } as any, r).handled).toBe(false);
   });
 });
@@ -84,6 +82,8 @@ describe("APP_COMMANDS config", () => {
     ]) {
       expect(ids).toContain(id);
     }
-    for (const c of APP_COMMANDS) expect(c.phrases.length).toBeGreaterThan(0);
+    for (const c of APP_COMMANDS) {
+      expect(c.phrases.length).toBeGreaterThan(0);
+    }
   });
 });

@@ -41,14 +41,18 @@ export type CommandRegistry = Record<string, CommandHandler>;
 
 export function lastWordRange(text: string): Range | null {
   const m = /(\S+)\s*$/.exec(text);
-  if (!m) return null;
+  if (!m) {
+    return null;
+  }
   const start = text.lastIndexOf(m[1]);
   return { start, end: start + m[1].length };
 }
 
 export function lastSentenceRange(text: string): Range | null {
   const trimmedEnd = text.replace(/\s+$/, "");
-  if (!trimmedEnd) return null;
+  if (!trimmedEnd) {
+    return null;
+  }
   // Find the start of the final sentence: char after the previous . ! ?
   const prevEnd = Math.max(
     trimmedEnd.lastIndexOf(".", trimmedEnd.length - 2),
@@ -61,9 +65,13 @@ export function lastSentenceRange(text: string): Range | null {
 }
 
 function lastOccurrenceRange(text: string, needle: string): Range | null {
-  if (!needle) return null;
+  if (!needle) {
+    return null;
+  }
   const idx = text.toLowerCase().lastIndexOf(needle.toLowerCase());
-  if (idx === -1) return null;
+  if (idx === -1) {
+    return null;
+  }
   return { start: idx, end: idx + needle.length };
 }
 
@@ -77,7 +85,9 @@ export const deleteLastSegment: CommandHandler = (adapter, _cmd, ctx) => {
     return { handled: true, description: "Deleted selection" };
   }
   const last = ctx.history[ctx.history.length - 1];
-  if (!last) return { handled: true, description: "Nothing to delete" };
+  if (!last) {
+    return { handled: true, description: "Nothing to delete" };
+  }
   adapter.replaceRange(last.start, last.end, "");
   return {
     handled: true,
@@ -96,14 +106,15 @@ export const insertParagraph: CommandHandler = (adapter) => {
 /** Capitalize the first letter of the last inserted dictation segment. */
 export const capitalizeLastSegment: CommandHandler = (adapter, _cmd, ctx) => {
   const last = ctx.history[ctx.history.length - 1];
-  if (!last) return { handled: true, description: "Nothing to capitalize" };
+  if (!last) {
+    return { handled: true, description: "Nothing to capitalize" };
+  }
   const text = adapter.getText();
   const target = text.slice(last.start, last.end);
-  const capped = target.replace(
-    /^(\s*)(\p{L})/u,
-    (_m, ws, ch) => ws + ch.toUpperCase(),
-  );
-  if (capped !== target) adapter.replaceRange(last.start, last.end, capped);
+  const capped = target.replace(/^(\s*)(\p{L})/u, (_m, ws, ch) => ws + ch.toUpperCase());
+  if (capped !== target) {
+    adapter.replaceRange(last.start, last.end, capped);
+  }
   return { handled: true, description: "Capitalized last segment" };
 };
 
@@ -127,11 +138,16 @@ export function selectEnumRange(variableKey = "range"): CommandHandler {
     const choice = (command.variables?.[variableKey] ?? "").toLowerCase();
     const text = adapter.getText();
     let range: Range | null = null;
-    if (choice.includes("all")) range = { start: 0, end: text.length };
-    else if (choice.includes("sentence")) range = lastSentenceRange(text);
-    else if (choice.includes("word")) range = lastWordRange(text);
-    if (!range)
+    if (choice.includes("all")) {
+      range = { start: 0, end: text.length };
+    } else if (choice.includes("sentence")) {
+      range = lastSentenceRange(text);
+    } else if (choice.includes("word")) {
+      range = lastWordRange(text);
+    }
+    if (!range) {
       return { handled: true, description: `Cannot select "${choice}"` };
+    }
     adapter.setSelection(range.start, range.end);
     return { handled: true, description: `Selected ${choice}` };
   };
@@ -146,7 +162,9 @@ export function selectWildcardText(variableKey = "utterance"): CommandHandler {
   return (adapter, command) => {
     const needle = command.variables?.[variableKey] ?? "";
     const range = lastOccurrenceRange(adapter.getText(), needle);
-    if (!range) return { handled: true, description: `"${needle}" not found` };
+    if (!range) {
+      return { handled: true, description: `"${needle}" not found` };
+    }
     adapter.setSelection(range.start, range.end);
     return { handled: true, description: `Selected "${needle}"` };
   };
@@ -195,26 +213,40 @@ export type CommandAction =
 
 export function describeCombo(c: KeyCombo): string {
   const parts: string[] = [];
-  if (c.meta) parts.push("Cmd");
-  if (c.ctrl) parts.push("Ctrl");
-  if (c.alt) parts.push("Alt");
-  if (c.shift) parts.push("Shift");
+  if (c.meta) {
+    parts.push("Cmd");
+  }
+  if (c.ctrl) {
+    parts.push("Ctrl");
+  }
+  if (c.alt) {
+    parts.push("Alt");
+  }
+  if (c.shift) {
+    parts.push("Shift");
+  }
   parts.push(c.key.length === 1 ? c.key.toUpperCase() : c.key);
   return parts.join("+");
 }
 
 /** True for a plain printable key (no Ctrl/Cmd/Alt) we can type literally. */
 function isPrintable(c: KeyCombo): boolean {
-  if (c.ctrl || c.meta || c.alt) return false;
-  return (
-    c.key.length === 1 || c.key === "Enter" || c.key === "Tab" || c.key === " "
-  );
+  if (c.ctrl || c.meta || c.alt) {
+    return false;
+  }
+  return c.key.length === 1 || c.key === "Enter" || c.key === "Tab" || c.key === " ";
 }
 
 function literalOf(c: KeyCombo): string {
-  if (c.key === "Enter") return "\n";
-  if (c.key === "Tab") return "\t";
-  if (c.key === " ") return " ";
+  if (c.key === "Enter") {
+    return "\n";
+  }
+  if (c.key === "Tab") {
+    return "\t";
+  }
+  if (c.key === " ") {
+    return " ";
+  }
   return c.key;
 }
 
@@ -233,9 +265,7 @@ function lineEndOffset(text: string, offset: number): number {
 /** Human-readable rendering of a captured key sequence. */
 export function describeSequence(combos: KeyCombo[]): string {
   return combos
-    .map((c) =>
-      isPrintable(c) ? (c.key === " " ? "␣" : c.key) : describeCombo(c),
-    )
+    .map((c) => (isPrintable(c) ? (c.key === " " ? "␣" : c.key) : describeCombo(c)))
     .join(" ");
 }
 
@@ -245,10 +275,7 @@ export function describeSequence(combos: KeyCombo[]): string {
  * active element — note that synthetic events do NOT trigger native edit actions
  * (browser security), so this is best-effort/illustrative for arbitrary keys.
  */
-export function applyKeyCombo(
-  adapter: EditorAdapter,
-  combo: KeyCombo,
-): CommandOutcome {
+export function applyKeyCombo(adapter: EditorAdapter, combo: KeyCombo): CommandOutcome {
   const mod = combo.meta || combo.ctrl;
   const k = combo.key.toLowerCase();
   if (mod && !combo.alt && adapter.applyFormat) {
@@ -339,20 +366,20 @@ export function applyKeyCombo(
  * literally into the editor; modifier combos (e.g. Ctrl+B) are applied via
  * applyKeyCombo. This lets a macro like ". v i t a l s" insert ". vitals".
  */
-export function applyKeySequence(
-  adapter: EditorAdapter,
-  combos: KeyCombo[],
-): CommandOutcome {
+export function applyKeySequence(adapter: EditorAdapter, combos: KeyCombo[]): CommandOutcome {
   let literal = "";
   const flush = () => {
-    if (!literal) return;
+    if (!literal) {
+      return;
+    }
     const { start, end } = adapter.getSelection();
     adapter.replaceRange(start, end, literal);
     literal = "";
   };
   for (const c of combos) {
-    if (isPrintable(c)) literal += literalOf(c);
-    else {
+    if (isPrintable(c)) {
+      literal += literalOf(c);
+    } else {
       flush();
       applyKeyCombo(adapter, c);
     }

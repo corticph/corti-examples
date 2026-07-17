@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { Upload } from "lucide-react";
+import { useState } from "react";
 import {
   TranscriptJsonDialog,
   TranscriptOutputCard,
@@ -15,14 +15,11 @@ export function FileTranscription() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold text-foreground">
-          File transcription
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">File transcription</h2>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Upload an audio file or reuse an existing interaction recording, then
-          generate an offline transcript through <code>/transcripts</code>. This
-          applet showcases asynchronous transcript generation and polling for
-          final results.
+          Upload an audio file or reuse an existing interaction recording, then generate an offline
+          transcript through <code>/transcripts</code>. This applet showcases asynchronous
+          transcript generation and polling for final results.
         </p>
       </div>
 
@@ -43,10 +40,7 @@ export function FileTranscription() {
         selectedInteraction={runner.selectedInteraction}
       />
 
-      <TranscriptOutputCard
-        runState={runner.runState}
-        onViewJson={() => setJsonOpen(true)}
-      />
+      <TranscriptOutputCard runState={runner.runState} onViewJson={() => setJsonOpen(true)} />
 
       <TranscriptJsonDialog
         open={jsonOpen}

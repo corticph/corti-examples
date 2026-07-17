@@ -5,30 +5,23 @@
  * a live debugger of detected commands + the action executed. Create/edit and
  * wildcard support arrive in 1b / 1c.
  */
-import { useEffect, useState } from "react";
+
 import { Download, Pencil, Plus, Trash2 } from "lucide-react";
-import { cn } from "../_shared/utils";
-import {
-  describeSequence,
-  type CommandAction,
-} from "../_shared/command-dispatch";
-import {
-  useCommandStore,
-  clearLog,
-  upsertCommand,
-  removeCommands,
-} from "./command-store";
-import type { ManagedCommand } from "./command-model";
-import { CommandEditor } from "./CommandEditor";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
+import { type CommandAction, describeSequence } from "../_shared/command-dispatch";
+import { cn } from "../_shared/utils";
+import { CommandEditor } from "./CommandEditor";
+import type { ManagedCommand } from "./command-model";
+import { clearLog, removeCommands, upsertCommand, useCommandStore } from "./command-store";
 
 /** Download selected commands as a shareable JSON config object. */
 function downloadCommands(commands: ManagedCommand[]) {
@@ -82,8 +75,7 @@ export function CommandManager() {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const selected = commands.find((c) => c.id === selectedId) ?? commands[0];
-  const editing =
-    mode.kind === "edit" ? commands.find((c) => c.id === mode.id) : undefined;
+  const editing = mode.kind === "edit" ? commands.find((c) => c.id === mode.id) : undefined;
 
   const checkedCommands = commands.filter((c) => checked.has(c.id));
   const removableChecked = checkedCommands.filter((c) => !c.builtin);
@@ -135,22 +127,18 @@ export function CommandManager() {
           </p>
         ) : (
           <ul className="max-h-48 divide-y divide-border overflow-auto">
-            {log.map((entry, i) => (
+            {log.map((entry) => (
               <li
-                key={`${entry.at}-${i}`}
+                key={`${entry.at}-${entry.id}`}
                 className="flex items-baseline gap-2 px-3 py-1.5 text-xs"
               >
-                <code className="shrink-0 font-semibold text-foreground">
-                  {entry.id}
-                </code>
+                <code className="shrink-0 font-semibold text-foreground">{entry.id}</code>
                 {entry.variables && Object.keys(entry.variables).length > 0 && (
                   <code className="shrink-0 text-muted-foreground">
                     {JSON.stringify(entry.variables)}
                   </code>
                 )}
-                <span className="truncate text-foreground">
-                  {entry.description}
-                </span>
+                <span className="truncate text-foreground">{entry.description}</span>
               </li>
             ))}
           </ul>
@@ -160,11 +148,7 @@ export function CommandManager() {
       <div className="flex flex-col gap-5 md:flex-row">
         <div className="flex shrink-0 flex-col gap-2 md:w-75">
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setMode({ kind: "new" })}
-            >
+            <Button size="sm" variant="outline" onClick={() => setMode({ kind: "new" })}>
               <Plus className="h-4 w-4" /> New command
             </Button>
             {mode.kind === "view" && selected && !selected.builtin && (
@@ -249,9 +233,7 @@ export function CommandManager() {
           selected && (
             <div className="min-w-0 flex-1 rounded-md border border-border bg-background p-3">
               {selected.description && (
-                <p className="mb-2 text-sm text-foreground">
-                  {selected.description}
-                </p>
+                <p className="mb-2 text-sm text-foreground">{selected.description}</p>
               )}
 
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -259,10 +241,7 @@ export function CommandManager() {
               </p>
               <ul className="mt-1 flex flex-wrap gap-1.5">
                 {selected.phrases.map((phrase) => (
-                  <li
-                    key={phrase}
-                    className="rounded bg-muted px-2 py-0.5 text-xs text-foreground"
-                  >
+                  <li key={phrase} className="rounded bg-muted px-2 py-0.5 text-xs text-foreground">
                     “{phrase}”
                   </li>
                 ))}
@@ -275,14 +254,9 @@ export function CommandManager() {
                   </p>
                   <ul className="mt-1 flex flex-col gap-1">
                     {selected.variables.map((variable) => (
-                      <li
-                        key={variable.key}
-                        className="text-sm text-foreground"
-                      >
+                      <li key={variable.key} className="text-sm text-foreground">
                         <code className="text-xs">{variable.key}</code>{" "}
-                        <span className="text-xs text-muted-foreground">
-                          ({variable.type})
-                        </span>
+                        <span className="text-xs text-muted-foreground">({variable.type})</span>
                         {variable.type === "enum" && (
                           <span className="ml-1 text-xs text-muted-foreground">
                             — {variable.enum.join(", ")}
@@ -298,9 +272,7 @@ export function CommandManager() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Action
                 </p>
-                <p className="mt-1 text-sm text-foreground">
-                  {actionSummary(selected.action)}
-                </p>
+                <p className="mt-1 text-sm text-foreground">{actionSummary(selected.action)}</p>
               </div>
             </div>
           )
