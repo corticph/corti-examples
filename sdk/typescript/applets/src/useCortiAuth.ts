@@ -24,7 +24,7 @@ export function useCortiAuth(): CortiAuthState {
   const [authToken, setAuthToken] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const refreshTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     fetch("/api/config")
