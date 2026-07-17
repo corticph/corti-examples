@@ -10,8 +10,8 @@ import {
   type ConfigStore,
   createLocalConfigStore,
   identityNamespace,
-} from "../_shared/config-store";
-import { CATALOG, type ManagedCommand } from "./command-model";
+} from "../_shared/configStore";
+import { CATALOG, type ManagedCommand } from "./commandModel";
 
 const COMMANDS_KEY = "dictation-commands.userCommands";
 const LOG_LIMIT = 50;

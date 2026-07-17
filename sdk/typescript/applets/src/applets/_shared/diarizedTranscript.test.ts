@@ -4,7 +4,7 @@ import {
   groupBySpeakerRuns,
   mergeDiarizedSegments,
   segmentKey,
-} from "./diarized-transcript";
+} from "./diarizedTranscript";
 
 function seg(
   start: number,

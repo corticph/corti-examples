@@ -1,4 +1,4 @@
-import type { StoredAudioArchive } from "./audio-archive";
+import type { StoredAudioArchive } from "./audioArchive";
 
 const DB_NAME_PREFIX = "corti-examples-audio-archive";
 const DB_VERSION = 1;

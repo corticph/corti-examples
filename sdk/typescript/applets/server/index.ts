@@ -1,6 +1,6 @@
 import "dotenv/config";
 import express from "express";
-import { getCreds, hasCreds } from "./corti-token";
+import { getCreds, hasCreds } from "./cortiToken";
 import authRouter from "./routes/auth";
 import { cortiProxy } from "./routes/proxy";
 

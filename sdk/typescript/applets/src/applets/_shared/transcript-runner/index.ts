@@ -11,6 +11,6 @@ export {
 } from "./TranscriptResults";
 export type { TranscriptRunnerFormProps } from "./TranscriptRunnerForm";
 export { TranscriptRunnerForm } from "./TranscriptRunnerForm";
-export * from "./transcripts-api";
+export * from "./transcriptsApi";
 export type { GenerateOptions, TranscriptRunner } from "./useTranscriptRunner";
 export { useTranscriptRunner } from "./useTranscriptRunner";

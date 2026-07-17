@@ -8,9 +8,9 @@
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { describeSequence, type KeyCombo } from "../_shared/command-dispatch";
+import { describeSequence, type KeyCombo } from "../_shared/commandDispatch";
 import { cn } from "../_shared/utils";
-import type { ManagedCommand, ManagedVariable } from "./command-model";
+import type { ManagedCommand, ManagedVariable } from "./commandModel";
 
 interface DraftVariable {
   key: string;

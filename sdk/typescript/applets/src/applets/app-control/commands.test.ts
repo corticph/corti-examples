@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createAppControlRegistry } from "../_shared/app-control-adapter";
+import { createAppControlRegistry } from "../_shared/appControlAdapter";
 import { APP_COMMANDS, handleAppCommand } from "./commands";
 
 function registryWithSpies() {

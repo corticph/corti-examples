@@ -1,6 +1,6 @@
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { AppletAuthProvider } from "./applets/_shared/auth-context";
+import { AppletAuthProvider } from "./applets/_shared/authContext";
 import {
   type AppletDefinition,
   getAppletsForWorkflow,

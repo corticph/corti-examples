@@ -16,13 +16,13 @@
  * use, so this is the clearest "speech-enable the UI" demonstration.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CortiDictationComponent } from "../_shared/corti-dictation-react";
+import { CortiDictationComponent } from "../_shared/cortiDictationReact";
 import {
   createContentEditableAdapter,
   createTextareaAdapter,
   type EditorAdapter,
-} from "../_shared/editor-adapter";
-import { buildInsertion } from "../_shared/text-insertion";
+} from "../_shared/editorAdapter";
+import { buildInsertion } from "../_shared/textInsertion";
 import { useActiveControl } from "../_shared/useActiveControl";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";

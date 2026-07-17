@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { type AppControl, createAppControlRegistry } from "./app-control-adapter";
+import { type AppControl, createAppControlRegistry } from "./appControlAdapter";
 
 function ctrl(over: Partial<AppControl> & Pick<AppControl, "id" | "label">): AppControl {
   return { kind: "action", run: vi.fn(), ...over };

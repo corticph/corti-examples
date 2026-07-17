@@ -15,7 +15,7 @@
 
 import type { CortiAuth } from "@corti/sdk";
 import { useCallback, useMemo } from "react";
-import { useAuth } from "./auth-context";
+import { useAuth } from "./authContext";
 import { buildWsBaseUrl } from "./urls";
 
 /**

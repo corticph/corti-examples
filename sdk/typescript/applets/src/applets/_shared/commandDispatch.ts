@@ -11,8 +11,8 @@
  * Portable: depends only on editor-adapter.ts, offset-map.ts and the SDK type.
  */
 import type { Corti } from "@corti/sdk";
-import type { EditorAdapter, FormatStyle } from "./editor-adapter";
-import type { Range } from "./offset-map";
+import type { EditorAdapter, FormatStyle } from "./editorAdapter";
+import type { Range } from "./offsetMap";
 
 export interface DispatchContext {
   /** Ranges of committed dictation segments, oldest→newest (for "delete that"). */

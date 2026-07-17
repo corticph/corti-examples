@@ -20,8 +20,8 @@ import {
   requestDevice,
   setButtonMappings,
   startLearning,
-} from "./dictation-device";
-import type { ButtonMappings } from "./hid-recording";
+} from "./dictationDevice";
+import type { ButtonMappings } from "./hidRecording";
 
 export interface UseDictationDevice extends DeviceStoreState {
   requestDevice: () => Promise<void>;

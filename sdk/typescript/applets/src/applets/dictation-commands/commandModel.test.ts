@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type ManagedCommand, toTranscribeCommands } from "./command-model";
+import { type ManagedCommand, toTranscribeCommands } from "./commandModel";
 
 const base = (over: Partial<ManagedCommand>): ManagedCommand => ({
   id: "c",

@@ -8,8 +8,8 @@
 
 import type { Corti } from "@corti/sdk";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CortiDictationComponent } from "./corti-dictation-react";
-import type { EditorAdapter } from "./editor-adapter";
+import { CortiDictationComponent } from "./cortiDictationReact";
+import type { EditorAdapter } from "./editorAdapter";
 import { useActiveControl } from "./useActiveControl";
 import { useCortiAccessToken } from "./useCortiAccessToken";
 

@@ -5,13 +5,13 @@ import {
   type ConfigStore,
   createLocalConfigStore,
   identityNamespace,
-} from "../_shared/config-store";
+} from "../_shared/configStore";
 import {
   type AgentSpec,
   describeAgentError,
   ensureAgent,
   sendAgentMessageWithContext,
-} from "../_shared/corti-agent";
+} from "../_shared/cortiAgent";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 import {
   appendDebugEntry,

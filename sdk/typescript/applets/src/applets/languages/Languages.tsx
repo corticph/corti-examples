@@ -27,7 +27,7 @@ import {
   fetchLanguages,
   type LanguagesResponse,
   toRows,
-} from "./languages-api";
+} from "./languagesApi";
 
 type Filter = EndpointFilter | "all";
 

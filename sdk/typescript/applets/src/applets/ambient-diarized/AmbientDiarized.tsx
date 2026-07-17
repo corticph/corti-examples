@@ -13,12 +13,12 @@ import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { CortiAmbientComponent } from "../_shared/corti-ambient-react";
+import { CortiAmbientComponent } from "../_shared/cortiAmbientReact";
 import {
   type DiarizedSegment,
   groupBySpeakerRuns,
   mergeDiarizedSegments,
-} from "../_shared/diarized-transcript";
+} from "../_shared/diarizedTranscript";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
 import { type AmbientSettings, buildStreamConfig, DEFAULT_AMBIENT_SETTINGS } from "./config";

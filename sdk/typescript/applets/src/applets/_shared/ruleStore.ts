@@ -5,7 +5,7 @@
  * ConfigStore seam; a preloaded catalog is always merged in and never removed.
  */
 import { useSyncExternalStore } from "react";
-import { type ConfigStore, createLocalConfigStore, identityNamespace } from "./config-store";
+import { type ConfigStore, createLocalConfigStore, identityNamespace } from "./configStore";
 
 export interface RuleBase {
   id: string;

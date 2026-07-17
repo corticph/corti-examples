@@ -21,20 +21,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { initDeviceManager } from "../_shared/dictation-device";
+import { initDeviceManager } from "../_shared/dictationDevice";
 import {
   type ButtonAction,
   type ButtonMappings,
   buttonName,
   DEVICE_BUTTONS,
-} from "../_shared/hid-recording";
+} from "../_shared/hidRecording";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useDictationDevice } from "../_shared/useDictationDevice";
 import { cn } from "../_shared/utils";
 import {
   setIdentity as setCommandStoreIdentity,
   useCommandStore,
-} from "../dictation-commands/command-store";
+} from "../dictation-commands/commandStore";
 
 type ActionKind = ButtonAction["type"];
 

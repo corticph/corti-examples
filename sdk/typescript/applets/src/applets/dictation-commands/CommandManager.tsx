@@ -17,11 +17,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { type CommandAction, describeSequence } from "../_shared/command-dispatch";
+import { type CommandAction, describeSequence } from "../_shared/commandDispatch";
 import { cn } from "../_shared/utils";
 import { CommandEditor } from "./CommandEditor";
-import type { ManagedCommand } from "./command-model";
-import { clearLog, removeCommands, upsertCommand, useCommandStore } from "./command-store";
+import type { ManagedCommand } from "./commandModel";
+import { clearLog, removeCommands, upsertCommand, useCommandStore } from "./commandStore";
 
 /** Download selected commands as a shareable JSON config object. */
 function downloadCommands(commands: ManagedCommand[]) {

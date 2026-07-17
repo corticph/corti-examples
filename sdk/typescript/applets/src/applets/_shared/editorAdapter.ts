@@ -13,7 +13,7 @@
  *
  * Portable: depends only on text-insertion.ts.
  */
-import { buildInsertion, type InsertionOptions } from "./text-insertion";
+import { buildInsertion, type InsertionOptions } from "./textInsertion";
 
 export interface EditorSelection {
   start: number;

@@ -12,7 +12,7 @@ import {
   type CommandRegistry,
   executeAction,
   type KeyCombo,
-} from "../_shared/command-dispatch";
+} from "../_shared/commandDispatch";
 
 export type ManagedVariable =
   | { key: string; type: "enum"; enum: string[] }

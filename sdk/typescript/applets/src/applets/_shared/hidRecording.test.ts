@@ -5,7 +5,7 @@ import {
   buttonName,
   computeButtonEffects,
   pressedButtonBit,
-} from "./hid-recording";
+} from "./hidRecording";
 
 const { RECORD, STOP, PLAY, F1 } = BUTTON_BIT;
 

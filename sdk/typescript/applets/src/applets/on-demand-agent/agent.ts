@@ -17,14 +17,14 @@ import {
   type ConfigStore,
   createLocalConfigStore,
   identityNamespace,
-} from "../_shared/config-store";
+} from "../_shared/configStore";
 import {
   type AgentSpec,
   describeAgentError,
   ensureAgent,
   sendAgentMessage,
-} from "../_shared/corti-agent";
-import type { EditorAdapter } from "../_shared/editor-adapter";
+} from "../_shared/cortiAgent";
+import type { EditorAdapter } from "../_shared/editorAdapter";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 
 export const COPY_EDIT_AGENT = {

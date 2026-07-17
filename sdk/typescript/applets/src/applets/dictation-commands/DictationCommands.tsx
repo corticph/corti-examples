@@ -10,15 +10,15 @@
 
 import type { Corti } from "@corti/sdk";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { dispatchCommand } from "../_shared/command-dispatch";
-import { CortiDictationComponent } from "../_shared/corti-dictation-react";
-import type { EditorAdapter } from "../_shared/editor-adapter";
-import { diffEdit, type Range, transformRanges } from "../_shared/offset-map";
+import { dispatchCommand } from "../_shared/commandDispatch";
+import { CortiDictationComponent } from "../_shared/cortiDictationReact";
+import type { EditorAdapter } from "../_shared/editorAdapter";
+import { diffEdit, type Range, transformRanges } from "../_shared/offsetMap";
 import { useActiveControl } from "../_shared/useActiveControl";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useHidCommandHandler } from "../_shared/useDictationDevice";
-import { buildRegistry, TEMPLATES, toTranscribeCommands } from "./command-model";
-import { logCommand, setIdentity, useCommandStore } from "./command-store";
+import { buildRegistry, TEMPLATES, toTranscribeCommands } from "./commandModel";
+import { logCommand, setIdentity, useCommandStore } from "./commandStore";
 import { buildDictationConfig } from "./config";
 
 const LANGUAGE = "en";

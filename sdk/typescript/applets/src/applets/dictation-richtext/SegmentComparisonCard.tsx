@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { spliceSegment } from "../_shared/text-insertion";
-import { type SegmentEntry, segmentStore } from "./segment-store";
+import { spliceSegment } from "../_shared/textInsertion";
+import { type SegmentEntry, segmentStore } from "./segmentStore";
 
 const LANGUAGE = "en";
 

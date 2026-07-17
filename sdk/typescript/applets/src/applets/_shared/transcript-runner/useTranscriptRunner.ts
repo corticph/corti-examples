@@ -29,7 +29,7 @@ import {
   listRecordings,
   pollTranscriptUntilReady,
   uploadRecording,
-} from "./transcripts-api";
+} from "./transcriptsApi";
 
 function buildTranscriptRequest(
   recordingId: string,

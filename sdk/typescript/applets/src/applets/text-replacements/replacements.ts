@@ -4,7 +4,7 @@
  * config). Catalog seeded from corti-examples/dictation/replacements.
  */
 import type { Corti } from "@corti/sdk";
-import { createRuleStore, type RuleBase } from "../_shared/rule-store";
+import { createRuleStore, type RuleBase } from "../_shared/ruleStore";
 
 export interface Replacement extends RuleBase {
   find: string;

@@ -10,13 +10,13 @@ import {
   createAudioArchiveId,
   createAudioArchiveSegmentId,
   type StoredAudioArchive,
-} from "./audio-archive";
+} from "./audioArchive";
 import {
   clearStoredAudioArchives,
   deleteStoredAudioArchive,
   listStoredAudioArchives,
   putStoredAudioArchive,
-} from "./audio-archive-store";
+} from "./audioArchiveStore";
 
 function archiveDurationMs(segments: AudioArchiveDraft["segments"]) {
   return segments.reduce((sum, segment) => sum + (segment.durationMs ?? 0), 0);

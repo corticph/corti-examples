@@ -11,9 +11,9 @@ import {
   type ConfigStore,
   createLocalConfigStore,
   identityNamespace,
-} from "../_shared/config-store";
-import { deviceStore, setButtonMappings } from "../_shared/dictation-device";
-import { BUTTON_BIT, type ButtonMappings } from "../_shared/hid-recording";
+} from "../_shared/configStore";
+import { deviceStore, setButtonMappings } from "../_shared/dictationDevice";
+import { BUTTON_BIT, type ButtonMappings } from "../_shared/hidRecording";
 
 const MAPPINGS_KEY = "buttonMappings";
 

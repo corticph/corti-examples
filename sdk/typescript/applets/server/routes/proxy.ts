@@ -1,6 +1,6 @@
 import type { Request, RequestHandler } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import { getCreds, getFullScopeToken } from "../corti-token";
+import { getCreds, getFullScopeToken } from "../cortiToken";
 
 const TOKEN_KEY = "__cortiToken";
 

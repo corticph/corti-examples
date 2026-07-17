@@ -27,7 +27,7 @@ import {
   buttonName,
   computeButtonEffects,
   pressedButtonBit,
-} from "./hid-recording";
+} from "./hidRecording";
 
 /** Out-of-the-box mapping: the Record button toggles recording. */
 const DEFAULT_MAPPINGS: ButtonMappings = {

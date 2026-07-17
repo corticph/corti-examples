@@ -10,8 +10,8 @@
 import { Loader2, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CortiDictationComponent } from "../_shared/corti-dictation-react";
-import type { EditorAdapter } from "../_shared/editor-adapter";
+import { CortiDictationComponent } from "../_shared/cortiDictationReact";
+import type { EditorAdapter } from "../_shared/editorAdapter";
 import { useActiveControl } from "../_shared/useActiveControl";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { COPY_EDIT_COMMAND_ID, configureCopyEdit, runCopyEdit, useCopyEditStore } from "./agent";

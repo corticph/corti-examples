@@ -14,9 +14,9 @@ import {
   lastWordRange,
   selectEnumRange,
   selectWildcardText,
-} from "./command-dispatch";
-import type { EditorAdapter } from "./editor-adapter";
-import { buildInsertion } from "./text-insertion";
+} from "./commandDispatch";
+import type { EditorAdapter } from "./editorAdapter";
+import { buildInsertion } from "./textInsertion";
 
 /** Minimal in-memory adapter for testing handlers without the DOM. */
 function makeFake(initial = "", richText = false) {

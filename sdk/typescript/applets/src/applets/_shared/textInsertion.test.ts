@@ -4,7 +4,7 @@ import {
   capitalizeForContext,
   getLeadingSeparator,
   spliceSegment,
-} from "./text-insertion";
+} from "./textInsertion";
 
 const NBSP = "\u00A0";
 

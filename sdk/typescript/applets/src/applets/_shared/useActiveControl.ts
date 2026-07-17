@@ -12,7 +12,7 @@ import {
   createContentEditableAdapter,
   createTextareaAdapter,
   type EditorAdapter,
-} from "./editor-adapter";
+} from "./editorAdapter";
 
 /** Resolve an event target to the editable host element, if any. */
 function editableHost(node: EventTarget | null): HTMLElement | null {

@@ -5,7 +5,7 @@
  * so the catalog below is a small medical starter set.
  */
 import type { Corti } from "@corti/sdk";
-import { createRuleStore, type RuleBase } from "../_shared/rule-store";
+import { createRuleStore, type RuleBase } from "../_shared/ruleStore";
 import type { KeytermsConfig, TranscribeConfiguration, TranscribeTerm } from "../_shared/types";
 
 export interface Term extends RuleBase {

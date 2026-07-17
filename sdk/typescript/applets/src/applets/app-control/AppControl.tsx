@@ -14,9 +14,9 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import {
   type AppControlSnapshotEntry,
   createAppControlRegistry,
-} from "../_shared/app-control-adapter";
-import { CortiDictationComponent } from "../_shared/corti-dictation-react";
-import type { EditorAdapter } from "../_shared/editor-adapter";
+} from "../_shared/appControlAdapter";
+import { CortiDictationComponent } from "../_shared/cortiDictationReact";
+import type { EditorAdapter } from "../_shared/editorAdapter";
 import { useActiveControl } from "../_shared/useActiveControl";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { handleAppCommand } from "./commands";

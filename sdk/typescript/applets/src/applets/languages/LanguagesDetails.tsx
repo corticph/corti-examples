@@ -1,5 +1,5 @@
 /** Details card: request shape + parameters for GET /v2/languages. */
-import { ENDPOINT_FILTERS } from "./languages-api";
+import { ENDPOINT_FILTERS } from "./languagesApi";
 
 export function LanguagesDetails() {
   return (

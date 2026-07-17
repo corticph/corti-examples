@@ -11,7 +11,7 @@
 import { CortiClient } from "@corti/sdk";
 import { Mic, Square } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { spliceSegment } from "../_shared/text-insertion";
+import { spliceSegment } from "../_shared/textInsertion";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
 import { buildDictationConfig } from "./config";

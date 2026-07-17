@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getScopedToken, type StreamScope } from "../corti-token";
+import { getScopedToken, type StreamScope } from "../cortiToken";
 
 const router = Router();
 

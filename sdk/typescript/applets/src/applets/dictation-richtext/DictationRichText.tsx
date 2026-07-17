@@ -13,13 +13,13 @@
 
 import { Bold, Italic } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CortiDictationComponent } from "../_shared/corti-dictation-react";
-import type { EditorAdapter } from "../_shared/editor-adapter";
+import { CortiDictationComponent } from "../_shared/cortiDictationReact";
+import type { EditorAdapter } from "../_shared/editorAdapter";
 import { useActiveControl } from "../_shared/useActiveControl";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
 import { buildDictationConfig } from "./config";
-import { segmentStore } from "./segment-store";
+import { segmentStore } from "./segmentStore";
 
 const LANGUAGE = "en";
 

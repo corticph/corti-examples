@@ -8,7 +8,7 @@
 
 import { Check, PanelRightOpen, Plus, Save } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { AppControlRegistry } from "../_shared/app-control-adapter";
+import type { AppControlRegistry } from "../_shared/appControlAdapter";
 import { cn } from "../_shared/utils";
 
 const TABS = ["overview", "orders", "notes"] as const;

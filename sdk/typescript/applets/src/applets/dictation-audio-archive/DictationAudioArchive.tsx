@@ -1,9 +1,9 @@
 import { CortiClient } from "@corti/sdk";
 import { Download, Mic, Square, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AudioArchiveEndReason, AudioArchiveListItem } from "../_shared/audio-archive";
-import { identityNamespace } from "../_shared/config-store";
-import { spliceSegment } from "../_shared/text-insertion";
+import type { AudioArchiveEndReason, AudioArchiveListItem } from "../_shared/audioArchive";
+import { identityNamespace } from "../_shared/configStore";
+import { spliceSegment } from "../_shared/textInsertion";
 import { useAudioArchive } from "../_shared/useAudioArchive";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";

@@ -3,7 +3,7 @@ import {
   buildAudioArchiveFileName,
   closeOpenAudioArchiveSegment,
   getAudioFileExtension,
-} from "./audio-archive";
+} from "./audioArchive";
 
 describe("audio archive helpers", () => {
   it("maps common capture mime types to file extensions", () => {

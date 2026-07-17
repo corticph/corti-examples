@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createRuleStore, type RuleBase } from "./rule-store";
+import { createRuleStore, type RuleBase } from "./ruleStore";
 
 interface Item extends RuleBase {
   value: string;

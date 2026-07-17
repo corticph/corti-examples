@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { RuleBase } from "./rule-store";
+import type { RuleBase } from "./ruleStore";
 import { cn } from "./utils";
 
 export interface RuleField {

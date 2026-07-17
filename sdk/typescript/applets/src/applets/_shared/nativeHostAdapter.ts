@@ -14,11 +14,7 @@
  * This file is types + documentation only. It exists so the architecture is
  * explicit about the native bridge without pulling OS control into a web sample.
  */
-import type {
-  AppControl,
-  AppControlRegistry,
-  AppControlSnapshotEntry,
-} from "./app-control-adapter";
+import type { AppControl, AppControlRegistry, AppControlSnapshotEntry } from "./appControlAdapter";
 
 /** A control as described by the native host (the wire shape of AppControl). */
 export interface NativeControlDescriptor {

@@ -11,7 +11,7 @@
  * box, then transfer the text into whichever app field you were working in.
  */
 import type { Corti } from "@corti/sdk";
-import type { CommandOutcome } from "../_shared/command-dispatch";
+import type { CommandOutcome } from "../_shared/commandDispatch";
 
 /** Field labels offered to `go to {field}` (spoken, lowercase). */
 export const FIELD_LABELS = ["note one", "note two", "severity"];
