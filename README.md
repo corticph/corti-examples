@@ -57,12 +57,12 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 
 ### SDK
 
-| Example                                                                  | Stack               | Description                                                                                   |
-|--------------------------------------------------------------------------|---------------------|-----------------------------------------------------------------------------------------------|
-| [sdk/typescript/express-web-api/](sdk/typescript/express-web-api/)       | TypeScript, Express | REST API covering all SDK features                                                            |
-| [sdk/typescript/next-auth-examples/](sdk/typescript/next-auth-examples/) | TypeScript, Next.js | Standalone demos of all four Corti OAuth flows (client credentials, ROPC, auth code, PKCE)    |
-| [sdk/typescript/applets/](sdk/typescript/applets/)                       | Typescript          | Speech to Text components to bootstrap dictation, ambient documentation, and voice agent apps |
-| [sdk/dotnet/web-api/](sdk/dotnet/web-api/)                               | C#, ASP.NET Core    | Same scope as the Express example, in .NET                                                    |
+| Example                                                                  | Stack                   | Description                                                                                   |
+|--------------------------------------------------------------------------|-------------------------|-----------------------------------------------------------------------------------------------|
+| [sdk/typescript/express-web-api/](sdk/typescript/express-web-api/)       | TypeScript, Express     | REST API covering all SDK features                                                            |
+| [sdk/typescript/next-auth-examples/](sdk/typescript/next-auth-examples/) | TypeScript, Next.js     | Standalone demos of all four Corti OAuth flows (client credentials, ROPC, auth code, PKCE)    |
+| [sdk/typescript/applets/](sdk/typescript/applets/)                       | Typescript, React, Vite | Speech to Text components to bootstrap dictation, ambient documentation, and voice agent apps |
+| [sdk/dotnet/web-api/](sdk/dotnet/web-api/)                               | C#, ASP.NET Core        | Same scope as the Express example, in .NET                                                    |
 
 
 ---
