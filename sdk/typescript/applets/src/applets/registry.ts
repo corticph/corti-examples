@@ -12,6 +12,7 @@ import {
   type LucideIcon,
   MessageCircle,
   MessageSquareCode,
+  Mic,
   PanelRight,
   Replace,
   Sparkles,
@@ -50,6 +51,8 @@ import { OnDemandAgentDetails } from "./on-demand-agent/OnDemandAgentDetails";
 import { SecondPassAgent } from "./second-pass-agent/SecondPassAgent";
 import { ReplacementsDetails } from "./text-replacements/ReplacementsDetails";
 import { TextReplacements } from "./text-replacements/TextReplacements";
+import { VoiceAgent } from "./voice-agent/VoiceAgent";
+import { VoiceAgentDetails } from "./voice-agent/VoiceAgentDetails";
 
 export type WorkflowArea = "dictation" | "ambient" | "agentic";
 
@@ -228,6 +231,16 @@ export const APPLETS: AppletDefinition[] = [
     Component: ConversationalAgent,
     detailsTitle: "Details",
     Details: ConversationalAgentDetails,
+  },
+  {
+    id: "voice-agent",
+    title: "Voice agent",
+    description: "Always-on voice chat with speculative prefetch for instant responses",
+    workflow: "agentic",
+    icon: Mic,
+    Component: VoiceAgent,
+    detailsTitle: "Details",
+    Details: VoiceAgentDetails,
   },
 ];
 

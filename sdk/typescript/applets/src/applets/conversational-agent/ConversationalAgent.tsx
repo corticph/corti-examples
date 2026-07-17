@@ -46,7 +46,7 @@ export function ConversationalAgent() {
       return;
     }
     viewport.scrollTop = viewport.scrollHeight;
-  }, [messages.length]);
+  }, [messages.length, status]);
 
   const dictationConfig = useMemo(() => buildConversationalConfig(LANGUAGE), []);
 
@@ -94,26 +94,42 @@ export function ConversationalAgent() {
                   </p>
                 </div>
               ) : (
-                messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
+                <>
+                  {messages.map((message) => (
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
-                        message.role === "user"
-                          ? "bg-corti-lime/15 text-foreground ring-1 ring-inset ring-corti-lime/40"
-                          : "bg-card text-foreground ring-1 ring-inset ring-border"
-                      }`}
+                      key={message.id}
+                      className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                     >
-                      <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-                        <span>{message.role === "user" ? "User" : "Assistant"}</span>
-                        <span>{message.source === "voice" ? "Voice" : "Typed"}</span>
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
+                          message.role === "user"
+                            ? "bg-corti-lime/15 text-foreground ring-1 ring-inset ring-corti-lime/40"
+                            : "bg-card text-foreground ring-1 ring-inset ring-border"
+                        }`}
+                      >
+                        <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                          <span>{message.role === "user" ? "User" : "Assistant"}</span>
+                          <span>{message.source === "voice" ? "Voice" : "Typed"}</span>
+                        </div>
+                        <p className="whitespace-pre-wrap leading-relaxed">{message.text}</p>
                       </div>
-                      <p className="whitespace-pre-wrap leading-relaxed">{message.text}</p>
                     </div>
-                  </div>
-                ))
+                  ))}
+
+                  {status === "running" && (
+                    <div className="flex justify-start">
+                      <div className="rounded-2xl bg-card px-4 py-3 text-sm ring-1 ring-inset ring-border">
+                        <div className="mb-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                          Assistant
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Thinking...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </ScrollArea>
