@@ -6,7 +6,9 @@
  * work (e.g. an agent pass) while the runner manages the `second_pass` phase
  * and keeps the finalized transcript visible if that work throws.
  */
-import { useEffect, useState } from "react";
+import { CortiClient } from "@corti/sdk";
+import { useEffect, useMemo, useState } from "react";
+import { useCortiAccessToken } from "../useCortiAccessToken";
 import {
   createEmptyRunState,
   flattenTranscriptForDisplay,
@@ -96,6 +98,12 @@ export interface TranscriptRunner {
 }
 
 export function useTranscriptRunner(): TranscriptRunner {
+  const { refreshAccessToken, sdkEnvironment } = useCortiAccessToken();
+  const client = useMemo(
+    () => new CortiClient({ environment: sdkEnvironment, auth: { refreshAccessToken } }),
+    [sdkEnvironment, refreshAccessToken],
+  );
+
   const [sourceMode, setSourceMode] = useState<TranscriptSourceMode>("upload");
   const [uploadInteractionMode, setUploadInteractionMode] = useState<UploadInteractionMode>("new");
   const [primaryLanguage, setPrimaryLanguage] = useState("en");
@@ -124,7 +132,7 @@ export function useTranscriptRunner(): TranscriptRunner {
       setBrowserError(undefined);
       setIsRefreshingInteractions(true);
       try {
-        const items = await listInteractions();
+        const items = await listInteractions(client);
         if (cancelled) {
           return;
         }
@@ -178,7 +186,7 @@ export function useTranscriptRunner(): TranscriptRunner {
         current.phase === "idle" ? { ...current, phase: "loading_recordings" } : current,
       );
       try {
-        const items = await listRecordings(selectedInteractionId);
+        const items = await listRecordings(client, selectedInteractionId);
         if (cancelled) {
           return;
         }
@@ -220,7 +228,7 @@ export function useTranscriptRunner(): TranscriptRunner {
     setIsRefreshingInteractions(true);
     setBrowserError(undefined);
     try {
-      const items = await listInteractions();
+      const items = await listInteractions(client);
       setInteractions(items);
       setSelectedInteractionId((current) => {
         if (current && items.some((item) => item.id === current)) {
@@ -242,7 +250,7 @@ export function useTranscriptRunner(): TranscriptRunner {
     setIsRefreshingRecordings(true);
     setBrowserError(undefined);
     try {
-      const items = await listRecordings(selectedInteractionId);
+      const items = await listRecordings(client, selectedInteractionId);
       setRecordings(items);
       setSelectedRecordingId((current) => {
         if (current && items.includes(current)) {
@@ -299,10 +307,10 @@ export function useTranscriptRunner(): TranscriptRunner {
       if (sourceMode === "upload") {
         interactionId =
           uploadInteractionMode === "new"
-            ? await createExamplesInteraction()
+            ? await createExamplesInteraction(client)
             : selectedInteractionId;
         // biome-ignore lint/style/noNonNullAssertion: file is guaranteed present — form validates before calling generate
-        recordingId = await uploadRecording(interactionId, file!);
+        recordingId = await uploadRecording(client, interactionId, file!);
         setRunState((current) => ({
           ...current,
           interactionId,
@@ -321,6 +329,7 @@ export function useTranscriptRunner(): TranscriptRunner {
       }
 
       const created = await createTranscript(
+        client,
         interactionId,
         buildTranscriptRequest(
           recordingId,
@@ -339,7 +348,7 @@ export function useTranscriptRunner(): TranscriptRunner {
         phase: "polling",
       }));
 
-      const status = await pollTranscriptUntilReady(interactionId, transcriptId, {
+      const status = await pollTranscriptUntilReady(client, interactionId, transcriptId, {
         onStatus: (nextStatus: TranscriptProcessingStatus) => {
           setRunState((current) => ({
             ...current,
@@ -358,7 +367,7 @@ export function useTranscriptRunner(): TranscriptRunner {
         return;
       }
 
-      const transcript = await getTranscript(interactionId, transcriptId);
+      const transcript = await getTranscript(client, interactionId, transcriptId);
 
       setRunState((current) => ({
         ...current,

@@ -1,4 +1,4 @@
-import { buildApiUrl } from "../../_shared/urls";
+import type { Corti, CortiClient } from "@corti/sdk";
 import type {
   InteractionSummary,
   TranscriptCreateRequest,
@@ -6,87 +6,38 @@ import type {
   TranscriptProcessingStatus,
   TranscriptResponse,
 } from "./model";
-import { resolveTranscriptIdFromCreateResponse } from "./model";
 
-const API_BASE = `${buildApiUrl()}/v2`;
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_ATTEMPTS = 120;
 
-interface ApiErrorBody {
-  detail?: string;
-  message?: string;
-  type?: string;
-  status?: number;
-}
-
-interface RawInteraction {
-  id: string;
-  encounter?: {
-    title?: string;
-  };
-  patient?: {
-    name?: string;
-  };
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface ListInteractionsResponse {
-  interactions?: RawInteraction[];
-}
-
-interface ListRecordingsResponse {
-  recordings?: string[];
-}
-
-interface CreateInteractionResponse {
-  interactionId?: string;
-}
-
-interface UploadRecordingResponse {
-  recordingId?: string;
-}
-
-interface TranscriptStatusResponse {
-  status?: TranscriptProcessingStatus;
-}
-
-function getApiErrorMessage(response: Response, body: ApiErrorBody | null | undefined): string {
-  return (
-    body?.detail ||
-    body?.message ||
-    body?.type ||
-    `${response.status} ${response.statusText}`.trim() ||
-    `HTTP ${response.status}`
-  );
-}
-
-async function readJsonBody<T>(response: Response): Promise<T | null> {
-  const text = await response.text();
-  if (!text.trim()) {
-    return null;
+export async function listInteractions(client: CortiClient): Promise<InteractionSummary[]> {
+  const page = await client.interactions.list({});
+  const items: InteractionSummary[] = [];
+  for await (const interaction of page) {
+    items.push({
+      id: interaction.id,
+      title: interaction.encounter?.title || "Untitled interaction",
+      patientName: interaction.patient?.name || "Unknown patient",
+      createdAt: interaction.createdAt.toISOString(),
+      updatedAt: interaction.updatedAt.toISOString(),
+    });
   }
-  return JSON.parse(text) as T;
+  return items.sort((a, b) => {
+    const left = Date.parse(b.updatedAt || b.createdAt || "") || 0;
+    const right = Date.parse(a.updatedAt || a.createdAt || "") || 0;
+    return left - right;
+  });
 }
 
-async function expectOkJson<T>(response: Response): Promise<T> {
-  const body = await readJsonBody<T & ApiErrorBody>(response).catch(() => null);
-  if (!response.ok) {
-    throw new Error(getApiErrorMessage(response, body));
-  }
-  return (body || {}) as T;
-}
-
-function createInteractionPayload() {
-  return {
-    assignedUserId: null,
+export async function createExamplesInteraction(client: CortiClient): Promise<string> {
+  const data = await client.interactions.create({
     encounter: {
       identifier: `corti-examples-${Date.now()}`,
       status: "planned",
       type: "consultation",
       period: {
-        start: new Date().toISOString(),
-        end: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        startedAt: new Date(),
+        endedAt: new Date(Date.now() + 60 * 60 * 1000),
       },
       title: "Corti Examples Session",
     },
@@ -94,103 +45,51 @@ function createInteractionPayload() {
       identifier: "test-patient-1",
       name: "Test Patient",
       gender: "unknown",
-      birthDate: "1990-01-01T00:00:00Z",
+      birthDate: new Date("1990-01-01T00:00:00Z"),
       pronouns: "They/Them",
     },
-  };
-}
-
-export async function listInteractions(): Promise<InteractionSummary[]> {
-  const response = await fetch(`${API_BASE}/interactions/`);
-  const data = await expectOkJson<ListInteractionsResponse>(response);
-  return (data.interactions || [])
-    .map((interaction) => ({
-      id: interaction.id,
-      title: interaction.encounter?.title || "Untitled interaction",
-      patientName: interaction.patient?.name || "Unknown patient",
-      createdAt: interaction.createdAt,
-      updatedAt: interaction.updatedAt,
-    }))
-    .sort((a, b) => {
-      const left = Date.parse(b.updatedAt || b.createdAt || "") || 0;
-      const right = Date.parse(a.updatedAt || a.createdAt || "") || 0;
-      return left - right;
-    });
-}
-
-export async function createExamplesInteraction(): Promise<string> {
-  const response = await fetch(`${API_BASE}/interactions/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(createInteractionPayload()),
   });
-  const data = await expectOkJson<CreateInteractionResponse>(response);
-  if (!data.interactionId) {
-    throw new Error("Interaction creation response was missing interactionId.");
-  }
   return data.interactionId;
 }
 
-export async function listRecordings(interactionId: string): Promise<string[]> {
-  const response = await fetch(
-    `${API_BASE}/interactions/${encodeURIComponent(interactionId)}/recordings/`,
-  );
-  const data = await expectOkJson<ListRecordingsResponse>(response);
-  return data.recordings || [];
+export async function listRecordings(
+  client: CortiClient,
+  interactionId: string,
+): Promise<string[]> {
+  const data = await client.recordings.list(interactionId);
+  return data.recordings;
 }
 
-export async function uploadRecording(interactionId: string, file: File): Promise<string> {
-  const response = await fetch(
-    `${API_BASE}/interactions/${encodeURIComponent(interactionId)}/recordings/`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": file.type || "application/octet-stream",
-      },
-      body: file,
-    },
-  );
-  const data = await expectOkJson<UploadRecordingResponse>(response);
-  if (!data.recordingId) {
-    throw new Error("Recording upload response was missing recordingId.");
-  }
+export async function uploadRecording(
+  client: CortiClient,
+  interactionId: string,
+  file: File,
+): Promise<string> {
+  const data = await client.recordings.upload(file, interactionId);
   return data.recordingId;
 }
 
 export async function createTranscript(
+  client: CortiClient,
   interactionId: string,
   request: TranscriptCreateRequest,
 ): Promise<TranscriptCreateResult> {
-  const response = await fetch(
-    `${API_BASE}/interactions/${encodeURIComponent(interactionId)}/transcripts/`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
-    },
+  const data = await client.transcripts.create(
+    interactionId,
+    request as unknown as Corti.TranscriptsCreateRequest,
   );
-  const body = await readJsonBody<Partial<TranscriptResponse> & ApiErrorBody>(response).catch(
-    () => null,
-  );
-
-  if (!response.ok) {
-    throw new Error(getApiErrorMessage(response, body));
-  }
-
   return {
-    transcriptId: resolveTranscriptIdFromCreateResponse(body, response.headers.get("Location")),
-    status: body?.status || "processing",
+    transcriptId: data.id,
+    status: (data.status || "processing") as TranscriptProcessingStatus,
   };
 }
 
 export async function getTranscriptStatus(
+  client: CortiClient,
   interactionId: string,
   transcriptId: string,
 ): Promise<TranscriptProcessingStatus> {
-  const response = await fetch(
-    `${API_BASE}/interactions/${encodeURIComponent(interactionId)}/transcripts/${encodeURIComponent(transcriptId)}/status`,
-  );
-  const data = await expectOkJson<TranscriptStatusResponse>(response);
+  const data = await client.transcripts.getStatus(interactionId, transcriptId);
   if (data.status !== "processing" && data.status !== "completed" && data.status !== "failed") {
     throw new Error("Transcript status response was missing a valid status.");
   }
@@ -198,6 +97,7 @@ export async function getTranscriptStatus(
 }
 
 export async function pollTranscriptUntilReady(
+  client: CortiClient,
   interactionId: string,
   transcriptId: string,
   options?: {
@@ -210,7 +110,7 @@ export async function pollTranscriptUntilReady(
   const intervalMs = options?.intervalMs || POLL_INTERVAL_MS;
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const status = await getTranscriptStatus(interactionId, transcriptId);
+    const status = await getTranscriptStatus(client, interactionId, transcriptId);
     options?.onStatus?.(status);
     if (status !== "processing") {
       return status;
@@ -222,20 +122,17 @@ export async function pollTranscriptUntilReady(
 }
 
 export async function getTranscript(
+  client: CortiClient,
   interactionId: string,
   transcriptId: string,
 ): Promise<TranscriptResponse> {
-  const response = await fetch(
-    `${API_BASE}/interactions/${encodeURIComponent(interactionId)}/transcripts/${encodeURIComponent(transcriptId)}`,
-  );
-  const data = await expectOkJson<TranscriptResponse>(response);
-  if (!data.id || !data.recordingId) {
-    throw new Error("Transcript response was missing required identifiers.");
-  }
+  const data = await client.transcripts.get(interactionId, transcriptId);
   return {
-    ...data,
-    metadata: data.metadata || {},
-    transcripts: data.transcripts || [],
-    status: data.status || "processing",
+    id: data.id,
+    metadata: (data.metadata || {}) as TranscriptResponse["metadata"],
+    transcripts: (data.transcripts || []) as TranscriptResponse["transcripts"],
+    usageInfo: data.usageInfo,
+    recordingId: data.recordingId,
+    status: (data.status || "processing") as TranscriptProcessingStatus,
   };
 }

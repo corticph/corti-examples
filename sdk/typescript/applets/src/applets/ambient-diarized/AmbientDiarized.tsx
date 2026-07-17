@@ -8,7 +8,7 @@
  * category when `mode: facts` is selected.
  */
 
-import type { Corti } from "@corti/sdk";
+import { type Corti, CortiClient } from "@corti/sdk";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,6 @@ import {
   groupBySpeakerRuns,
   mergeDiarizedSegments,
 } from "../_shared/diarized-transcript";
-import { buildApiUrl } from "../_shared/urls";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
 import { type AmbientSettings, buildStreamConfig, DEFAULT_AMBIENT_SETTINGS } from "./config";
@@ -31,43 +30,35 @@ function speakerLabel(speakerId: number, channel: number): string {
   return `Speaker ${speakerId}`;
 }
 
-async function createInteraction(): Promise<string> {
-  const response = await fetch(`${buildApiUrl()}/v2/interactions/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      assignedUserId: null,
-      encounter: {
-        identifier: `corti-examples-${Date.now()}`,
-        status: "planned",
-        type: "consultation",
-        period: {
-          start: new Date().toISOString(),
-          end: new Date(Date.now() + 60 * 60000).toISOString(),
-        },
-        title: "Corti Examples Session",
+async function createInteraction(client: CortiClient): Promise<string> {
+  const data = await client.interactions.create({
+    encounter: {
+      identifier: `corti-examples-${Date.now()}`,
+      status: "planned",
+      type: "consultation",
+      period: {
+        startedAt: new Date(),
+        endedAt: new Date(Date.now() + 60 * 60000),
       },
-      patient: {
-        identifier: "test-patient-1",
-        name: "Test Patient",
-        gender: "unknown",
-        birthDate: "1990-01-01T00:00:00Z",
-        pronouns: "They/Them",
-      },
-    }),
+      title: "Corti Examples Session",
+    },
+    patient: {
+      identifier: "test-patient-1",
+      name: "Test Patient",
+      gender: "unknown",
+      birthDate: new Date("1990-01-01T00:00:00Z"),
+      pronouns: "They/Them",
+    },
   });
-  if (!response.ok) {
-    throw new Error(`Failed to create interaction: ${response.status}`);
-  }
-  const data = await response.json();
-  if (!data.interactionId) {
-    throw new Error("Interaction response missing interactionId");
-  }
-  return data.interactionId as string;
+  return data.interactionId;
 }
 
 export function AmbientDiarized() {
-  const { authConfig } = useCortiAccessToken();
+  const { authConfig, refreshAccessToken, sdkEnvironment } = useCortiAccessToken();
+  const client = useMemo(
+    () => new CortiClient({ environment: sdkEnvironment, auth: { refreshAccessToken } }),
+    [sdkEnvironment, refreshAccessToken],
+  );
   const [settings, setSettings] = useState<AmbientSettings>(DEFAULT_AMBIENT_SETTINGS);
   const [interactionId, setInteractionId] = useState<string>();
   const [creating, setCreating] = useState(false);
@@ -86,7 +77,7 @@ export function AmbientDiarized() {
     requestedRef.current = true;
     let cancelled = false;
     setCreating(true);
-    createInteraction()
+    createInteraction(client)
       .then((interactionId) => {
         if (!cancelled) {
           setInteractionId(interactionId);

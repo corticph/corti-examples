@@ -6,8 +6,9 @@
  * or as the raw JSON body.
  */
 
+import { CortiClient } from "@corti/sdk";
 import { Check, Copy, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
 import {
   ENDPOINT_FILTERS,
@@ -40,6 +42,12 @@ function AvailabilityCell({ enabled }: { enabled: boolean }) {
 }
 
 export function Languages() {
+  const { refreshAccessToken, sdkEnvironment } = useCortiAccessToken();
+  const client = useMemo(
+    () => new CortiClient({ environment: sdkEnvironment, auth: { refreshAccessToken } }),
+    [sdkEnvironment, refreshAccessToken],
+  );
+
   const [filter, setFilter] = useState<Filter>("all");
   const [data, setData] = useState<LanguagesResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,7 +57,7 @@ export function Languages() {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchLanguages(filter === "all" ? undefined : filter);
+      const result = await fetchLanguages(client, filter === "all" ? undefined : filter);
       setData(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

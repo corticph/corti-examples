@@ -68,7 +68,7 @@ export interface TranscriptCreateRequest {
   diarize: boolean;
   participants?: Array<{
     channel: number;
-    role?: string;
+    role?: "doctor" | "patient" | "multiple";
   }>;
   async: true;
 }
