@@ -65,27 +65,27 @@ export function VoiceAgent() {
 
   const finalBufferRef = useRef<string[]>([]);
   const finalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isRecordingRef = useRef(false);
-  // Ref so flushFinal can read the latest debounce value without being recreated.
-  const responseDebounceRefMs = useRef(responseDebounceMs);
-  useEffect(() => {
-    responseDebounceRefMs.current = responseDebounceMs;
-  }, [responseDebounceMs]);
+  const commitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const flushFinal = useCallback(() => {
-    if (isRecordingRef.current) {
-      // Timer fired mid-recording (STT segment boundary, not a real pause).
-      // Re-extend rather than flush — one recording session = one user message.
-      finalTimerRef.current = setTimeout(flushFinal, responseDebounceRefMs.current);
-      return;
-    }
-    finalTimerRef.current = null;
+  const doFlush = useCallback(() => {
     const text = finalBufferRef.current.join(" ").trim();
     finalBufferRef.current = [];
     if (text) {
       void handleFinal(text);
     }
   }, []);
+
+  // After the debounce fires, wait 300 ms before committing the flush. Any incoming
+  // transcript event during that window cancels the commit and restarts the debounce —
+  // this prevents STT segment boundaries (next interim arriving tens of ms after the
+  // timer fires) from splitting one continuous utterance into multiple messages.
+  const flushFinal = useCallback(() => {
+    finalTimerRef.current = null;
+    if (commitTimerRef.current) {
+      clearTimeout(commitTimerRef.current);
+    }
+    commitTimerRef.current = setTimeout(doFlush, 300);
+  }, [doFlush]);
 
   const handleTranscript = useCallback(
     (e: CustomEvent<TranscriptEventDetail>) => {
@@ -94,11 +94,21 @@ export function VoiceAgent() {
         return;
       }
 
+      // New event during the grace period means the user is still speaking — cancel the
+      // pending flush and restart the debounce so the turn stays open.
+      const hadCommit = Boolean(commitTimerRef.current);
+      if (hadCommit && commitTimerRef.current) {
+        clearTimeout(commitTimerRef.current);
+        commitTimerRef.current = null;
+      }
+
       if (!data.isFinal) {
         handleInterim(data.text);
-        // New interim means user is still speaking — extend the debounce window if active
-        if (finalTimerRef.current) {
-          clearTimeout(finalTimerRef.current);
+        // Extend the debounce if a timer is active, or restart it after cancelling a commit
+        if (finalTimerRef.current || hadCommit) {
+          if (finalTimerRef.current) {
+            clearTimeout(finalTimerRef.current);
+          }
           finalTimerRef.current = setTimeout(flushFinal, responseDebounceMs);
         }
       } else {
@@ -116,15 +126,21 @@ export function VoiceAgent() {
   const handleRecordingState = useCallback(
     (e: CustomEvent<RecordingStateChangedEventDetail>) => {
       const recording = e.detail?.state === "recording";
-      isRecordingRef.current = recording;
       setIsRecording(recording);
-      // Recording stopped — flush everything buffered in this session immediately
-      if (!recording && finalTimerRef.current) {
-        clearTimeout(finalTimerRef.current);
-        flushFinal();
+      if (!recording) {
+        // Recording stopped — cancel both timers and flush immediately (no grace period)
+        if (commitTimerRef.current) {
+          clearTimeout(commitTimerRef.current);
+          commitTimerRef.current = null;
+        }
+        if (finalTimerRef.current) {
+          clearTimeout(finalTimerRef.current);
+          finalTimerRef.current = null;
+        }
+        doFlush();
       }
     },
-    [flushFinal],
+    [doFlush],
   );
 
   const showGhost = isRecording && Boolean(interimText);
