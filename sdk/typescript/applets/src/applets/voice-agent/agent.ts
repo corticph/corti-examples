@@ -39,6 +39,7 @@ export type DebugLogEventType =
   | "speculative_response"
   | "speculative_discarded"
   | "final_flushed"
+  | "turn_merged"
   | "contextual_fired"
   | "contextual_response"
   | "mode_detected"
@@ -127,6 +128,15 @@ let speculativeTimer: ReturnType<typeof setTimeout> | null = null;
 // Index into state.messages from which history is included in speculative calls.
 // Reset when orchestrator detects a new mode, so stale context doesn't bleed through.
 let speculativeHistoryStartIdx = 0;
+
+// Incremented each time sendContextual starts. A call that resolves with a stale seq
+// was superseded by a turn-merge and must not commit its result.
+let contextualSeq = 0;
+
+// Timestamp of the last successful contextual response. Used to detect post-response
+// continuations: new speech that arrives within responseDebounceMs*2 after a response
+// is treated as part of the same turn rather than a new one.
+let lastContextualResponseAt: number | null = null;
 
 const defaultPreset = VOICE_PRESETS[DEFAULT_PRESET_KEY];
 
@@ -371,13 +381,68 @@ export function handleInterim(text: string) {
 }
 
 export async function handleFinal(text: string) {
-  if (state.status === "thinking" || state.status === "preparing") {
+  if (state.status === "preparing") {
     return;
   }
 
   const normalized = text.trim();
   if (!normalized) {
     set({ interimText: "" });
+    return;
+  }
+
+  // Post-response continuation window: new speech arriving shortly after a contextual
+  // response is still part of the same turn (STT segment gaps can be 100s of ms even
+  // during uninterrupted speech). Window = 2× responseDebounceMs.
+  const timeSinceResponse =
+    lastContextualResponseAt != null ? Date.now() - lastContextualResponseAt : Infinity;
+  const isContinuation =
+    state.status === "ready" && timeSinceResponse < state.responseDebounceMs * 2;
+
+  // Merge into the current turn when: (a) the contextual call is still in flight
+  // (thinking), or (b) we're within the post-response window (ready but recent).
+  // Both cases: remove any stale trailing assistant message, extend the last user
+  // message with the new text, and restart sendContextual with the merged text.
+  if (state.status === "thinking" || isContinuation) {
+    cancelSpeculative();
+
+    const messages = [...state.messages];
+
+    // Invalidate any in-flight sendContextual so it doesn't commit on resolution
+    if (state.status === "thinking") {
+      contextualSeq++;
+    }
+
+    // Post-response path: the last message is a (now stale) assistant response — remove it
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg?.role === "assistant" && !lastMsg.pending) {
+      messages.pop();
+    }
+
+    // Append to the last user message (always present at this point)
+    const lastUserIdx = messages.reduce((best, m, i) => (m.role === "user" ? i : best), -1);
+    const mergedText =
+      lastUserIdx >= 0 ? `${messages[lastUserIdx].text} ${normalized}` : normalized;
+    if (lastUserIdx >= 0) {
+      messages[lastUserIdx] = { ...messages[lastUserIdx], text: mergedText };
+    } else {
+      messages.push({ id: crypto.randomUUID(), role: "user", text: mergedText, at: Date.now() });
+    }
+
+    addLog({ event: "turn_merged", text: snippet(mergedText) });
+
+    state = {
+      ...state,
+      messages,
+      interimText: "",
+      heldResponse: null,
+      isSpeculating: false,
+      pendingAgentMsgId: null,
+      status: "thinking",
+      error: undefined,
+    };
+    emit();
+    await sendContextual(mergedText);
     return;
   }
 
@@ -469,6 +534,8 @@ async function replaceProvisional(text: string, pendingId: string) {
       addLog({ event: "mode_detected", text: mode });
     }
 
+    lastContextualResponseAt = Date.now();
+
     state = {
       ...state,
       messages: state.messages.map((m) =>
@@ -498,6 +565,7 @@ async function sendContextual(text: string) {
     return;
   }
 
+  const mySeq = ++contextualSeq;
   const firedAt = nowMs();
   addLog({ event: "contextual_fired", text: snippet(text) });
 
@@ -516,6 +584,13 @@ async function sendContextual(text: string) {
         throw error;
       }
     }
+
+    // A turn-merge happened while we were awaiting — a newer call owns the commit.
+    if (mySeq !== contextualSeq) {
+      return;
+    }
+
+    lastContextualResponseAt = Date.now();
 
     const { mode, cleanText } = extractMode(result.text.trim());
     const responseText = cleanText || "(no response)";
@@ -556,6 +631,7 @@ async function sendContextual(text: string) {
 export async function resetConversation() {
   cancelSpeculative();
   speculativeHistoryStartIdx = 0;
+  lastContextualResponseAt = null;
   const currentAgentId = agentId;
   const currentContextId = state.contextId;
   let resetError: string | undefined;

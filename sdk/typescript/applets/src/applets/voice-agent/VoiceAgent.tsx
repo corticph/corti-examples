@@ -69,13 +69,9 @@ export function VoiceAgent() {
   const dictationConfig = useMemo(() => buildVoiceConfig(LANGUAGE), []);
 
   const finalBufferRef = useRef<string[]>([]);
-  const finalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const commitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Ref so flushFinal can read the latest debounce value without being recreated.
-  const continuationWindowRef = useRef(responseDebounceMs);
-  useEffect(() => {
-    continuationWindowRef.current = responseDebounceMs;
-  }, [responseDebounceMs]);
+  // Single debounce timer: any transcript event (interim or final) resets this.
+  // Turn ends when no transcript has arrived for responseDebounceMs.
+  const transcriptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const doFlush = useCallback(() => {
     const text = finalBufferRef.current.join(" ").trim();
@@ -85,18 +81,6 @@ export function VoiceAgent() {
     }
   }, []);
 
-  // Two-phase flush: debounce fires → hold for another responseDebounceMs before committing.
-  // Any new speech in that window cancels the commit and restarts the debounce, so STT
-  // segment boundaries and short cross-segment gaps merge into one user turn. finalBufferRef
-  // is not cleared until doFlush runs, so cancelled continuations accumulate naturally.
-  const flushFinal = useCallback(() => {
-    finalTimerRef.current = null;
-    if (commitTimerRef.current) {
-      clearTimeout(commitTimerRef.current);
-    }
-    commitTimerRef.current = setTimeout(doFlush, continuationWindowRef.current);
-  }, [doFlush]);
-
   const handleTranscript = useCallback(
     (e: CustomEvent<TranscriptEventDetail>) => {
       const data = e.detail?.data;
@@ -104,33 +88,21 @@ export function VoiceAgent() {
         return;
       }
 
-      // New event during the grace period means the user is still speaking — cancel the
-      // pending flush and restart the debounce so the turn stays open.
-      const hadCommit = Boolean(commitTimerRef.current);
-      if (hadCommit && commitTimerRef.current) {
-        clearTimeout(commitTimerRef.current);
-        commitTimerRef.current = null;
+      // Every transcript event — interim or final — resets the inactivity timer.
+      // As long as events keep arriving, the user is still speaking.
+      if (transcriptTimerRef.current) {
+        clearTimeout(transcriptTimerRef.current);
       }
+      transcriptTimerRef.current = setTimeout(doFlush, responseDebounceMs);
 
       if (!data.isFinal) {
         handleInterim(data.text);
-        // Extend the debounce if a timer is active, or restart it after cancelling a commit
-        if (finalTimerRef.current || hadCommit) {
-          if (finalTimerRef.current) {
-            clearTimeout(finalTimerRef.current);
-          }
-          finalTimerRef.current = setTimeout(flushFinal, responseDebounceMs);
-        }
       } else {
         finalBufferRef.current.push(data.text);
-        if (finalTimerRef.current) {
-          clearTimeout(finalTimerRef.current);
-        }
-        finalTimerRef.current = setTimeout(flushFinal, responseDebounceMs);
         handleInterim(data.text);
       }
     },
-    [flushFinal, responseDebounceMs],
+    [doFlush, responseDebounceMs],
   );
 
   const handleRecordingState = useCallback(
@@ -138,14 +110,9 @@ export function VoiceAgent() {
       const recording = e.detail?.state === "recording";
       setIsRecording(recording);
       if (!recording) {
-        // Recording stopped — cancel both timers and flush immediately (no grace period)
-        if (commitTimerRef.current) {
-          clearTimeout(commitTimerRef.current);
-          commitTimerRef.current = null;
-        }
-        if (finalTimerRef.current) {
-          clearTimeout(finalTimerRef.current);
-          finalTimerRef.current = null;
+        if (transcriptTimerRef.current) {
+          clearTimeout(transcriptTimerRef.current);
+          transcriptTimerRef.current = null;
         }
         doFlush();
       }
