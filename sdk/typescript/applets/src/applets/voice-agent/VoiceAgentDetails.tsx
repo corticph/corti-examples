@@ -5,6 +5,7 @@ import {
   applyPreset,
   clearDebugLog,
   savePrompt,
+  setMinSpeculativeWords,
   setResponseDebounceMs,
   setShowProvisionalDetails,
   useDebugLogStore,
@@ -14,8 +15,14 @@ import {
 import { ORCHESTRATOR_KEY, SPECIALIST_KEYS, VOICE_PRESETS } from "./model";
 
 export function VoiceAgentDetails() {
-  const { prompt, presetKey, status, responseDebounceMs, showProvisionalDetails } =
-    useVoiceAgentStore();
+  const {
+    prompt,
+    presetKey,
+    status,
+    responseDebounceMs,
+    minSpeculativeWords,
+    showProvisionalDetails,
+  } = useVoiceAgentStore();
   const debugLog = useDebugLogStore();
   const [draft, setDraft] = useState(prompt);
   const [debugOpen, setDebugOpen] = useState(false);
@@ -33,10 +40,10 @@ export function VoiceAgentDetails() {
         <p className="text-xs text-muted-foreground">{VOICE_AGENT.description}</p>
       </div>
 
-      {/* Settings row */}
-      <div className="grid grid-cols-3 divide-x divide-border rounded-lg border border-border text-xs">
-        {/* Mode */}
-        <div className="flex flex-col gap-2 p-3">
+      {/* Settings grid — 2×2: toggles on top row, sliders on bottom row */}
+      <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-border text-xs">
+        {/* Mode toggle — top left */}
+        <div className="flex flex-col gap-2 border-b border-r border-border p-3">
           <p className="font-semibold uppercase tracking-wide text-muted-foreground">Mode</p>
           <div className="flex items-center justify-between gap-2">
             <span className="text-muted-foreground">Auto-detect</span>
@@ -63,29 +70,8 @@ export function VoiceAgentDetails() {
           </div>
         </div>
 
-        {/* Response delay */}
-        <div className="flex flex-col gap-2 p-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-semibold uppercase tracking-wide text-muted-foreground">
-              Response delay
-            </p>
-            <span className="tabular-nums text-muted-foreground">
-              {(responseDebounceMs / 1000).toFixed(1)} s
-            </span>
-          </div>
-          <input
-            type="range"
-            min={500}
-            max={3000}
-            step={100}
-            value={responseDebounceMs}
-            onChange={(e) => setResponseDebounceMs(Number(e.target.value))}
-            className="w-full accent-corti-lime"
-          />
-        </div>
-
-        {/* Provisional details */}
-        <div className="flex flex-col gap-2 p-3">
+        {/* Provisional toggle — top right */}
+        <div className="flex flex-col gap-2 border-b border-border p-3">
           <p className="font-semibold uppercase tracking-wide text-muted-foreground">Provisional</p>
           <div className="flex items-center justify-between gap-2">
             <span className="text-muted-foreground">Show details</span>
@@ -105,6 +91,44 @@ export function VoiceAgentDetails() {
               />
             </button>
           </div>
+        </div>
+
+        {/* Response delay slider — bottom left */}
+        <div className="flex flex-col gap-2 border-r border-border p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-semibold uppercase tracking-wide text-muted-foreground">
+              Response delay
+            </p>
+            <span className="tabular-nums text-muted-foreground">
+              {(responseDebounceMs / 1000).toFixed(1)} s
+            </span>
+          </div>
+          <input
+            type="range"
+            min={500}
+            max={3000}
+            step={100}
+            value={responseDebounceMs}
+            onChange={(e) => setResponseDebounceMs(Number(e.target.value))}
+            className="w-full accent-corti-lime"
+          />
+        </div>
+
+        {/* Min words slider — bottom right */}
+        <div className="flex flex-col gap-2 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-semibold uppercase tracking-wide text-muted-foreground">Min words</p>
+            <span className="tabular-nums text-muted-foreground">{minSpeculativeWords}</span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={10}
+            step={1}
+            value={minSpeculativeWords}
+            onChange={(e) => setMinSpeculativeWords(Number(e.target.value))}
+            className="w-full accent-corti-lime"
+          />
         </div>
       </div>
 

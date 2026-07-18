@@ -26,8 +26,10 @@ const PRESET_KEY = "voiceAgent.presetKey";
 const AGENT_ID_KEY = "voiceAgent.agentId";
 const DEBOUNCE_KEY = "voiceAgent.responseDebounceMs";
 const PROVISIONAL_KEY = "voiceAgent.showProvisionalDetails";
+const MIN_WORDS_KEY = "voiceAgent.minSpeculativeWords";
 
 export const DEFAULT_DEBOUNCE_MS = 1500;
+export const DEFAULT_MIN_SPECULATIVE_WORDS = 1;
 
 // ─── Debug log ───────────────────────────────────────────────────────────────
 
@@ -106,6 +108,7 @@ interface VoiceAgentState {
   prompt: string;
   presetKey: string;
   responseDebounceMs: number;
+  minSpeculativeWords: number;
   detectedMode: string | null;
   showProvisionalDetails: boolean;
   error?: string;
@@ -137,6 +140,7 @@ let state: VoiceAgentState = {
   prompt: defaultPreset.prompt,
   presetKey: DEFAULT_PRESET_KEY,
   responseDebounceMs: DEFAULT_DEBOUNCE_MS,
+  minSpeculativeWords: DEFAULT_MIN_SPECULATIVE_WORDS,
   detectedMode: null,
   showProvisionalDetails: false,
 };
@@ -190,6 +194,9 @@ function loadStateFromStore() {
     prompt: store.get<string>(PROMPT_KEY, "") || presetDefault,
     presetKey: storedPresetKey,
     responseDebounceMs: store.get<number>(DEBOUNCE_KEY, DEFAULT_DEBOUNCE_MS) || DEFAULT_DEBOUNCE_MS,
+    minSpeculativeWords:
+      store.get<number>(MIN_WORDS_KEY, DEFAULT_MIN_SPECULATIVE_WORDS) ||
+      DEFAULT_MIN_SPECULATIVE_WORDS,
     showProvisionalDetails: store.get<boolean>(PROVISIONAL_KEY, false) || false,
     interimText: "",
     heldResponse: null,
@@ -208,6 +215,11 @@ export function setResponseDebounceMs(ms: number) {
 export function setShowProvisionalDetails(val: boolean) {
   store.set(PROVISIONAL_KEY, val);
   set({ showProvisionalDetails: val });
+}
+
+export function setMinSpeculativeWords(n: number) {
+  store.set(MIN_WORDS_KEY, n);
+  set({ minSpeculativeWords: n });
 }
 
 async function prepare() {
@@ -329,7 +341,11 @@ async function fireSpeculative(text: string) {
 }
 
 // Fires on every interim — 200ms debounce collapses rapid bursts into one call.
+// Skips if text is shorter than the configured minimum word count.
 function scheduleSpeculative(text: string) {
+  if (text.trim().split(/\s+/).length < state.minSpeculativeWords) {
+    return;
+  }
   if (speculativeTimer) {
     clearTimeout(speculativeTimer);
   }
