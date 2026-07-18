@@ -65,8 +65,20 @@ export function VoiceAgent() {
 
   const finalBufferRef = useRef<string[]>([]);
   const finalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isRecordingRef = useRef(false);
+  // Ref so flushFinal can read the latest debounce value without being recreated.
+  const responseDebounceRefMs = useRef(responseDebounceMs);
+  useEffect(() => {
+    responseDebounceRefMs.current = responseDebounceMs;
+  }, [responseDebounceMs]);
 
   const flushFinal = useCallback(() => {
+    if (isRecordingRef.current) {
+      // Timer fired mid-recording (STT segment boundary, not a real pause).
+      // Re-extend rather than flush — one recording session = one user message.
+      finalTimerRef.current = setTimeout(flushFinal, responseDebounceRefMs.current);
+      return;
+    }
     finalTimerRef.current = null;
     const text = finalBufferRef.current.join(" ").trim();
     finalBufferRef.current = [];
@@ -104,8 +116,9 @@ export function VoiceAgent() {
   const handleRecordingState = useCallback(
     (e: CustomEvent<RecordingStateChangedEventDetail>) => {
       const recording = e.detail?.state === "recording";
+      isRecordingRef.current = recording;
       setIsRecording(recording);
-      // Recording stopped — flush buffered finals immediately rather than waiting
+      // Recording stopped — flush everything buffered in this session immediately
       if (!recording && finalTimerRef.current) {
         clearTimeout(finalTimerRef.current);
         flushFinal();
