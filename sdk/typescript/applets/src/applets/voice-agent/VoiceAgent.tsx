@@ -66,6 +66,11 @@ export function VoiceAgent() {
   const finalBufferRef = useRef<string[]>([]);
   const finalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref so flushFinal can read the latest debounce value without being recreated.
+  const continuationWindowRef = useRef(responseDebounceMs);
+  useEffect(() => {
+    continuationWindowRef.current = responseDebounceMs;
+  }, [responseDebounceMs]);
 
   const doFlush = useCallback(() => {
     const text = finalBufferRef.current.join(" ").trim();
@@ -75,16 +80,16 @@ export function VoiceAgent() {
     }
   }, []);
 
-  // After the debounce fires, wait 300 ms before committing the flush. Any incoming
-  // transcript event during that window cancels the commit and restarts the debounce —
-  // this prevents STT segment boundaries (next interim arriving tens of ms after the
-  // timer fires) from splitting one continuous utterance into multiple messages.
+  // Two-phase flush: debounce fires → hold for another responseDebounceMs before committing.
+  // Any new speech in that window cancels the commit and restarts the debounce, so STT
+  // segment boundaries and short cross-segment gaps merge into one user turn. finalBufferRef
+  // is not cleared until doFlush runs, so cancelled continuations accumulate naturally.
   const flushFinal = useCallback(() => {
     finalTimerRef.current = null;
     if (commitTimerRef.current) {
       clearTimeout(commitTimerRef.current);
     }
-    commitTimerRef.current = setTimeout(doFlush, 300);
+    commitTimerRef.current = setTimeout(doFlush, continuationWindowRef.current);
   }, [doFlush]);
 
   const handleTranscript = useCallback(
