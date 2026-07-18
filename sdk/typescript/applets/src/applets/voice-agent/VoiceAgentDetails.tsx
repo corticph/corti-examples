@@ -1,10 +1,13 @@
+import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   applyPreset,
+  clearDebugLog,
   savePrompt,
   setResponseDebounceMs,
   setShowProvisionalDetails,
+  useDebugLogStore,
   useVoiceAgentStore,
   VOICE_AGENT,
 } from "./agent";
@@ -13,7 +16,9 @@ import { ORCHESTRATOR_KEY, SPECIALIST_KEYS, VOICE_PRESETS } from "./model";
 export function VoiceAgentDetails() {
   const { prompt, presetKey, status, responseDebounceMs, showProvisionalDetails } =
     useVoiceAgentStore();
+  const debugLog = useDebugLogStore();
   const [draft, setDraft] = useState(prompt);
+  const [debugOpen, setDebugOpen] = useState(false);
 
   useEffect(() => setDraft(prompt), [prompt]);
 
@@ -150,6 +155,61 @@ export function VoiceAgentDetails() {
             Discard
           </Button>
         </div>
+      </div>
+
+      {/* Debug log */}
+      <div className="rounded-lg border border-border">
+        <button
+          type="button"
+          onClick={() => setDebugOpen((o) => !o)}
+          className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+        >
+          <span>Debug log ({debugLog.length} events)</span>
+          <ChevronDown
+            className={`h-3.5 w-3.5 transition-transform ${debugOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {debugOpen && (
+          <div className="border-t border-border p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={debugLog.length === 0}
+                onClick={() => {
+                  const text = debugLog
+                    .map(
+                      (e) =>
+                        `+${String(e.tMs).padStart(6)}ms  ${e.event.padEnd(24)} ${e.text}${e.latencyMs != null ? `  (${e.latencyMs}ms)` : ""}`,
+                    )
+                    .join("\n");
+                  void navigator.clipboard.writeText(text);
+                }}
+              >
+                Copy
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={debugLog.length === 0}
+                onClick={clearDebugLog}
+              >
+                Clear
+              </Button>
+            </div>
+            <pre className="max-h-72 overflow-y-auto rounded-md bg-muted p-2 font-mono text-[11px] leading-relaxed text-foreground">
+              {debugLog.length === 0
+                ? "No events yet — speak to start recording."
+                : debugLog
+                    .map(
+                      (e) =>
+                        `+${String(e.tMs).padStart(6)}ms  ${e.event.padEnd(24)} ${e.text}${e.latencyMs != null ? `  (${e.latencyMs}ms)` : ""}`,
+                    )
+                    .join("\n")}
+            </pre>
+          </div>
+        )}
       </div>
     </div>
   );

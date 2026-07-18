@@ -29,23 +29,84 @@ const PROVISIONAL_KEY = "voiceAgent.showProvisionalDetails";
 
 export const DEFAULT_DEBOUNCE_MS = 1500;
 
+// ─── Debug log ───────────────────────────────────────────────────────────────
+
+export type DebugLogEventType =
+  | "interim"
+  | "speculative_fired"
+  | "speculative_response"
+  | "speculative_discarded"
+  | "final_flushed"
+  | "contextual_fired"
+  | "contextual_response"
+  | "mode_detected";
+
+export interface DebugLogEntry {
+  id: string;
+  tMs: number;
+  event: DebugLogEventType;
+  text: string;
+  latencyMs?: number;
+}
+
+// Separate store so frequent log updates don't re-render the chat UI
+let debugLog: DebugLogEntry[] = [];
+let logEpochMs: number | null = null;
+const debugLogListeners = new Set<() => void>();
+const emitLog = () => {
+  for (const l of debugLogListeners) {
+    l();
+  }
+};
+
+function nowMs(): number {
+  if (!logEpochMs) {
+    logEpochMs = Date.now();
+  }
+  return Date.now() - logEpochMs;
+}
+
+function snippet(text: string, maxLen = 70): string {
+  const flat = text.replace(/\n/g, " ");
+  return flat.length > maxLen ? `${flat.slice(0, maxLen)}…` : flat;
+}
+
+function addLog(entry: Omit<DebugLogEntry, "id" | "tMs">) {
+  debugLog = [...debugLog, { id: crypto.randomUUID(), tMs: nowMs(), ...entry }];
+  emitLog();
+}
+
+export function useDebugLogStore(): DebugLogEntry[] {
+  return useSyncExternalStore(
+    (listener) => {
+      debugLogListeners.add(listener);
+      return () => debugLogListeners.delete(listener);
+    },
+    () => debugLog,
+    () => debugLog,
+  );
+}
+
+export function clearDebugLog() {
+  logEpochMs = null;
+  debugLog = [];
+  emitLog();
+}
+
+// ─── Main agent state ─────────────────────────────────────────────────────────
+
 interface VoiceAgentState {
   status: VoiceStatus;
   messages: VoiceMessage[];
   interimText: string;
-  // Speculative: stateless prefetch for display speed; always replaced by the real contextual response
   heldResponse: string | null;
   isSpeculating: boolean;
-  // ID of the provisional agent message currently being replaced in-place by the real response
   pendingAgentMsgId: string | null;
   contextId: string | null;
   prompt: string;
   presetKey: string;
-  // How long to wait after isFinal=true before firing the agent (ms)
   responseDebounceMs: number;
-  // Specialist key detected by the orchestrator from the latest response [MODE:key] tag
   detectedMode: string | null;
-  // When false (default), pending bubbles show "Responding…" instead of the raw speculative text
   showProvisionalDetails: boolean;
   error?: string;
 }
@@ -57,10 +118,11 @@ let store: ConfigStore = createLocalConfigStore(namespace);
 let agentId: string | null = null;
 let preparedFor: string | null = null;
 
-// One speculative call per user turn — stateless so it never touches the real thread
 let speculativeSeq = 0;
 let speculativeTimer: ReturnType<typeof setTimeout> | null = null;
-let speculativeFiredThisTurn = false;
+// Index into state.messages from which history is included in speculative calls.
+// Reset when orchestrator detects a new mode, so stale context doesn't bleed through.
+let speculativeHistoryStartIdx = 0;
 
 const defaultPreset = VOICE_PRESETS[DEFAULT_PRESET_KEY];
 
@@ -99,14 +161,25 @@ const spec = (): AgentSpec => ({
   systemPrompt: state.prompt,
 });
 
-// Strips the [MODE:key] prefix the orchestrator includes at the start of every response.
-// Returns the detected key (or null) and the clean display text.
 function extractMode(text: string): { mode: string | null; cleanText: string } {
   const match = text.match(/^\[MODE:([^\]]+)\]\n?/);
   if (!match) {
     return { mode: null, cleanText: text };
   }
   return { mode: match[1], cleanText: text.slice(match[0].length).trim() };
+}
+
+// Builds a plain-text history preamble from the last `limit` turns starting at `startIdx`.
+function formatHistoryPreamble(messages: VoiceMessage[], limit: number, startIdx: number): string {
+  const relevant = messages
+    .slice(startIdx)
+    .filter((m) => !m.pending)
+    .slice(-(limit * 2));
+  if (!relevant.length) {
+    return "";
+  }
+  const lines = relevant.map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`);
+  return `[Conversation context]\n${lines.join("\n")}\n\n`;
 }
 
 function loadStateFromStore() {
@@ -212,23 +285,41 @@ function cancelSpeculative() {
     speculativeTimer = null;
   }
   speculativeSeq++;
-  speculativeFiredThisTurn = false;
 }
 
-// Stateless prefetch — no contextId so the real thread is never touched.
-// The held response is shown immediately on final, then replaced by the real contextual response.
+// Stateless prefetch with injected conversation history — no contextId so the real thread
+// is never touched. Fires on every interim (debounced 200ms) so the latest text is used.
 async function fireSpeculative(text: string) {
   if (!client || !agentId) {
     return;
   }
   const seq = ++speculativeSeq;
+  const firedAt = nowMs();
+
+  const preamble = formatHistoryPreamble(state.messages, 6, speculativeHistoryStartIdx);
+  const fullText = preamble
+    ? `${preamble}[User is still speaking — this may be incomplete]\n${text}`
+    : text;
+
+  addLog({ event: "speculative_fired", text: snippet(text) });
   set({ isSpeculating: true });
+
   try {
-    const result = await sendAgentMessage(client, agentId, text);
+    const result = await sendAgentMessage(client, agentId, fullText);
     if (seq !== speculativeSeq) {
+      addLog({
+        event: "speculative_discarded",
+        text: snippet(result),
+        latencyMs: nowMs() - firedAt,
+      });
       return;
     }
     const { cleanText } = extractMode(result);
+    addLog({
+      event: "speculative_response",
+      text: snippet(cleanText),
+      latencyMs: nowMs() - firedAt,
+    });
     set({ heldResponse: cleanText, isSpeculating: false });
   } catch {
     if (seq === speculativeSeq) {
@@ -237,17 +328,13 @@ async function fireSpeculative(text: string) {
   }
 }
 
+// Fires on every interim — 200ms debounce collapses rapid bursts into one call.
 function scheduleSpeculative(text: string) {
-  // Fire once per turn — additional interims don't retrigger, keeping held response stable
-  if (speculativeFiredThisTurn) {
-    return;
-  }
   if (speculativeTimer) {
     clearTimeout(speculativeTimer);
   }
   speculativeTimer = setTimeout(() => {
     speculativeTimer = null;
-    speculativeFiredThisTurn = true;
     void fireSpeculative(text);
   }, 200);
 }
@@ -257,6 +344,7 @@ export function handleInterim(text: string) {
   if (!normalized) {
     return;
   }
+  addLog({ event: "interim", text: snippet(normalized) });
   set({ interimText: normalized, error: undefined });
   scheduleSpeculative(normalized);
 }
@@ -272,13 +360,12 @@ export async function handleFinal(text: string) {
     return;
   }
 
+  addLog({ event: "final_flushed", text: snippet(normalized) });
   cancelSpeculative();
 
   const held = state.heldResponse;
 
   if (held) {
-    // Show provisional response immediately, then fire the real contextual to replace it.
-    // The real response uses the correct final text and full thread context.
     const provisionalId = crypto.randomUUID();
     state = {
       ...state,
@@ -297,7 +384,6 @@ export async function handleFinal(text: string) {
     emit();
     await replaceProvisional(normalized, provisionalId);
   } else {
-    // No held response — add user message, show thinking, fire contextual
     state = {
       ...state,
       messages: [
@@ -316,7 +402,6 @@ export async function handleFinal(text: string) {
   }
 }
 
-// Fires the real contextual request and updates the provisional message in-place.
 async function replaceProvisional(text: string, pendingId: string) {
   if (!client || !agentId) {
     state = {
@@ -328,6 +413,10 @@ async function replaceProvisional(text: string, pendingId: string) {
     emit();
     return;
   }
+
+  const firedAt = nowMs();
+  addLog({ event: "contextual_fired", text: snippet(text) });
+
   try {
     let result: Awaited<ReturnType<typeof sendAgentMessageWithContext>> | undefined;
     try {
@@ -346,6 +435,19 @@ async function replaceProvisional(text: string, pendingId: string) {
 
     const { mode, cleanText } = extractMode(result.text.trim());
     const responseText = cleanText || "(no response)";
+
+    addLog({
+      event: "contextual_response",
+      text: snippet(responseText),
+      latencyMs: nowMs() - firedAt,
+    });
+
+    // Mode changed — reset speculative history so prior context doesn't bleed across modes
+    if (mode && mode !== state.detectedMode) {
+      speculativeHistoryStartIdx = Math.max(0, state.messages.length - 2);
+      addLog({ event: "mode_detected", text: mode });
+    }
+
     state = {
       ...state,
       messages: state.messages.map((m) =>
@@ -358,7 +460,6 @@ async function replaceProvisional(text: string, pendingId: string) {
     };
     emit();
   } catch (error) {
-    // Clear pending indicator, keep the provisional text visible, surface the error
     state = {
       ...state,
       messages: state.messages.map((m) => (m.id === pendingId ? { ...m, pending: false } : m)),
@@ -370,12 +471,15 @@ async function replaceProvisional(text: string, pendingId: string) {
   }
 }
 
-// Fallback path — no speculative was ready; fires contextual directly and adds the response.
 async function sendContextual(text: string) {
   if (!client || !agentId) {
     set({ status: "ready" });
     return;
   }
+
+  const firedAt = nowMs();
+  addLog({ event: "contextual_fired", text: snippet(text) });
+
   try {
     let result: Awaited<ReturnType<typeof sendAgentMessageWithContext>> | undefined;
     try {
@@ -394,6 +498,19 @@ async function sendContextual(text: string) {
 
     const { mode, cleanText } = extractMode(result.text.trim());
     const responseText = cleanText || "(no response)";
+
+    addLog({
+      event: "contextual_response",
+      text: snippet(responseText),
+      latencyMs: nowMs() - firedAt,
+    });
+
+    // Mode changed — reset speculative history start to the current user turn
+    if (mode && mode !== state.detectedMode) {
+      speculativeHistoryStartIdx = Math.max(0, state.messages.length - 1);
+      addLog({ event: "mode_detected", text: mode });
+    }
+
     state = {
       ...state,
       messages: [
@@ -417,6 +534,7 @@ async function sendContextual(text: string) {
 
 export async function resetConversation() {
   cancelSpeculative();
+  speculativeHistoryStartIdx = 0;
   const currentAgentId = agentId;
   const currentContextId = state.contextId;
   let resetError: string | undefined;
