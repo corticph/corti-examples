@@ -41,7 +41,8 @@ export type DebugLogEventType =
   | "final_flushed"
   | "contextual_fired"
   | "contextual_response"
-  | "mode_detected";
+  | "mode_detected"
+  | "audio_event";
 
 export interface DebugLogEntry {
   id: string;
@@ -353,6 +354,10 @@ function scheduleSpeculative(text: string) {
     speculativeTimer = null;
     void fireSpeculative(text);
   }, 200);
+}
+
+export function handleAudioEvent(eventType: string) {
+  addLog({ event: "audio_event", text: eventType });
 }
 
 export function handleInterim(text: string) {

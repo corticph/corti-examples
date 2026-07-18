@@ -1,4 +1,8 @@
-import type { RecordingStateChangedEventDetail, TranscriptEventDetail } from "@corti/dictation-web";
+import type {
+  AudioEventEventDetail,
+  RecordingStateChangedEventDetail,
+  TranscriptEventDetail,
+} from "@corti/dictation-web";
 import { Loader2, Mic, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +12,7 @@ import { CortiDictationComponent } from "../_shared/cortiDictationReact";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import {
   configureVoiceAgent,
+  handleAudioEvent,
   handleFinal,
   handleInterim,
   resetConversation,
@@ -148,6 +153,13 @@ export function VoiceAgent() {
     [doFlush],
   );
 
+  const handleAudioEventWrapper = useCallback((e: CustomEvent<AudioEventEventDetail>) => {
+    const eventType = e.detail?.data?.event;
+    if (eventType) {
+      handleAudioEvent(eventType);
+    }
+  }, []);
+
   const showGhost = isRecording && Boolean(interimText);
   // Response is pre-computed and waiting; spinner gone, ghost dims to signal readiness
   const ghostReady = showGhost && Boolean(heldResponse) && !isSpeculating;
@@ -259,6 +271,7 @@ export function VoiceAgent() {
             settingsEnabled={["device", "language", "keybinding"]}
             onTranscript={handleTranscript}
             onRecordingStateChanged={handleRecordingState}
+            onAudioEvent={handleAudioEventWrapper}
           />
 
           <div className="flex items-center gap-3">
