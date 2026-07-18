@@ -16,6 +16,7 @@ import {
   handleFinal,
   handleInterim,
   resetConversation,
+  TURN_MODE_DEBOUNCE_MS,
   useVoiceAgentStore,
 } from "./agent";
 import { buildVoiceConfig } from "./config";
@@ -40,7 +41,7 @@ export function VoiceAgent() {
     isSpeculating,
     heldResponse,
     error,
-    responseDebounceMs,
+    turnMode,
     presetKey,
     detectedMode,
     showProvisionalDetails,
@@ -70,7 +71,7 @@ export function VoiceAgent() {
 
   const finalBufferRef = useRef<string[]>([]);
   // Single debounce timer: any transcript event (interim or final) resets this.
-  // Turn ends when no transcript has arrived for responseDebounceMs.
+  // In deliberate mode this is never set — turn ends on mic-off or longSilenceDetected.
   const transcriptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const doFlush = useCallback(() => {
@@ -88,12 +89,15 @@ export function VoiceAgent() {
         return;
       }
 
-      // Every transcript event — interim or final — resets the inactivity timer.
-      // As long as events keep arriving, the user is still speaking.
+      // Every transcript event resets the inactivity timer (clearing any stale one).
+      // In deliberate mode there is no timer — turn ends only on mic-off or longSilenceDetected.
       if (transcriptTimerRef.current) {
         clearTimeout(transcriptTimerRef.current);
+        transcriptTimerRef.current = null;
       }
-      transcriptTimerRef.current = setTimeout(doFlush, responseDebounceMs);
+      if (turnMode !== "deliberate") {
+        transcriptTimerRef.current = setTimeout(doFlush, TURN_MODE_DEBOUNCE_MS[turnMode]);
+      }
 
       if (!data.isFinal) {
         handleInterim(data.text);
@@ -102,7 +106,7 @@ export function VoiceAgent() {
         handleInterim(data.text);
       }
     },
-    [doFlush, responseDebounceMs],
+    [doFlush, turnMode],
   );
 
   const handleRecordingState = useCallback(
@@ -120,12 +124,19 @@ export function VoiceAgent() {
     [doFlush],
   );
 
-  const handleAudioEventWrapper = useCallback((e: CustomEvent<AudioEventEventDetail>) => {
-    const eventType = e.detail?.data?.event;
-    if (eventType) {
-      handleAudioEvent(eventType);
-    }
-  }, []);
+  const handleAudioEventWrapper = useCallback(
+    (e: CustomEvent<AudioEventEventDetail>) => {
+      const eventType = e.detail?.data?.event;
+      if (eventType) {
+        handleAudioEvent(eventType);
+        // In deliberate mode, longSilenceDetected is the automatic turn-end signal
+        if (turnMode === "deliberate" && eventType === "longSilenceDetected") {
+          doFlush();
+        }
+      }
+    },
+    [doFlush, turnMode],
+  );
 
   const showGhost = isRecording && Boolean(interimText);
   // Response is pre-computed and waiting; spinner gone, ghost dims to signal readiness

@@ -24,12 +24,23 @@ export const VOICE_AGENT = {
 const PROMPT_KEY = "voiceAgent.systemPrompt";
 const PRESET_KEY = "voiceAgent.presetKey";
 const AGENT_ID_KEY = "voiceAgent.agentId";
-const DEBOUNCE_KEY = "voiceAgent.responseDebounceMs";
+const TURN_MODE_KEY = "voiceAgent.turnMode";
 const PROVISIONAL_KEY = "voiceAgent.showProvisionalDetails";
 const MIN_WORDS_KEY = "voiceAgent.minSpeculativeWords";
 
-export const DEFAULT_DEBOUNCE_MS = 1500;
 export const DEFAULT_MIN_SPECULATIVE_WORDS = 1;
+
+export type TurnMode = "instant" | "standard" | "deliberate";
+const DEFAULT_TURN_MODE: TurnMode = "standard";
+
+// Silence window after which a turn ends. Deliberate has no timer — turn ends only
+// on mic-off or longSilenceDetected. The value here is used for the post-response
+// continuation window only (2× this) to catch late-arriving STT finals.
+export const TURN_MODE_DEBOUNCE_MS: Record<TurnMode, number> = {
+  instant: 500,
+  standard: 1500,
+  deliberate: 1500,
+};
 
 // ─── Debug log ───────────────────────────────────────────────────────────────
 
@@ -109,7 +120,7 @@ interface VoiceAgentState {
   contextId: string | null;
   prompt: string;
   presetKey: string;
-  responseDebounceMs: number;
+  turnMode: TurnMode;
   minSpeculativeWords: number;
   detectedMode: string | null;
   showProvisionalDetails: boolean;
@@ -134,7 +145,7 @@ let speculativeHistoryStartIdx = 0;
 let contextualSeq = 0;
 
 // Timestamp of the last successful contextual response. Used to detect post-response
-// continuations: new speech that arrives within responseDebounceMs*2 after a response
+// continuations: new speech that arrives within TURN_MODE_DEBOUNCE_MS[turnMode]*2 after a response
 // is treated as part of the same turn rather than a new one.
 let lastContextualResponseAt: number | null = null;
 
@@ -150,7 +161,7 @@ let state: VoiceAgentState = {
   contextId: null,
   prompt: defaultPreset.prompt,
   presetKey: DEFAULT_PRESET_KEY,
-  responseDebounceMs: DEFAULT_DEBOUNCE_MS,
+  turnMode: DEFAULT_TURN_MODE,
   minSpeculativeWords: DEFAULT_MIN_SPECULATIVE_WORDS,
   detectedMode: null,
   showProvisionalDetails: false,
@@ -204,7 +215,7 @@ function loadStateFromStore() {
     ...state,
     prompt: store.get<string>(PROMPT_KEY, "") || presetDefault,
     presetKey: storedPresetKey,
-    responseDebounceMs: store.get<number>(DEBOUNCE_KEY, DEFAULT_DEBOUNCE_MS) || DEFAULT_DEBOUNCE_MS,
+    turnMode: (store.get<string>(TURN_MODE_KEY, "") as TurnMode) || DEFAULT_TURN_MODE,
     minSpeculativeWords:
       store.get<number>(MIN_WORDS_KEY, DEFAULT_MIN_SPECULATIVE_WORDS) ||
       DEFAULT_MIN_SPECULATIVE_WORDS,
@@ -218,9 +229,9 @@ function loadStateFromStore() {
   };
 }
 
-export function setResponseDebounceMs(ms: number) {
-  store.set(DEBOUNCE_KEY, ms);
-  set({ responseDebounceMs: ms });
+export function setTurnMode(mode: TurnMode) {
+  store.set(TURN_MODE_KEY, mode);
+  set({ turnMode: mode });
 }
 
 export function setShowProvisionalDetails(val: boolean) {
@@ -397,7 +408,7 @@ export async function handleFinal(text: string) {
   const timeSinceResponse =
     lastContextualResponseAt != null ? Date.now() - lastContextualResponseAt : Infinity;
   const isContinuation =
-    state.status === "ready" && timeSinceResponse < state.responseDebounceMs * 2;
+    state.status === "ready" && timeSinceResponse < TURN_MODE_DEBOUNCE_MS[state.turnMode] * 2;
 
   // Merge into the current turn when: (a) the contextual call is still in flight
   // (thinking), or (b) we're within the post-response window (ready but recent).

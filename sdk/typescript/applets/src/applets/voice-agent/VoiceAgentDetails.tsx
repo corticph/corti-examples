@@ -6,8 +6,9 @@ import {
   clearDebugLog,
   savePrompt,
   setMinSpeculativeWords,
-  setResponseDebounceMs,
   setShowProvisionalDetails,
+  setTurnMode,
+  type TurnMode,
   useDebugLogStore,
   useVoiceAgentStore,
   VOICE_AGENT,
@@ -15,14 +16,8 @@ import {
 import { ORCHESTRATOR_KEY, SPECIALIST_KEYS, VOICE_PRESETS } from "./model";
 
 export function VoiceAgentDetails() {
-  const {
-    prompt,
-    presetKey,
-    status,
-    responseDebounceMs,
-    minSpeculativeWords,
-    showProvisionalDetails,
-  } = useVoiceAgentStore();
+  const { prompt, presetKey, status, turnMode, minSpeculativeWords, showProvisionalDetails } =
+    useVoiceAgentStore();
   const debugLog = useDebugLogStore();
   const [draft, setDraft] = useState(prompt);
   const [debugOpen, setDebugOpen] = useState(false);
@@ -93,25 +88,25 @@ export function VoiceAgentDetails() {
           </div>
         </div>
 
-        {/* Response delay slider — bottom left */}
+        {/* Turn mode — bottom left */}
         <div className="flex flex-col gap-2 border-r border-border p-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-semibold uppercase tracking-wide text-muted-foreground">
-              Response delay
-            </p>
-            <span className="tabular-nums text-muted-foreground">
-              {(responseDebounceMs / 1000).toFixed(1)} s
-            </span>
+          <p className="font-semibold uppercase tracking-wide text-muted-foreground">Turn mode</p>
+          <div className="flex gap-1">
+            {(["instant", "standard", "deliberate"] as TurnMode[]).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setTurnMode(mode)}
+                className={`flex-1 rounded px-1 py-1 text-[11px] font-medium capitalize transition-colors ${
+                  turnMode === mode
+                    ? "bg-corti-lime/20 text-foreground ring-1 ring-inset ring-corti-lime/60"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
           </div>
-          <input
-            type="range"
-            min={500}
-            max={3000}
-            step={100}
-            value={responseDebounceMs}
-            onChange={(e) => setResponseDebounceMs(Number(e.target.value))}
-            className="w-full accent-corti-lime"
-          />
         </div>
 
         {/* Min words slider — bottom right */}
