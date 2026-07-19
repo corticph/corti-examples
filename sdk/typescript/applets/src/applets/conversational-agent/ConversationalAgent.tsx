@@ -1,43 +1,62 @@
-import type { TranscriptEventDetail } from "@corti/dictation-web";
-import { Brain, Loader2, RotateCcw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import type {
+  AudioEventEventDetail,
+  RecordingStateChangedEventDetail,
+  TranscriptEventDetail,
+} from "@corti/dictation-web";
+import { Loader2, Mic, RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Switch } from "@/components/ui/switch";
 import { CortiDictationComponent } from "../_shared/cortiDictationReact";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import {
-  clearConversationError,
-  configureConversation,
-  handleWakeCommand,
-  logFinalTranscript,
-  logWakeCommand,
+  configureConversationalAgent,
+  handleAudioEvent,
+  handleFinal,
+  handleInterim,
   resetConversation,
-  sendComposer,
-  setAutoSend,
-  setComposer,
-  useConversationStore,
+  TURN_MODE_DEBOUNCE_MS,
+  useConversationalAgentStore,
 } from "./agent";
-import { buildConversationalConfig } from "./config";
-import { WAKE_COMMAND_ID } from "./model";
+import { buildVoiceConfig } from "./config";
+import { ORCHESTRATOR_KEY, VOICE_PRESETS } from "./model";
 
 const LANGUAGE = "en";
 
 const STATUS_LABEL: Record<string, string> = {
   preparing: "Preparing...",
   ready: "Ready",
-  running: "Responding...",
-  resetting: "Resetting...",
+  thinking: "Thinking...",
+  responding: "Responding...",
+  error: "Error",
 };
 
 export function ConversationalAgent() {
   const { authConfig, clientId, tenantName, sdkEnvironment } = useCortiAccessToken();
-  const { status, error, messages, composer, autoSend, contextId } = useConversationStore();
+  const {
+    status,
+    messages,
+    interimText,
+    isSpeculating,
+    heldResponse,
+    error,
+    turnMode,
+    presetKey,
+    detectedMode,
+    showProvisionalDetails,
+  } = useConversationalAgentStore();
+
+  // In orchestrator mode: show the specialist the LLM detected; else show the selected preset.
+  const activeModeLabel =
+    presetKey === ORCHESTRATOR_KEY
+      ? (VOICE_PRESETS[detectedMode ?? ""]?.label ?? null)
+      : (VOICE_PRESETS[presetKey]?.label ?? null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => {
-    configureConversation(authConfig, sdkEnvironment, clientId, tenantName);
+    configureConversationalAgent(authConfig, sdkEnvironment, clientId, tenantName);
   }, [authConfig, sdkEnvironment, clientId, tenantName]);
 
   useEffect(() => {
@@ -46,185 +65,217 @@ export function ConversationalAgent() {
       return;
     }
     viewport.scrollTop = viewport.scrollHeight;
-  }, [messages.length, status]);
+  }, [messages.length, interimText]);
 
-  const dictationConfig = useMemo(() => buildConversationalConfig(LANGUAGE), []);
+  const dictationConfig = useMemo(() => buildVoiceConfig(LANGUAGE), []);
 
-  const handleTranscript = useCallback((e: CustomEvent<TranscriptEventDetail>) => {
-    const data = e.detail?.data;
-    if (!data || Array.isArray(data) || !data.isFinal) {
-      return;
+  const finalBufferRef = useRef<string[]>([]);
+  // Single debounce timer: any transcript event (interim or final) resets this.
+  // In deliberate mode this is never set — turn ends on mic-off or longSilenceDetected.
+  const transcriptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const doFlush = useCallback(() => {
+    const text = finalBufferRef.current.join(" ").trim();
+    finalBufferRef.current = [];
+    if (text) {
+      void handleFinal(text);
     }
-    logFinalTranscript(data.text);
   }, []);
 
-  const onCommand = useCallback(async (e: CustomEvent) => {
-    const data = e.detail?.data;
-    if (!data || data.id !== WAKE_COMMAND_ID) {
-      return;
-    }
-    logWakeCommand(data);
-    await handleWakeCommand(data);
-  }, []);
+  const handleTranscript = useCallback(
+    (e: CustomEvent<TranscriptEventDetail>) => {
+      const data = e.detail?.data;
+      if (!data || Array.isArray(data)) {
+        return;
+      }
 
-  const busy = status === "running" || status === "resetting";
+      // Every transcript event resets the inactivity timer (clearing any stale one).
+      // In deliberate mode there is no timer — turn ends only on mic-off or longSilenceDetected.
+      if (transcriptTimerRef.current) {
+        clearTimeout(transcriptTimerRef.current);
+        transcriptTimerRef.current = null;
+      }
+      if (turnMode !== "deliberate") {
+        transcriptTimerRef.current = setTimeout(doFlush, TURN_MODE_DEBOUNCE_MS[turnMode]);
+      }
+
+      if (!data.isFinal) {
+        handleInterim(data.text);
+      } else {
+        finalBufferRef.current.push(data.text);
+        handleInterim(data.text);
+      }
+    },
+    [doFlush, turnMode],
+  );
+
+  const handleRecordingState = useCallback(
+    (e: CustomEvent<RecordingStateChangedEventDetail>) => {
+      const recording = e.detail?.state === "recording";
+      setIsRecording(recording);
+      if (!recording) {
+        if (transcriptTimerRef.current) {
+          clearTimeout(transcriptTimerRef.current);
+          transcriptTimerRef.current = null;
+        }
+        doFlush();
+      }
+    },
+    [doFlush],
+  );
+
+  const handleAudioEventWrapper = useCallback(
+    (e: CustomEvent<AudioEventEventDetail>) => {
+      const eventType = e.detail?.data?.event;
+      if (eventType) {
+        handleAudioEvent(eventType);
+        // In deliberate mode, longSilenceDetected is the automatic turn-end signal
+        if (turnMode === "deliberate" && eventType === "longSilenceDetected") {
+          doFlush();
+        }
+      }
+    },
+    [doFlush, turnMode],
+  );
+
+  const showGhost = isRecording && Boolean(interimText);
+  // Response is pre-computed and waiting; spinner gone, ghost dims to signal readiness
+  const ghostReady = showGhost && Boolean(heldResponse) && !isSpeculating;
+  const showThinkingInline = status === "thinking";
+  const busyStatus = status === "thinking" || status === "preparing";
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Conversational agent</h2>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            A chat-style clinical agent. Type normally, or keep the mic live and speak a
-            single-utterance wake command like "okay Corti summarize the plan." STT results that are
-            not preceded by the wake command are ignored.
-          </p>
-        </div>
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">Conversational agent</h2>
+        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+          Speak freely, and the agent will orchestrate the request and respond accordingly based on
+          the supported specialists listed below. Responses are pre-fetched during speech and will
+          finalize when you finish talking.
+        </p>
       </div>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="min-h-[28rem] rounded-xl border border-border bg-muted/45">
-          <ScrollArea className="h-[28rem]" viewportRef={viewportRef}>
-            <div className="flex min-h-full flex-col gap-3 p-4">
-              {messages.length === 0 ? (
-                <div className="flex min-h-[24rem] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card/50 px-6 text-center">
-                  <p className="text-sm font-medium text-foreground">No messages yet</p>
-                  <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                    Dictate a wake command or type a message below. Threaded memory is kept until
-                    you reset the conversation.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {messages.map((message) => (
+
+      <div className="min-h-[28rem] rounded-xl border border-border bg-muted/45">
+        {activeModeLabel && (
+          <div className="flex items-center gap-2 border-b border-border px-4 py-2">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Mode</span>
+            <span className="rounded-full bg-corti-lime/15 px-2 py-0.5 text-xs font-medium text-foreground ring-1 ring-inset ring-corti-lime/50">
+              {activeModeLabel}
+            </span>
+          </div>
+        )}
+        <ScrollArea className="h-[28rem]" viewportRef={viewportRef}>
+          <div className="flex min-h-full flex-col gap-3 p-4">
+            {messages.length === 0 && !showGhost && !showThinkingInline ? (
+              <div className="flex min-h-[24rem] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card/50 px-6 text-center">
+                <Mic className="mb-3 h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-medium text-foreground">Start speaking</p>
+                <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                  Hold the mic button and speak — the agent responds as you finish.
+                </p>
+              </div>
+            ) : (
+              <>
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
                     <div
-                      key={message.id}
-                      className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm transition-opacity ${
+                        message.role === "user"
+                          ? "bg-corti-lime/15 text-foreground ring-1 ring-inset ring-corti-lime/40"
+                          : "bg-card text-foreground ring-1 ring-inset ring-border"
+                      } ${message.pending ? "opacity-40" : "opacity-100"}`}
                     >
-                      <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
-                          message.role === "user"
-                            ? "bg-corti-lime/15 text-foreground ring-1 ring-inset ring-corti-lime/40"
-                            : "bg-card text-foreground ring-1 ring-inset ring-border"
-                        }`}
+                      <div className="mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+                        <span>{message.role === "user" ? "You" : "Agent"}</span>
+                      </div>
+                      <p
+                        className={`whitespace-pre-wrap leading-relaxed ${message.pending ? "italic" : ""}`}
                       >
-                        <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-                          <span>{message.role === "user" ? "User" : "Assistant"}</span>
-                          <span>{message.source === "voice" ? "Voice" : "Typed"}</span>
-                        </div>
-                        <p className="whitespace-pre-wrap leading-relaxed">{message.text}</p>
+                        {message.pending && !showProvisionalDetails ? "Responding…" : message.text}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Live interim ghost — shows while user is speaking */}
+                {showGhost && (
+                  <div className="flex justify-end">
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ring-1 ring-inset transition-opacity ${
+                        ghostReady
+                          ? "bg-muted/30 ring-corti-lime/20 opacity-50"
+                          : "bg-muted/60 ring-border/50 opacity-75"
+                      }`}
+                    >
+                      <div className="mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground/60">
+                        <span>You</span>
+                        {isSpeculating && <Loader2 className="h-3 w-3 animate-spin" />}
+                      </div>
+                      <p className="whitespace-pre-wrap italic leading-relaxed text-muted-foreground">
+                        {interimText}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Thinking bubble — shown when no held response and contextual is in flight */}
+                {showThinkingInline && (
+                  <div className="flex justify-start">
+                    <div className="rounded-2xl bg-card px-4 py-3 text-sm ring-1 ring-inset ring-border">
+                      <div className="mb-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                        Agent
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Thinking...</span>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
 
-                  {status === "running" && (
-                    <div className="flex justify-start">
-                      <div className="rounded-2xl bg-card px-4 py-3 text-sm ring-1 ring-inset ring-border">
-                        <div className="mb-1 text-[11px] uppercase tracking-wide text-muted-foreground">
-                          Assistant
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Thinking...</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-
-        <div className="flex flex-col items-stretch gap-3 lg:w-[8.5rem]">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <CortiDictationComponent
             authConfig={authConfig}
             dictationConfig={dictationConfig}
             settingsEnabled={["device", "language", "keybinding"]}
             onTranscript={handleTranscript}
-            onCommand={onCommand}
+            onRecordingStateChanged={handleRecordingState}
+            onAudioEvent={handleAudioEventWrapper}
           />
-          <div className="rounded-lg border-border bg-card p-3 text-xs text-muted-foreground">
-            <p className="font-semibold tracking-wide text-foreground">Wake phrases</p>
-            <p className="mt-2">"hey Corti ..."</p>
-            <p>"ok Corti ..."</p>
-          </div>
-          <div className="rounded-lg border-border bg-card p-3 text-xs text-muted-foreground"></div>
-          <Badge variant="outline" className="gap-1.5 self-start">
-            <Brain className="h-4 w-4" />
-            {STATUS_LABEL[status] ?? "Idle"}
-          </Badge>
-        </div>
-      </div>
 
-      <div className="rounded-xl border border-border bg-card p-4">
-        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3 text-sm text-foreground">
-            <Switch
-              checked={autoSend}
-              onCheckedChange={(checked) => setAutoSend(Boolean(checked))}
-            />
-            <span>Auto-send wake-command intents instead of landing them in the composer</span>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {contextId ? "Thread active" : "New thread on next send"}
-          </div>
-        </div>
-
-        <textarea
-          value={composer}
-          onChange={(e) => {
-            clearConversationError();
-            setComposer(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void sendComposer();
-            }
-          }}
-          rows={4}
-          spellCheck={false}
-          placeholder="Type a clinical question, or dictate a wake-command to drop text here for review..."
-          className="w-full resize-y rounded-lg border border-border bg-background p-3 text-sm text-foreground outline-none focus:border-corti-lime"
-        />
-
-        <div className="mt-3 flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            Press Enter to send. Use Shift+Enter for a new line.
-          </p>
-          <Button onClick={() => void sendComposer()} disabled={busy}>
-            {status === "running" ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Sending...
-              </>
-            ) : (
-              "Send"
-            )}
-          </Button>
-        </div>
-
-        <div className="mt-3 flex items-start justify-between gap-6">
-          <div className="text-left text-xs text-muted-foreground"></div>
-
-          <div className="flex flex-col items-end gap-2 text-right">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="gap-1.5">
+              {busyStatus && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {STATUS_LABEL[status] ?? "Idle"}
+            </Badge>
             <Button
               size="sm"
               variant="outline"
               onClick={() => void resetConversation()}
-              disabled={status === "resetting"}
+              disabled={busyStatus}
             >
-              <RotateCcw className="h-4 w-4" /> Reset thread
+              <RotateCcw className="h-4 w-4" /> Reset
             </Button>
-            <p className="text-xs text-muted-foreground">
-              {messages.length} messages in current context.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Reset clears agent context and local thread state.
-            </p>
           </div>
         </div>
 
-        {error && <p className="mt-3 text-sm text-variant-error-foreground">{error}</p>}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Mic control and configuration</span>
+          <span>
+            {messages.length} {messages.length === 1 ? "message" : "messages"}
+          </span>
+        </div>
+
+        {error && <p className="text-sm text-variant-error-foreground">{error}</p>}
       </div>
     </div>
   );

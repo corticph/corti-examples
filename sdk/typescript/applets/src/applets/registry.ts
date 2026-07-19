@@ -51,8 +51,8 @@ import { OnDemandAgentDetails } from "./on-demand-agent/OnDemandAgentDetails";
 import { SecondPassAgent } from "./second-pass-agent/SecondPassAgent";
 import { ReplacementsDetails } from "./text-replacements/ReplacementsDetails";
 import { TextReplacements } from "./text-replacements/TextReplacements";
-import { VoiceAgent } from "./voice-agent/VoiceAgent";
-import { VoiceAgentDetails } from "./voice-agent/VoiceAgentDetails";
+import { WakeCommandAgent } from "./wake-command-agent/WakeCommandAgent";
+import { WakeCommandAgentDetails } from "./wake-command-agent/WakeCommandAgentDetails";
 
 export type WorkflowArea = "dictation" | "ambient" | "agentic";
 
@@ -223,24 +223,24 @@ export const APPLETS: AppletDefinition[] = [
     Component: SecondPassAgent,
   },
   {
-    id: "conversational-agent",
-    title: "Conversational agent",
+    id: "wake-command-agent",
+    title: "Wake-command agent",
     description: "Wake-command gated chat UI with threaded agent memory",
     workflow: "agentic",
     icon: MessageCircle,
-    Component: ConversationalAgent,
+    Component: WakeCommandAgent,
     detailsTitle: "Details",
-    Details: ConversationalAgentDetails,
+    Details: WakeCommandAgentDetails,
   },
   {
-    id: "voice-agent",
-    title: "Voice agent",
+    id: "conversational-agent",
+    title: "Conversational agent",
     description: "Always-on voice chat with speculative prefetch for instant responses",
     workflow: "agentic",
     icon: Mic,
-    Component: VoiceAgent,
+    Component: ConversationalAgent,
     detailsTitle: "Details",
-    Details: VoiceAgentDetails,
+    Details: ConversationalAgentDetails,
   },
 ];
 

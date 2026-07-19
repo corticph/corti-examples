@@ -1,4 +1,4 @@
-import type { Corti, CortiAuth } from "@corti/sdk";
+import type { CortiAuth } from "@corti/sdk";
 import { CortiClient } from "@corti/sdk";
 import { useSyncExternalStore } from "react";
 import {
@@ -10,48 +10,121 @@ import {
   type AgentSpec,
   describeAgentError,
   ensureAgent,
+  sendAgentMessage,
   sendAgentMessageWithContext,
 } from "../_shared/cortiAgent";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
-import {
-  appendDebugEntry,
-  type ConversationMessage,
-  type ConversationSource,
-  clearConversationState,
-  type DebugEntry,
-  extractWakeIntent,
-} from "./model";
+import { DEFAULT_PRESET_KEY, VOICE_PRESETS, type VoiceMessage, type VoiceStatus } from "./model";
 
 export const CONVERSATIONAL_AGENT = {
-  name: "Conversational Clinical Agent",
-  description:
-    "Conversational clinical assistant with wake-command gated voice input and threaded memory.",
+  name: "Conversational Agent",
+  description: "Real-time conversational agent with speculative prefetch.",
 };
 
-export const DEFAULT_PROMPT = `You are a real-time conversational clinical agent.
-Provide concise, clinically appropriate responses for a healthcare professional using the app.
-Maintain conversational memory within the current thread so follow-up questions stay grounded in prior turns.
-Do not claim actions you did not perform. If information is missing or uncertain, say so plainly.
-Respond in clear professional language. Prefer short paragraphs or brief lists when they improve readability.
-Do not add boilerplate disclaimers unless the user asks for medical advice that requires caution.`;
-
 const PROMPT_KEY = "conversationalAgent.systemPrompt";
+const PRESET_KEY = "conversationalAgent.presetKey";
 const AGENT_ID_KEY = "conversationalAgent.agentId";
-const AUTO_SEND_KEY = "conversationalAgent.autoSend";
-const CONTEXT_ID_KEY = "conversationalAgent.contextId";
-const MESSAGES_KEY = "conversationalAgent.messages";
+const TURN_MODE_KEY = "conversationalAgent.turnMode";
+const PROVISIONAL_KEY = "conversationalAgent.showProvisionalDetails";
+const MIN_WORDS_KEY = "conversationalAgent.minSpeculativeWords";
 
-export type ConversationStatus = "idle" | "preparing" | "ready" | "running" | "resetting" | "error";
+export const DEFAULT_MIN_SPECULATIVE_WORDS = 1;
 
-interface ConversationState {
-  prompt: string;
-  status: ConversationStatus;
-  error?: string;
-  messages: ConversationMessage[];
-  composer: string;
-  autoSend: boolean;
-  debugLog: DebugEntry[];
+export type TurnMode = "instant" | "standard" | "deliberate";
+const DEFAULT_TURN_MODE: TurnMode = "standard";
+
+// Silence window after which a turn ends. Deliberate has no timer — turn ends only
+// on mic-off or longSilenceDetected. The value here is used for the post-response
+// continuation window only (2× this) to catch late-arriving STT finals.
+export const TURN_MODE_DEBOUNCE_MS: Record<TurnMode, number> = {
+  instant: 500,
+  standard: 1500,
+  deliberate: 1500,
+};
+
+// ─── Debug log ───────────────────────────────────────────────────────────────
+
+export type DebugLogEventType =
+  | "interim"
+  | "speculative_fired"
+  | "speculative_response"
+  | "speculative_discarded"
+  | "final_flushed"
+  | "turn_merged"
+  | "contextual_fired"
+  | "contextual_response"
+  | "mode_detected"
+  | "audio_event";
+
+export interface DebugLogEntry {
+  id: string;
+  tMs: number;
+  event: DebugLogEventType;
+  text: string;
+  latencyMs?: number;
+}
+
+// Separate store so frequent log updates don't re-render the chat UI
+let debugLog: DebugLogEntry[] = [];
+let logEpochMs: number | null = null;
+const debugLogListeners = new Set<() => void>();
+const emitLog = () => {
+  for (const l of debugLogListeners) {
+    l();
+  }
+};
+
+function nowMs(): number {
+  if (!logEpochMs) {
+    logEpochMs = Date.now();
+  }
+  return Date.now() - logEpochMs;
+}
+
+function snippet(text: string, maxLen = 70): string {
+  const flat = text.replace(/\n/g, " ");
+  return flat.length > maxLen ? `${flat.slice(0, maxLen)}…` : flat;
+}
+
+function addLog(entry: Omit<DebugLogEntry, "id" | "tMs">) {
+  debugLog = [...debugLog, { id: crypto.randomUUID(), tMs: nowMs(), ...entry }];
+  emitLog();
+}
+
+export function useDebugLogStore(): DebugLogEntry[] {
+  return useSyncExternalStore(
+    (listener) => {
+      debugLogListeners.add(listener);
+      return () => debugLogListeners.delete(listener);
+    },
+    () => debugLog,
+    () => debugLog,
+  );
+}
+
+export function clearDebugLog() {
+  logEpochMs = null;
+  debugLog = [];
+  emitLog();
+}
+
+// ─── Main agent state ─────────────────────────────────────────────────────────
+
+interface VoiceAgentState {
+  status: VoiceStatus;
+  messages: VoiceMessage[];
+  interimText: string;
+  heldResponse: string | null;
+  isSpeculating: boolean;
+  pendingAgentMsgId: string | null;
   contextId: string | null;
+  prompt: string;
+  presetKey: string;
+  turnMode: TurnMode;
+  minSpeculativeWords: number;
+  detectedMode: string | null;
+  showProvisionalDetails: boolean;
+  error?: string;
 }
 
 let client: CortiClient | null = null;
@@ -61,14 +134,37 @@ let store: ConfigStore = createLocalConfigStore(namespace);
 let agentId: string | null = null;
 let preparedFor: string | null = null;
 
-let state: ConversationState = {
-  prompt: DEFAULT_PROMPT,
+let speculativeSeq = 0;
+let speculativeTimer: ReturnType<typeof setTimeout> | null = null;
+// Index into state.messages from which history is included in speculative calls.
+// Reset when orchestrator detects a new mode, so stale context doesn't bleed through.
+let speculativeHistoryStartIdx = 0;
+
+// Incremented each time sendContextual starts. A call that resolves with a stale seq
+// was superseded by a turn-merge and must not commit its result.
+let contextualSeq = 0;
+
+// Timestamp of the last successful contextual response. Used to detect post-response
+// continuations: new speech that arrives within TURN_MODE_DEBOUNCE_MS[turnMode]*2 after a response
+// is treated as part of the same turn rather than a new one.
+let lastContextualResponseAt: number | null = null;
+
+const defaultPreset = VOICE_PRESETS[DEFAULT_PRESET_KEY];
+
+let state: VoiceAgentState = {
   status: "idle",
   messages: [],
-  composer: "",
-  autoSend: true,
-  debugLog: [],
+  interimText: "",
+  heldResponse: null,
+  isSpeculating: false,
+  pendingAgentMsgId: null,
   contextId: null,
+  prompt: defaultPreset.prompt,
+  presetKey: DEFAULT_PRESET_KEY,
+  turnMode: DEFAULT_TURN_MODE,
+  minSpeculativeWords: DEFAULT_MIN_SPECULATIVE_WORDS,
+  detectedMode: null,
+  showProvisionalDetails: false,
 };
 
 const listeners = new Set<() => void>();
@@ -81,7 +177,7 @@ const emit = () => {
     listener();
   }
 };
-const set = (patch: Partial<ConversationState>) => {
+const set = (patch: Partial<VoiceAgentState>) => {
   state = { ...state, ...patch };
   emit();
 };
@@ -91,54 +187,61 @@ const spec = (): AgentSpec => ({
   systemPrompt: state.prompt,
 });
 
-function persistConversationData() {
-  store.set(PROMPT_KEY, state.prompt);
-  store.set(AUTO_SEND_KEY, state.autoSend);
-  store.set(CONTEXT_ID_KEY, state.contextId);
-  store.set(MESSAGES_KEY, state.messages);
+function extractMode(text: string): { mode: string | null; cleanText: string } {
+  const match = text.match(/^\[MODE:([^\]]+)\]\n?/);
+  if (!match) {
+    return { mode: null, cleanText: text };
+  }
+  return { mode: match[1], cleanText: text.slice(match[0].length).trim() };
+}
+
+// Builds a plain-text history preamble from the last `limit` turns starting at `startIdx`.
+function formatHistoryPreamble(messages: VoiceMessage[], limit: number, startIdx: number): string {
+  const relevant = messages
+    .slice(startIdx)
+    .filter((m) => !m.pending)
+    .slice(-(limit * 2));
+  if (!relevant.length) {
+    return "";
+  }
+  const lines = relevant.map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`);
+  return `[Conversation context]\n${lines.join("\n")}\n\n`;
 }
 
 function loadStateFromStore() {
+  const storedPresetKey = store.get<string>(PRESET_KEY, DEFAULT_PRESET_KEY) || DEFAULT_PRESET_KEY;
+  const presetDefault = VOICE_PRESETS[storedPresetKey]?.prompt ?? defaultPreset.prompt;
   state = {
     ...state,
-    prompt: store.get<string>(PROMPT_KEY, "") || DEFAULT_PROMPT,
-    autoSend: store.get<boolean>(AUTO_SEND_KEY, true),
-    contextId: store.get<string | null>(CONTEXT_ID_KEY, null),
-    messages: store.get<ConversationMessage[]>(MESSAGES_KEY, []),
-    composer: "",
-    debugLog: [],
+    prompt: store.get<string>(PROMPT_KEY, "") || presetDefault,
+    presetKey: storedPresetKey,
+    turnMode: (store.get<string>(TURN_MODE_KEY, "") as TurnMode) || DEFAULT_TURN_MODE,
+    minSpeculativeWords:
+      store.get<number>(MIN_WORDS_KEY, DEFAULT_MIN_SPECULATIVE_WORDS) ||
+      DEFAULT_MIN_SPECULATIVE_WORDS,
+    showProvisionalDetails: store.get<boolean>(PROVISIONAL_KEY, false) || false,
+    interimText: "",
+    heldResponse: null,
+    isSpeculating: false,
+    pendingAgentMsgId: null,
+    detectedMode: null,
     error: undefined,
   };
 }
 
-function appendMessage(role: "user" | "assistant", text: string, source: ConversationSource) {
-  state = {
-    ...state,
-    messages: [
-      ...state.messages,
-      {
-        id: crypto.randomUUID(),
-        role,
-        text,
-        source,
-        at: Date.now(),
-      },
-    ],
-  };
-  persistConversationData();
-  emit();
+export function setTurnMode(mode: TurnMode) {
+  store.set(TURN_MODE_KEY, mode);
+  set({ turnMode: mode });
 }
 
-function logDebug(entry: Omit<DebugEntry, "id" | "at">) {
-  state = {
-    ...state,
-    debugLog: appendDebugEntry(state.debugLog, entry),
-  };
-  emit();
+export function setShowProvisionalDetails(val: boolean) {
+  store.set(PROVISIONAL_KEY, val);
+  set({ showProvisionalDetails: val });
 }
 
-function isBusy(status: ConversationStatus) {
-  return status === "running" || status === "resetting";
+export function setMinSpeculativeWords(n: number) {
+  store.set(MIN_WORDS_KEY, n);
+  set({ minSpeculativeWords: n });
 }
 
 async function prepare() {
@@ -157,7 +260,7 @@ async function prepare() {
   }
 }
 
-export function configureConversation(
+export function configureConversationalAgent(
   authConfig: CortiAuth.AuthTokenDerivable,
   environment: CortiSdkEnvironment,
   clientId?: string,
@@ -200,145 +303,350 @@ export async function savePrompt(prompt: string) {
   }
 }
 
-export const resetPrompt = () => savePrompt(DEFAULT_PROMPT);
-
-export function setComposer(text: string) {
-  set({ composer: text, error: undefined });
-}
-
-export function setAutoSend(autoSend: boolean) {
-  state = { ...state, autoSend };
-  persistConversationData();
-  emit();
-}
-
-export function clearConversationError() {
-  if (!state.error) {
+export async function applyPreset(presetKey: string) {
+  const preset = VOICE_PRESETS[presetKey];
+  if (!preset) {
     return;
   }
-  set({ error: undefined });
+  store.set(PRESET_KEY, presetKey);
+  set({ presetKey });
+  await savePrompt(preset.prompt);
 }
 
-export function logFinalTranscript(text: string) {
-  const normalized = text.trim();
-  if (!normalized) {
+function cancelSpeculative() {
+  if (speculativeTimer) {
+    clearTimeout(speculativeTimer);
+    speculativeTimer = null;
+  }
+  speculativeSeq++;
+}
+
+// Stateless prefetch with injected conversation history — no contextId so the real thread
+// is never touched. Fires on every interim (debounced 200ms) so the latest text is used.
+async function fireSpeculative(text: string) {
+  if (!client || !agentId) {
     return;
   }
-  logDebug({ type: "transcript", text: normalized });
-}
+  const seq = ++speculativeSeq;
+  const firedAt = nowMs();
 
-export function logWakeCommand(command: Corti.TranscribeCommandData) {
-  logDebug({
-    type: "command",
-    text: command.rawTranscriptText.trim(),
-    variables: command.variables,
-  });
-}
+  const preamble = formatHistoryPreamble(state.messages, 6, speculativeHistoryStartIdx);
+  const fullText = preamble
+    ? `${preamble}[User is still speaking — this may be incomplete]\n${text}`
+    : text;
 
-export function clearDebugLog() {
-  set({ debugLog: [] });
-}
-
-export async function sendText(text: string, source: ConversationSource): Promise<boolean> {
-  const normalized = text.trim();
-  if (!normalized) {
-    set({ error: "Nothing to send yet." });
-    return false;
-  }
-  if (!client) {
-    return false;
-  }
-  if (isBusy(state.status)) {
-    set({ error: "Wait for the current response before sending another turn." });
-    return false;
-  }
-
-  set({ status: "running", error: undefined, composer: "" });
-  appendMessage("user", normalized, source);
+  addLog({ event: "speculative_fired", text: snippet(text) });
+  set({ isSpeculating: true });
 
   try {
-    if (!agentId) {
-      agentId = await ensureAgent(client, spec());
-      store.set(AGENT_ID_KEY, agentId);
+    const result = await sendAgentMessage(client, agentId, fullText);
+    if (seq !== speculativeSeq) {
+      addLog({
+        event: "speculative_discarded",
+        text: snippet(result),
+        latencyMs: nowMs() - firedAt,
+      });
+      return;
+    }
+    const { cleanText } = extractMode(result);
+    addLog({
+      event: "speculative_response",
+      text: snippet(cleanText),
+      latencyMs: nowMs() - firedAt,
+    });
+    set({ heldResponse: cleanText, isSpeculating: false });
+  } catch {
+    if (seq === speculativeSeq) {
+      set({ isSpeculating: false });
+    }
+  }
+}
+
+// Fires on every interim — 200ms debounce collapses rapid bursts into one call.
+// Skips if text is shorter than the configured minimum word count.
+function scheduleSpeculative(text: string) {
+  if (text.trim().split(/\s+/).length < state.minSpeculativeWords) {
+    return;
+  }
+  if (speculativeTimer) {
+    clearTimeout(speculativeTimer);
+  }
+  speculativeTimer = setTimeout(() => {
+    speculativeTimer = null;
+    void fireSpeculative(text);
+  }, 200);
+}
+
+export function handleAudioEvent(eventType: string) {
+  addLog({ event: "audio_event", text: eventType });
+}
+
+export function handleInterim(text: string) {
+  const normalized = text.trim();
+  if (!normalized) {
+    return;
+  }
+  addLog({ event: "interim", text: snippet(normalized) });
+  set({ interimText: normalized, error: undefined });
+  scheduleSpeculative(normalized);
+}
+
+export async function handleFinal(text: string) {
+  if (state.status === "preparing") {
+    return;
+  }
+
+  const normalized = text.trim();
+  if (!normalized) {
+    set({ interimText: "" });
+    return;
+  }
+
+  // Post-response continuation window: new speech arriving shortly after a contextual
+  // response is still part of the same turn (STT segment gaps can be 100s of ms even
+  // during uninterrupted speech). Window = 2× responseDebounceMs.
+  const timeSinceResponse =
+    lastContextualResponseAt != null ? Date.now() - lastContextualResponseAt : Infinity;
+  const isContinuation =
+    state.status === "ready" && timeSinceResponse < TURN_MODE_DEBOUNCE_MS[state.turnMode] * 2;
+
+  // Merge into the current turn when: (a) the contextual call is still in flight
+  // (thinking), or (b) we're within the post-response window (ready but recent).
+  // Both cases: remove any stale trailing assistant message, extend the last user
+  // message with the new text, and restart sendContextual with the merged text.
+  if (state.status === "thinking" || isContinuation) {
+    cancelSpeculative();
+
+    const messages = [...state.messages];
+
+    // Invalidate any in-flight sendContextual so it doesn't commit on resolution
+    if (state.status === "thinking") {
+      contextualSeq++;
     }
 
-    let retriedWithoutContext = false;
-    // biome-ignore lint/suspicious/noImplicitAnyLet: typed by the awaited assignment below
-    let result;
+    // Post-response path: the last message is a (now stale) assistant response — remove it
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg?.role === "assistant" && !lastMsg.pending) {
+      messages.pop();
+    }
 
+    // Append to the last user message (always present at this point)
+    const lastUserIdx = messages.reduce((best, m, i) => (m.role === "user" ? i : best), -1);
+    const mergedText =
+      lastUserIdx >= 0 ? `${messages[lastUserIdx].text} ${normalized}` : normalized;
+    if (lastUserIdx >= 0) {
+      messages[lastUserIdx] = { ...messages[lastUserIdx], text: mergedText };
+    } else {
+      messages.push({ id: crypto.randomUUID(), role: "user", text: mergedText, at: Date.now() });
+    }
+
+    addLog({ event: "turn_merged", text: snippet(mergedText) });
+
+    state = {
+      ...state,
+      messages,
+      interimText: "",
+      heldResponse: null,
+      isSpeculating: false,
+      pendingAgentMsgId: null,
+      status: "thinking",
+      error: undefined,
+    };
+    emit();
+    await sendContextual(mergedText);
+    return;
+  }
+
+  addLog({ event: "final_flushed", text: snippet(normalized) });
+  cancelSpeculative();
+
+  const held = state.heldResponse;
+
+  if (held) {
+    const provisionalId = crypto.randomUUID();
+    state = {
+      ...state,
+      messages: [
+        ...state.messages,
+        { id: crypto.randomUUID(), role: "user", text: normalized, at: Date.now() },
+        { id: provisionalId, role: "assistant", text: held, at: Date.now(), pending: true },
+      ],
+      interimText: "",
+      heldResponse: null,
+      isSpeculating: false,
+      pendingAgentMsgId: provisionalId,
+      status: "responding",
+      error: undefined,
+    };
+    emit();
+    await replaceProvisional(normalized, provisionalId);
+  } else {
+    state = {
+      ...state,
+      messages: [
+        ...state.messages,
+        { id: crypto.randomUUID(), role: "user", text: normalized, at: Date.now() },
+      ],
+      interimText: "",
+      heldResponse: null,
+      isSpeculating: false,
+      pendingAgentMsgId: null,
+      status: "thinking",
+      error: undefined,
+    };
+    emit();
+    await sendContextual(normalized);
+  }
+}
+
+async function replaceProvisional(text: string, pendingId: string) {
+  if (!client || !agentId) {
+    state = {
+      ...state,
+      messages: state.messages.map((m) => (m.id === pendingId ? { ...m, pending: false } : m)),
+      pendingAgentMsgId: null,
+      status: "ready",
+    };
+    emit();
+    return;
+  }
+
+  const firedAt = nowMs();
+  addLog({ event: "contextual_fired", text: snippet(text) });
+
+  try {
+    let result: Awaited<ReturnType<typeof sendAgentMessageWithContext>> | undefined;
     try {
-      result = await sendAgentMessageWithContext(client, agentId, normalized, {
+      result = await sendAgentMessageWithContext(client, agentId, text, {
         contextId: state.contextId || undefined,
       });
     } catch (error) {
       if (/404|not.?found/i.test(String(error))) {
         agentId = await ensureAgent(client, spec());
         store.set(AGENT_ID_KEY, agentId);
-        retriedWithoutContext = Boolean(state.contextId);
-        result = await sendAgentMessageWithContext(client, agentId, normalized);
+        result = await sendAgentMessageWithContext(client, agentId, text);
       } else {
         throw error;
       }
     }
 
-    const responseText = result.text.trim();
-    if (!responseText) {
-      set({
-        status: "ready",
-        error: "Agent returned no text; the conversation was left unchanged.",
+    const { mode, cleanText } = extractMode(result.text.trim());
+    const responseText = cleanText || "(no response)";
+
+    addLog({
+      event: "contextual_response",
+      text: snippet(responseText),
+      latencyMs: nowMs() - firedAt,
+    });
+
+    // Mode changed — reset speculative history so prior context doesn't bleed across modes
+    if (mode && mode !== state.detectedMode) {
+      speculativeHistoryStartIdx = Math.max(0, state.messages.length - 2);
+      addLog({ event: "mode_detected", text: mode });
+    }
+
+    lastContextualResponseAt = Date.now();
+
+    state = {
+      ...state,
+      messages: state.messages.map((m) =>
+        m.id === pendingId ? { ...m, text: responseText, pending: false } : m,
+      ),
+      contextId: result.contextId ?? state.contextId,
+      detectedMode: mode ?? state.detectedMode,
+      pendingAgentMsgId: null,
+      status: "ready",
+    };
+    emit();
+  } catch (error) {
+    state = {
+      ...state,
+      messages: state.messages.map((m) => (m.id === pendingId ? { ...m, pending: false } : m)),
+      pendingAgentMsgId: null,
+      status: "error",
+      error: describeAgentError(error),
+    };
+    emit();
+  }
+}
+
+async function sendContextual(text: string) {
+  if (!client || !agentId) {
+    set({ status: "ready" });
+    return;
+  }
+
+  const mySeq = ++contextualSeq;
+  const firedAt = nowMs();
+  addLog({ event: "contextual_fired", text: snippet(text) });
+
+  try {
+    let result: Awaited<ReturnType<typeof sendAgentMessageWithContext>> | undefined;
+    try {
+      result = await sendAgentMessageWithContext(client, agentId, text, {
+        contextId: state.contextId || undefined,
       });
-      return true;
+    } catch (error) {
+      if (/404|not.?found/i.test(String(error))) {
+        agentId = await ensureAgent(client, spec());
+        store.set(AGENT_ID_KEY, agentId);
+        result = await sendAgentMessageWithContext(client, agentId, text);
+      } else {
+        throw error;
+      }
+    }
+
+    // A turn-merge happened while we were awaiting — a newer call owns the commit.
+    if (mySeq !== contextualSeq) {
+      return;
+    }
+
+    lastContextualResponseAt = Date.now();
+
+    const { mode, cleanText } = extractMode(result.text.trim());
+    const responseText = cleanText || "(no response)";
+
+    addLog({
+      event: "contextual_response",
+      text: snippet(responseText),
+      latencyMs: nowMs() - firedAt,
+    });
+
+    // Mode changed — reset speculative history start to the current user turn
+    if (mode && mode !== state.detectedMode) {
+      speculativeHistoryStartIdx = Math.max(0, state.messages.length - 1);
+      addLog({ event: "mode_detected", text: mode });
     }
 
     state = {
       ...state,
+      messages: [
+        ...state.messages,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          text: responseText,
+          at: Date.now(),
+        },
+      ],
       contextId: result.contextId ?? state.contextId,
-    };
-    appendMessage("assistant", responseText, "typed");
-    persistConversationData();
-    set({
+      detectedMode: mode ?? state.detectedMode,
       status: "ready",
-      contextId: result.contextId ?? state.contextId,
-      error: retriedWithoutContext
-        ? "The saved thread was unavailable on the server, so a new one was started for this turn."
-        : undefined,
-    });
-    return true;
+    };
+    emit();
   } catch (error) {
     set({ status: "error", error: describeAgentError(error) });
-    return false;
   }
-}
-
-export async function sendComposer(): Promise<boolean> {
-  return sendText(state.composer, "typed");
-}
-
-export async function handleWakeCommand(command: Corti.TranscribeCommandData): Promise<void> {
-  const intent = extractWakeIntent(command);
-  if (!intent) {
-    set({
-      error: 'Wake phrase recognized, but no intent was captured after "Corti".',
-    });
-    return;
-  }
-
-  if (state.autoSend) {
-    const sent = await sendText(intent, "voice");
-    if (!sent) {
-      setComposer(intent);
-    }
-    return;
-  }
-
-  setComposer(intent);
 }
 
 export async function resetConversation() {
+  cancelSpeculative();
+  speculativeHistoryStartIdx = 0;
+  lastContextualResponseAt = null;
   const currentAgentId = agentId;
   const currentContextId = state.contextId;
   let resetError: string | undefined;
-  set({ status: "resetting", error: undefined });
+  set({ status: "preparing", error: undefined });
 
   try {
     if (client && currentAgentId && currentContextId) {
@@ -350,17 +658,22 @@ export async function resetConversation() {
     }
   }
 
-  state = clearConversationState({
+  state = {
     ...state,
+    messages: [],
+    interimText: "",
+    heldResponse: null,
+    isSpeculating: false,
+    pendingAgentMsgId: null,
+    contextId: null,
+    detectedMode: null,
     status: client ? "ready" : "idle",
-    prompt: state.prompt,
-    autoSend: state.autoSend,
-  });
-  persistConversationData();
-  set({ status: client ? "ready" : "idle", error: resetError });
+    error: resetError,
+  };
+  emit();
 }
 
-export function useConversationStore(): ConversationState {
+export function useConversationalAgentStore(): VoiceAgentState {
   return useSyncExternalStore(
     subscribe,
     () => state,
