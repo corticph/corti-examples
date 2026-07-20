@@ -7,14 +7,14 @@ Minimal vanilla TypeScript example showing how to integrate the Corti Embedded A
 1. **Authenticates** with Corti using ROPC flow via backend
 2. **Configures** app-level UI and interaction options using the current Embedded API
 3. **Creates an interaction** with encounter details
-4. **Navigates** to the session view
-5. **Handles** events and errors from the embedded component
+4. **Navigates** to the session view and waits for `interaction.loaded`
+5. **Handles** lifecycle timeouts, retry, events, and errors from the embedded component
 
 ## What This Example Doesn't Cover
 
 - Customisation
 - Advanced event handling
-- Production error handling patterns
+- Production observability patterns
 - State management
 
 ## Quick Start
@@ -54,18 +54,19 @@ This starts both the TypeScript compiler in watch mode and the server. Opens on 
 
 - **[index.html](index.html)** - Main HTML page:
   - **Import map** - Maps `@corti/embedded-web` to the served bundle
-  - **Web component** - `<corti-embedded>` element with `baseUrl` and `visibility` attributes
-  - **Status display** - Shows loading/success/error states
+  - **Web component** - `<corti-embedded>` element with `baseUrl` and hidden initial `visibility`
+  - **Status display** - Shows loading/success/error states and a retry action
   - Server injects `baseUrl` by replacing `{{baseUrl}}` placeholder
 
 - **[public/app.ts](public/app.ts)** - Main application logic:
   - **Component access** - Gets `<corti-embedded>` element by ID and casts to API type
-  - **Readiness check** - Waits for the `embedded.ready` event before starting API calls
+  - **Readiness check** - Waits for the `embedded.ready` event with a timeout before starting API calls
   - **Authentication** - Calls `corti.auth()` with credentials from `/api/auth`
   - **App configuration** - Calls `corti.configureApp()` for app-level UI options
   - **Interaction options** - Calls `corti.setInteractionOptions()` before creating the interaction
   - **Interaction creation** - Creates encounter with `corti.createInteraction()`
-  - **Navigation** - Calls `corti.navigate()` to session view
+  - **Navigation** - Calls `corti.navigate()` to session view and waits for `interaction.loaded` before showing the embed
+  - **Lifecycle recovery** - Remounts the web component when the user retries after a timeout or error
   - **Error handling** - Listens for `error` events and displays status
   - Auto-compiles to `public/app.js` in watch mode during development
 
@@ -86,8 +87,9 @@ This starts both the TypeScript compiler in watch mode and the server. Opens on 
 ```typescript
 // Get embedded element reference
 const corti = document.getElementById("assistant") as CortiEmbeddedElement;
+corti.hide();
 
-const readyPromise = waitForReady(corti);
+const readyPromise = waitForEvent(corti, "embedded.ready", 20000);
 const authPromise = fetch("/api/auth").then((response) => response.json());
 
 const [, credentials] = await Promise.all([readyPromise, authPromise]);
@@ -113,7 +115,10 @@ await corti.setInteractionOptions({
   },
 });
 const interaction = await corti.createInteraction({ encounter: {...} });
-await corti.navigate(`/session/${interaction.id}`);
+await waitForInteractionLoaded(corti, () =>
+  corti.navigate({ path: `/session/${interaction.id}` }),
+);
+corti.show();
 
 // Handle errors
 corti.addEventListener("error", (event: any) => {

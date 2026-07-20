@@ -21,4 +21,5 @@ export type StatusType = "loading" | "success" | "error";
 export interface Status {
   message: string;
   type: StatusType;
+  canRetry?: boolean;
 }
