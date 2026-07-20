@@ -31,13 +31,13 @@ authorized-but-not-entitled client returns **403**, surfaced in the UI.
 - `agent.ts` — agent spec (prompt) + `useCopyEditStore` hook (ensure/cache/run).
 - `OnDemandAgent.tsx` — dictation editor + copy-edit command/button.
 - `OnDemandAgentDetails.tsx` — agent/prompt/lifecycle/gating info.
-- `../_shared/corti-agent.ts` — `ensureAgent` / `sendAgentMessage` helpers.
+- `../_shared/cortiAgent.ts` — `ensureAgent` / `sendAgentMessage` helpers.
 
 ## Dependencies to copy
 
 - npm: `@corti/sdk`, `@corti/dictation-web`, `@lit/react`
-- shared: `../_shared/corti-agent.ts`, `../_shared/config-store.ts`,
-  `../_shared/corti-dictation-react.tsx`, `../_shared/editor-adapter.ts`,
-  `../_shared/text-insertion.ts`, `../_shared/useActiveControl.ts`,
+- shared: `../_shared/cortiAgent.ts`, `../_shared/configStore.ts`,
+  `../_shared/cortiDictationReact.tsx`, `../_shared/editorAdapter.ts`,
+  `../_shared/textInsertion.ts`, `../_shared/useActiveControl.ts`,
   `../_shared/useCortiAccessToken.ts`
 - local: `agent.ts`, `config.ts`

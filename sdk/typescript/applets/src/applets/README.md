@@ -18,18 +18,18 @@ the Corti SDK (`@corti/sdk`) and/or the dictation/ambient web components
 The reusable STT-integration layer — editor-agnostic, the actual deliverable for
 customers building their own apps/hardware:
 
-- `editor-adapter.ts` — `EditorAdapter` over a `<textarea>` / contenteditable
+- `editorAdapter.ts` — `EditorAdapter` over a `<textarea>` / contenteditable
   (DOM-backed, framework-agnostic; the seam a native integration would reimplement).
-- `command-dispatch.ts` — maps `command` events (enum **or** wildcard variables)
+- `commandDispatch.ts` — maps `command` events (enum **or** wildcard variables)
   to real editor actions via the adapter.
-- `offset-map.ts` — keeps tracked text ranges valid across dictation, commands,
+- `offsetMap.ts` — keeps tracked text ranges valid across dictation, commands,
   and manual typing.
-- `text-insertion.ts` — casing/spacing boundary rules.
-- `diarized-transcript.ts` — time-ordering for `/streams`.
-- `audio-archive.ts` / `audio-archive-store.ts` / `useAudioArchive.ts` — local
+- `textInsertion.ts` — casing/spacing boundary rules.
+- `diarizedTranscript.ts` — time-ordering for `/streams`.
+- `audioArchive.ts` / `audioArchiveStore.ts` / `useAudioArchive.ts` — local
   audio-archive seam (types, IndexedDB store, active-session hook).
 - `useActiveControl.ts` — tracks the focused editable control as an adapter.
-- `corti-dictation-react.tsx` / `corti-ambient-react.tsx` — `@lit/react` wrappers.
+- `cortiDictationReact.tsx` / `cortiAmbientReact.tsx` — `@lit/react` wrappers.
 - `useCortiAccessToken.ts` — host-auth adapter (swap for your own token source).
 
 ## Portability

@@ -22,13 +22,12 @@ The `endpoint` query param is appended only when a specific endpoint is chosen;
 
 ## Key files
 
-- `languages-api.ts` — response types, `fetchLanguages()` (auth headers +
-  optional `?endpoint=` filter), and `toRows()` (flatten + sort for the table).
+- `languagesApi.ts` — response types, `fetchLanguages(client, endpoint?)` via
+  `CortiClient.languages.list`, and `toRows()` (flatten + sort for the table).
 - `Languages.tsx` — endpoint dropdown + fetch button + table / raw-JSON toggle.
 - `LanguagesDetails.tsx` — request shape, headers, and parameter reference.
 
 ## Dependencies to copy
 
 - shared: `../_shared/useCortiAccessToken.ts`
-- local: `languages-api.ts`
-- helper: `buildApiUrl` from `client/types/websocket.ts`
+- local: `languagesApi.ts`

@@ -31,7 +31,7 @@ a reusable `AppControlAdapter`.
 
 ## Native bridge
 
-`_shared/native-host-adapter.ts` documents (does not implement) the
+`_shared/nativeHostAdapter.ts` documents (does not implement) the
 `NativeHostAdapter` seam: the same resolve-and-run contract over an IPC bridge to a
 desktop/OS host, so the integration logic runs against web or native UI unchanged.
 
@@ -41,14 +41,14 @@ desktop/OS host, so the integration logic runs against web or native UI unchange
 - `MockApp.tsx` — the mock app UI; registers its controls into the registry.
 - `commands.ts` — `APP_COMMANDS` config + `handleAppCommand` dispatch.
 - `config.ts` — `buildDictationConfig`.
-- `../_shared/app-control-adapter.ts` — the reusable `AppControlRegistry`.
-- `../_shared/native-host-adapter.ts` — the native bridge design seam.
+- `../_shared/appControlAdapter.ts` — the reusable `AppControlRegistry`.
+- `../_shared/nativeHostAdapter.ts` — the native bridge design seam.
 
 ## Dependencies to copy
 
 - npm: `@corti/sdk`, `@corti/dictation-web`, `@lit/react`
-- shared files: `../_shared/corti-dictation-react.tsx`,
-  `../_shared/app-control-adapter.ts`, `../_shared/native-host-adapter.ts`,
-  `../_shared/editor-adapter.ts`, `../_shared/text-insertion.ts`,
+- shared files: `../_shared/cortiDictationReact.tsx`,
+  `../_shared/appControlAdapter.ts`, `../_shared/nativeHostAdapter.ts`,
+  `../_shared/editorAdapter.ts`, `../_shared/textInsertion.ts`,
   `../_shared/useActiveControl.ts`, `../_shared/useCortiAccessToken.ts`
 - local files: `AppControl.tsx`, `MockApp.tsx`, `commands.ts`, `config.ts`

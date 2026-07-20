@@ -63,8 +63,8 @@ transcripts are forwarded to the agent.
 ## Dependencies to copy
 
 - npm: `@corti/sdk`, `@corti/dictation-web`, `@lit/react`
-- shared: `../_shared/corti-agent.ts`, `../_shared/config-store.ts`,
-  `../_shared/corti-dictation-react.tsx`, `../_shared/useCortiAccessToken.ts`
+- shared: `../_shared/cortiAgent.ts`, `../_shared/configStore.ts`,
+  `../_shared/cortiDictationReact.tsx`, `../_shared/useCortiAccessToken.ts`
 - local: `agent.ts`, `config.ts`, `model.ts`
 
 ## Gating

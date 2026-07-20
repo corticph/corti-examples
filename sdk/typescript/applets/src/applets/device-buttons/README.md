@@ -46,9 +46,9 @@ on reload.
 - `DeviceButtons.tsx` — the mapping manager UI (connect, learn, per-button
   action / command selectors, live monitor).
 - `DeviceButtonsDetails.tsx` — the "how it works" details card.
-- `../_shared/hid-recording.ts` — pure button catalog + edge-detection
+- `../_shared/hidRecording.ts` — pure button catalog + edge-detection
   (`computeButtonEffects`, `pressedButtonBit`); unit-tested, no WebHID needed.
-- `../_shared/dictation-device.ts` — module-level singleton over
+- `../_shared/dictationDevice.ts` — module-level singleton over
   `DictationDeviceManager`: device I/O, mappings, learn mode, and effect routing.
 - `../_shared/useDictationDevice.ts` — React views: `useDictationDevice()`,
   `useHidRecordingControl(ref)` (wired into the dictation/ambient wrappers), and
@@ -58,10 +58,10 @@ on reload.
 
 - npm: `dictation_support` (plus `@corti/dictation-web` / `@corti/ambient-web` +
   `@lit/react` for the recording surfaces the buttons drive)
-- shared files: `../_shared/hid-recording.ts`, `../_shared/dictation-device.ts`,
-  `../_shared/useDictationDevice.ts`, `../_shared/config-store.ts`,
+- shared files: `../_shared/hidRecording.ts`, `../_shared/dictationDevice.ts`,
+  `../_shared/useDictationDevice.ts`, `../_shared/configStore.ts`,
   `../_shared/useCortiAccessToken.ts`, and the
-  `../_shared/corti-dictation-react.tsx` / `../_shared/corti-ambient-react.tsx`
+  `../_shared/cortiDictationReact.tsx` / `../_shared/cortiAmbientReact.tsx`
   wrappers (which call `useHidRecordingControl`)
 - local files: `DeviceButtons.tsx`, `DeviceButtonsDetails.tsx`
 - to list command ids for command mappings: `../dictation-commands/command-store`
@@ -70,5 +70,5 @@ on reload.
 ## Persistence
 
 Button mappings persist per **API client** (`clientId:tenant`) via
-`../_shared/config-store.ts` (localStorage today; swap for a server store when
+`../_shared/configStore.ts` (localStorage today; swap for a server store when
 hosted).

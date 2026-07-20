@@ -56,7 +56,7 @@ WebSocket endpoints (`/transcribe`, `/streams`) use the streaming token. REST ca
 
 ### `AppletAuthProvider` pattern
 
-Every applet relies on `AppletAuthProvider` from `src/applets/_shared/auth-context.tsx` instead of reaching for credentials directly.
+Every applet relies on `AppletAuthProvider` from `src/applets/_shared/authContext.tsx` instead of reaching for credentials directly.
 
 `App.tsx` sits at the top of the tree and feeds auth values into the provider:
 
@@ -101,7 +101,7 @@ src/
 
 server/
   index.ts            # Express factory (createServer())
-  corti-token.ts      # credential + token management
+  cortiToken.ts       # credential + token management
   routes/auth.ts      # POST /api/auth/stream-token
   routes/proxy.ts     # /api/corti/* proxy
 ```
@@ -109,7 +109,7 @@ server/
 ## Adding an applet
 
 1. Create a folder under `src/applets/<your-applet>/` with at least one component.
-2. Use `useAuth()` from `../_shared/auth-context` for credentials.
+2. Use `useAuth()` from `../_shared/authContext` for credentials.
 3. Use `buildApiUrl()` from `../_shared/urls` for REST base URLs and `buildWsBaseUrl(cluster)` for WebSocket base URLs.
 4. Add an entry to the `APPLETS` array in `src/applets/registry.ts`.
 
