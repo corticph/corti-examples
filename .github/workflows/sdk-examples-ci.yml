@@ -38,6 +38,9 @@ jobs:
             react-next-agent-chat:
               - 'agents/react/next-agent-chat/**'
               - '.github/workflows/sdk-examples-ci.yml'
+            applets:
+              - 'sdk/typescript/applets/**'
+              - '.github/workflows/sdk-examples-ci.yml'
 
   dotnet:
     name: C# format & build
@@ -82,6 +85,8 @@ jobs:
             path: sdk/typescript/next-auth-examples
           - project: react-next-agent-chat
             path: agents/react/next-agent-chat
+          - project: applets
+            path: sdk/typescript/applets
 
     defaults:
       run:
