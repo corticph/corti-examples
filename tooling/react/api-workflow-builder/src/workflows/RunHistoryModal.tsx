@@ -27,13 +27,13 @@ export function RunHistoryModal({
   refreshToken: number;
   onClose: () => void;
 }) {
-  // useMemo keyed on open + refreshToken: read once each time the modal is shown OR
-  // after a new run completes while the modal stays open.
+  // Read history when the modal is open. Including `expandedId` ensures we re-read after
+  // a delete action (which collapses the row) without relying on the parent to remount.
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const entries = useMemo(
     () => (open ? loadHistory(workflowId) : []),
-    [open, workflowId, refreshToken],
+    [open, workflowId, refreshToken, expandedId],
   );
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
     <Modal open={open} onClose={onClose} title="Run history" widthClass="max-w-3xl">
