@@ -35,6 +35,7 @@ export default function AuthView({ onAuth }) {
         </p>
 
         <button
+          type="button"
           onClick={handleConnect}
           disabled={status === "loading"}
           className="w-full bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground font-semibold py-2.5 px-4 rounded-lg transition-opacity"

@@ -37,16 +37,16 @@ conversation.
 npm install
 cp .env.example .env     # then set MCP_SCOPE_SECRET (required)
 npm run build            # compile src/ (TypeScript) → build/
-npm run reindex          # optional on first run — a prebuilt index is committed
+npm run reindex          # build the document index from docs/ (required before first run)
 ```
 
-> **First run:** `data/index.json` is committed, so you can skip `npm run reindex`
-> and go straight to [Running](#running). Re-run it only after you add or change
-> files in `docs/`.
+> `npm run reindex` builds `data/index.json` from `docs/` and is **required
+> before the first run** — the index isn't committed, and without it
+> `search_documents` returns nothing (a missing index reads as empty). Re-run it
+> whenever you add or change files in `docs/`.
 >
 > The first reindex/search downloads the embedding model
-> (`Xenova/all-MiniLM-L6-v2`) into `node_modules/.cache`, so skipping reindex also
-> defers that one-time download until you need it. Later runs are fast.
+> (`Xenova/all-MiniLM-L6-v2`) into `node_modules/.cache`. Later runs are fast.
 
 ## Running
 

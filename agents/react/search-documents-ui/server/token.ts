@@ -20,7 +20,8 @@ export interface ScopeClaims {
 
 const base64UrlJson = (value: unknown): string =>
   Buffer.from(JSON.stringify(value)).toString("base64url");
-const hmac = (data: string): string => createHmac("sha256", SECRET).update(data).digest("base64url");
+const hmac = (data: string): string =>
+  createHmac("sha256", SECRET).update(data).digest("base64url");
 
 // This app only mints tokens (the MCP verifies them), so there is no verifier here.
 // Sign a compact HS256 JWT.

@@ -14,7 +14,9 @@ async function request(path, { method = "GET", body, label = "Request" } = {}) {
     init.body = JSON.stringify(body);
   }
   const res = await fetch(path, init);
-  if (res.status === 401) _onUnauthorized?.();
+  if (res.status === 401) {
+    _onUnauthorized?.();
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || `${label} failed: ${res.status}`);
@@ -84,25 +86,32 @@ async function pollAgentTask(agentId, taskId, { onTick } = {}) {
     const elapsed = Math.round((performance.now() - start) / 1000);
     onTick?.({ state, elapsed });
 
-    if (TERMINAL_OK_STATES.has(state)) return task;
-    if (FOLLOWUP_STATES.has(state)) return task;
-    if (TERMINAL_FAIL_STATES.has(state)) throw new Error(`Agent task ${state}`);
-    if (STUCK_STATES.has(state)) throw new Error(`Agent task requires authentication (${state})`);
+    if (TERMINAL_OK_STATES.has(state)) {
+      return task;
+    }
+    if (FOLLOWUP_STATES.has(state)) {
+      return task;
+    }
+    if (TERMINAL_FAIL_STATES.has(state)) {
+      throw new Error(`Agent task ${state}`);
+    }
+    if (STUCK_STATES.has(state)) {
+      throw new Error(`Agent task requires authentication (${state})`);
+    }
     await sleep(elapsed < 30 ? 2000 : 5000);
   }
 }
 
 export async function sendAgentMessage(agentId, { text, files, contextId, taskId, onPoll }) {
-  const encodedFiles =
-    files && files.length
-      ? await Promise.all(
-          files.map(async (file) => ({
-            name: file.name,
-            mimeType: file.type || "application/octet-stream",
-            bytes: await readFileAsBase64(file),
-          })),
-        )
-      : undefined;
+  const encodedFiles = files?.length
+    ? await Promise.all(
+        files.map(async (file) => ({
+          name: file.name,
+          mimeType: file.type || "application/octet-stream",
+          bytes: await readFileAsBase64(file),
+        })),
+      )
+    : undefined;
 
   const initial = await request(`/api/agents/${encodeURIComponent(agentId)}/message`, {
     method: "POST",

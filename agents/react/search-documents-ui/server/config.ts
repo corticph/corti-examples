@@ -18,10 +18,12 @@ if (missing.length) {
   process.exit(1);
 }
 
-// Validated as present above, so the non-null assertions are safe.
-export const MCP_URL: string = process.env.MCP_URL!;
-export const MCP_NAME: string = process.env.MCP_NAME!;
-export const SYSTEM_PROMPT: string = process.env.SYSTEM_PROMPT!;
+// Validated as present above, so we can treat these as defined strings.
+const env = process.env as Record<string, string>;
+
+export const MCP_URL: string = env.MCP_URL;
+export const MCP_NAME: string = env.MCP_NAME;
+export const SYSTEM_PROMPT: string = env.SYSTEM_PROMPT;
 export const MCP_AUDIENCE = "search-documents-mcp"; // must match the MCP's audience
 
 // The MCP's other endpoints live on the same host as /mcp.
@@ -36,10 +38,10 @@ export const MCP_SERVER_CONFIG: Corti.AgentsCreateMcpServer = {
 };
 
 export const CORTI = {
-  env: process.env.CORTI_ENVIRONMENT || "us",
-  tenant: process.env.CORTI_TENANT_NAME!,
-  clientId: process.env.CORTI_CLIENT_ID!,
-  clientSecret: process.env.CORTI_CLIENT_SECRET!,
+  env: env.CORTI_ENVIRONMENT || "us",
+  tenant: env.CORTI_TENANT_NAME,
+  clientId: env.CORTI_CLIENT_ID,
+  clientSecret: env.CORTI_CLIENT_SECRET,
 };
 
 export const PORT = 3003;

@@ -44,8 +44,12 @@ interface SdkErrorShape {
 
 export function sdkStatus(err: unknown): number {
   const e = err as SdkErrorShape;
-  if (e.statusCode != null) return e.statusCode;
-  if (e.name === "CortiTimeoutError") return 408;
+  if (e.statusCode != null) {
+    return e.statusCode;
+  }
+  if (e.name === "CortiTimeoutError") {
+    return 408;
+  }
   return 500;
 }
 
@@ -54,20 +58,36 @@ function deriveUserErrorMessage(err: unknown): string {
   const e = err as SdkErrorShape;
   const body = e.body;
   if (body && typeof body === "object") {
-    if (body.error_description) return body.error_description;
-    if (body.error) return body.error;
-    if (body.message) return body.message;
+    if (body.error_description) {
+      return body.error_description;
+    }
+    if (body.error) {
+      return body.error;
+    }
+    if (body.message) {
+      return body.message;
+    }
   }
-  if (typeof body === "string" && body.length > 0) return body;
+  if (typeof body === "string" && body.length > 0) {
+    return body;
+  }
   const wwwAuth = e.rawResponse?.headers?.get?.("www-authenticate");
   if (wwwAuth) {
     const description = wwwAuth.match(/error_description="([^"]+)"/)?.[1];
-    if (description) return description;
+    if (description) {
+      return description;
+    }
     const code = wwwAuth.match(/error="([^"]+)"/)?.[1];
-    if (code) return code;
+    if (code) {
+      return code;
+    }
   }
-  if (e.statusCode != null) return `Request failed: ${e.statusCode}`;
-  if (e.name === "CortiTimeoutError") return e.message ?? "Request timed out";
+  if (e.statusCode != null) {
+    return `Request failed: ${e.statusCode}`;
+  }
+  if (e.name === "CortiTimeoutError") {
+    return e.message ?? "Request timed out";
+  }
   return `Corti API unreachable: ${e.message || "unknown error"}`;
 }
 

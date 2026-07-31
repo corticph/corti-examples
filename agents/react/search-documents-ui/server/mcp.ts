@@ -9,7 +9,9 @@ import { signScopeToken } from "./token.js";
 export function mintScopeToken(clinician: Clinician): string {
   const scopes = clinician.patients.map((mrn) => `patient:${mrn}`);
   const names: Record<string, string> = {};
-  for (const mrn of clinician.patients) names[`patient:${mrn}`] = PATIENTS[mrn] ?? mrn;
+  for (const mrn of clinician.patients) {
+    names[`patient:${mrn}`] = PATIENTS[mrn] ?? mrn;
+  }
   return signScopeToken({ sub: clinician.id, scopes, names, aud: MCP_AUDIENCE });
 }
 
@@ -35,7 +37,9 @@ export function matchedMcpServer(
   targetUrl: string,
 ): McpServerRef | null {
   const target = normalizeUrl(targetUrl);
-  if (!target) return null;
+  if (!target) {
+    return null;
+  }
   // AgentsAgentResponse is a union whose variants expose different fields; read
   // the MCP-server fields defensively (agent-level and expert-level).
   const a = agent as unknown as {

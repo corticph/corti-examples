@@ -40,6 +40,11 @@ jobs:
               - '.github/workflows/sdk-examples-ci.yml'
             applets:
               - 'sdk/typescript/applets/**'
+            search-documents-ui:
+              - 'agents/react/search-documents-ui/**'
+              - '.github/workflows/sdk-examples-ci.yml'
+            search-documents-mcp:
+              - 'agents/typescript/search-documents-mcp/**'
               - '.github/workflows/sdk-examples-ci.yml'
 
   dotnet:
@@ -87,6 +92,10 @@ jobs:
             path: agents/react/next-agent-chat
           - project: applets
             path: sdk/typescript/applets
+          - project: search-documents-ui
+            path: agents/react/search-documents-ui
+          - project: search-documents-mcp
+            path: agents/typescript/search-documents-mcp
 
     defaults:
       run:

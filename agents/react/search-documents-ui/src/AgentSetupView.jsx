@@ -18,7 +18,9 @@ export default function AgentSetupView({ onReady, onDisconnect }) {
     (async () => {
       try {
         const [active, setupConfig] = await Promise.all([getActiveAgent(), getSetupConfig()]);
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setConfig(setupConfig);
         if (active.agent) {
           onReady(active.agent); // already set up, skip straight through
@@ -71,6 +73,7 @@ export default function AgentSetupView({ onReady, onDisconnect }) {
         title="Set up orchestrator"
         right={
           <button
+            type="button"
             onClick={onDisconnect}
             className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -98,8 +101,14 @@ export default function AgentSetupView({ onReady, onDisconnect }) {
           )}
 
           <div>
-            <label className="text-xs font-semibold text-foreground mb-1.5 block">Agent name</label>
+            <label
+              htmlFor="agent-name"
+              className="text-xs font-semibold text-foreground mb-1.5 block"
+            >
+              Agent name
+            </label>
             <input
+              id="agent-name"
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -152,6 +161,7 @@ export default function AgentSetupView({ onReady, onDisconnect }) {
 
           <div className="flex justify-end">
             <button
+              type="button"
               onClick={handleCreate}
               disabled={creating || !config?.mcpConfigured}
               className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"

@@ -22,7 +22,9 @@ export default function UploadView({ clinician, onBack }) {
   async function onPickFile(e) {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     if (!/\.(txt|md)$/i.test(file.name)) {
       setError("Only .txt or .md files are supported.");
       return;
@@ -34,7 +36,9 @@ export default function UploadView({ clinician, onBack }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting) {
+      return;
+    }
     if (!text.trim()) {
       setError("Add some text or pick a file.");
       return;
@@ -81,12 +85,14 @@ export default function UploadView({ clinician, onBack }) {
               <p className="text-xs">Indexed chunks: {uploadResult.chunks}</p>
               <div className="flex gap-2 mt-3">
                 <button
+                  type="button"
                   onClick={uploadAnother}
                   className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
                 >
                   Upload another
                 </button>
                 <button
+                  type="button"
                   onClick={onBack}
                   className="px-3 py-1.5 rounded-md border border-border bg-background text-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
                 >
@@ -97,10 +103,14 @@ export default function UploadView({ clinician, onBack }) {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-foreground mb-1.5 block">
+                <label
+                  htmlFor="upload-scope"
+                  className="text-xs font-semibold text-foreground mb-1.5 block"
+                >
                   Belongs to
                 </label>
                 <select
+                  id="upload-scope"
                   value={scope}
                   onChange={(event) => setScope(event.target.value)}
                   disabled={submitting}
@@ -116,7 +126,10 @@ export default function UploadView({ clinician, onBack }) {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-foreground mb-1.5 block">
+                <label
+                  htmlFor="upload-text"
+                  className="text-xs font-semibold text-foreground mb-1.5 block"
+                >
                   Document
                 </label>
                 <div className="flex items-center gap-2 mb-2">
@@ -141,6 +154,7 @@ export default function UploadView({ clinician, onBack }) {
                   )}
                 </div>
                 <textarea
+                  id="upload-text"
                   value={text}
                   onChange={(event) => {
                     setText(event.target.value);

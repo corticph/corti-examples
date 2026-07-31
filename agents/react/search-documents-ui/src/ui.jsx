@@ -30,6 +30,7 @@ export function ScreenHeader({ title, onBack, right = null }) {
       <div className="flex-1 flex justify-start">
         {onBack && (
           <button
+            type="button"
             onClick={onBack}
             className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >

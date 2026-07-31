@@ -25,6 +25,7 @@ export default function PatientPanelView({
               </span>
             )}
             <button
+              type="button"
               onClick={onSignOut}
               className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -69,6 +70,7 @@ export default function PatientPanelView({
 
           <div className="space-y-2">
             <button
+              type="button"
               onClick={onStartChat}
               disabled={starting}
               className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
@@ -84,6 +86,7 @@ export default function PatientPanelView({
               )}
             </button>
             <button
+              type="button"
               onClick={onUpload}
               disabled={starting}
               className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"

@@ -19,7 +19,9 @@ export default function App() {
 
   // Start chat: warm up + pre-bind the context, then enter the chat with it.
   async function handleStartChat() {
-    if (starting) return;
+    if (starting) {
+      return;
+    }
     setStarting(true);
     setStartError("");
     try {

@@ -66,8 +66,8 @@ export function bindContext(contextId: string, scopeContext: ScopeContext): void
 // Resolve the scope for a contextId at tool-call time. Defaults to shared-only.
 export function scopeForContext(contextId?: string) {
   const value = contextId ? contextScopes.get(contextId) : undefined;
-  if (value && Date.now() > value.expiresAt) {
-    contextScopes.delete(contextId!);
+  if (value && contextId && Date.now() > value.expiresAt) {
+    contextScopes.delete(contextId);
     return { allowed: [], patientNames: {} };
   }
   return (

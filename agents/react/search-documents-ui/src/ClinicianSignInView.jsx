@@ -14,7 +14,9 @@ export default function ClinicianSignInView({ onSignIn, onDisconnect }) {
   const [signInError, setSignInError] = useState("");
 
   async function handleSelect(clinician) {
-    if (signingId) return;
+    if (signingId) {
+      return;
+    }
     setSigningId(clinician.id);
     setSignInError("");
     try {
@@ -31,11 +33,17 @@ export default function ClinicianSignInView({ onSignIn, onDisconnect }) {
     (async () => {
       try {
         const data = await listClinicians();
-        if (!cancelled) setClinicians(data);
+        if (!cancelled) {
+          setClinicians(data);
+        }
       } catch (err) {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) {
+          setError(err.message);
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     })();
     return () => {
@@ -49,6 +57,7 @@ export default function ClinicianSignInView({ onSignIn, onDisconnect }) {
         title="Sign in"
         right={
           <button
+            type="button"
             onClick={onDisconnect}
             className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >

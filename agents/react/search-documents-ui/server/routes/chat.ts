@@ -75,7 +75,9 @@ router.post("/agents/:id/message", requireCorti, async (req, res) => {
   try {
     const { text, files, contextId, taskId } = req.body ?? {};
     const parts: Corti.AgentsPart[] = [];
-    if (typeof text === "string" && text.length > 0) parts.push({ kind: "text", text });
+    if (typeof text === "string" && text.length > 0) {
+      parts.push({ kind: "text", text });
+    }
     if (Array.isArray(files)) {
       for (const file of files) {
         parts.push({
@@ -97,8 +99,12 @@ router.post("/agents/:id/message", requireCorti, async (req, res) => {
       messageId: randomUUID(),
       kind: "message",
     };
-    if (contextId) message.contextId = contextId;
-    if (taskId) message.taskId = taskId;
+    if (contextId) {
+      message.contextId = contextId;
+    }
+    if (taskId) {
+      message.taskId = taskId;
+    }
     const result = await getCorti().agents.messageSend(
       req.params.id,
       { message, configuration: { blocking: false } },

@@ -5,13 +5,25 @@ const MODEL = "Xenova/all-MiniLM-L6-v2";
 
 export const EMBED_DIM = 384;
 
-// Loaded once, lazily. `pipeline` is cast to any: its overload set produces a
-// union too complex for TS to represent (TS2590).
-let extractorPromise: Promise<any> | null = null;
+// Minimal view of the transformers.js feature-extraction pipeline we use: a
+// callable returning a tensor with tolist(). We cast `pipeline` through
+// `unknown` to this simpler shape because its own overload set is too complex
+// for TS to represent (TS2590).
+type FeatureExtractor = (
+  texts: string[],
+  options: { pooling: "mean"; normalize: boolean },
+) => Promise<{ tolist(): number[][] }>;
 
-function getExtractor(): Promise<any> {
+// Loaded once, lazily.
+let extractorPromise: Promise<FeatureExtractor> | null = null;
+
+function getExtractor(): Promise<FeatureExtractor> {
   if (!extractorPromise) {
-    extractorPromise = (pipeline as any)("feature-extraction", MODEL) as Promise<any>;
+    const createExtractor = pipeline as unknown as (
+      task: string,
+      model: string,
+    ) => Promise<FeatureExtractor>;
+    extractorPromise = createExtractor("feature-extraction", MODEL);
   }
   return extractorPromise;
 }
@@ -23,5 +35,5 @@ export async function embed(texts: string[]): Promise<number[][]> {
   }
   const extractor = await getExtractor();
   const output = await extractor(texts, { pooling: "mean", normalize: true });
-  return output.tolist() as number[][];
+  return output.tolist();
 }

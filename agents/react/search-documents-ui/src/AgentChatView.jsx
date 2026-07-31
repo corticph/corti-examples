@@ -45,7 +45,9 @@ export default function AgentChatView({ agent, clinician, initialContextId, onBa
 
   function onPickFiles(event) {
     const files = Array.from(event.target.files ?? []);
-    if (files.length) setPendingFiles((existing) => [...existing, ...files]);
+    if (files.length) {
+      setPendingFiles((existing) => [...existing, ...files]);
+    }
     event.target.value = "";
   }
   function removeFile(indexToRemove) {
@@ -55,8 +57,12 @@ export default function AgentChatView({ agent, clinician, initialContextId, onBa
   async function handleSend(e) {
     e.preventDefault();
     const text = input.trim();
-    if (loading) return;
-    if (!text && pendingFiles.length === 0) return;
+    if (loading) {
+      return;
+    }
+    if (!text && pendingFiles.length === 0) {
+      return;
+    }
 
     const oversize = pendingFiles.find((file) => file.size > MAX_FILE_BYTES);
     if (oversize) {
@@ -66,7 +72,10 @@ export default function AgentChatView({ agent, clinician, initialContextId, onBa
 
     const filesForSend = pendingFiles;
     const fileNames = filesForSend.map((file) => file.name);
-    setMessages((existing) => [...existing, { role: "user", text, files: fileNames }]);
+    setMessages((existing) => [
+      ...existing,
+      { id: crypto.randomUUID(), role: "user", text, files: fileNames },
+    ]);
     setInput("");
     setPendingFiles([]);
     setLoading(true);
@@ -83,12 +92,14 @@ export default function AgentChatView({ agent, clinician, initialContextId, onBa
       });
       const nextContextId = response?.task?.contextId ?? response?.message?.contextId ?? contextId;
       const state = response?.task?.status?.state;
-      if (nextContextId) setContextId(nextContextId);
+      if (nextContextId) {
+        setContextId(nextContextId);
+      }
       setAwaitingTaskId(state === "input-required" ? response?.task?.id || "" : "");
       const agentText = extractAgentText(response);
       setMessages((existing) => [
         ...existing,
-        { role: "agent", text: agentText || "(empty response)" },
+        { id: crypto.randomUUID(), role: "agent", text: agentText || "(empty response)" },
       ]);
     } catch (err) {
       setError(err.message);
@@ -103,6 +114,7 @@ export default function AgentChatView({ agent, clinician, initialContextId, onBa
         {/* Back + agent name */}
         <div className="flex items-center justify-between">
           <button
+            type="button"
             onClick={onBack}
             className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -128,9 +140,9 @@ export default function AgentChatView({ agent, clinician, initialContextId, onBa
                 Ask a question about your patients' records or the shared reference material.
               </p>
             )}
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <div
-                key={index}
+                key={message.id}
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
@@ -143,9 +155,9 @@ export default function AgentChatView({ agent, clinician, initialContextId, onBa
                   {message.text}
                   {message.files?.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1">
-                      {message.files.map((name, fileIndex) => (
+                      {message.files.map((name) => (
                         <span
-                          key={fileIndex}
+                          key={name}
                           className="inline-flex items-center gap-1 text-xs opacity-80"
                         >
                           <FileIcon size={12} /> {name}
@@ -175,7 +187,7 @@ export default function AgentChatView({ agent, clinician, initialContextId, onBa
             <div className="px-4 pb-2 flex flex-wrap gap-1.5">
               {pendingFiles.map((file, index) => (
                 <span
-                  key={index}
+                  key={file.name}
                   className="inline-flex items-center gap-1 text-xs border border-border rounded-md px-2 py-1 text-foreground"
                 >
                   <FileIcon size={12} /> {file.name}
