@@ -234,7 +234,7 @@ public static class CortiHelpers
             "createdat" => InteractionsListRequestSort.CreatedAt,
             "endedat" => InteractionsListRequestSort.EndedAt,
             "updatedat" => InteractionsListRequestSort.UpdatedAt,
-            _ => throw new ArgumentException($"Unknown sort field: {value}"),
+            _ => (InteractionsListRequestSort?)null,
         };
     }
 
