@@ -46,7 +46,7 @@ public static class AgentsEndpoint
 
             var messageSendResponse = await client.Agents.MessageSendAsync(
                 createdAgent.Id,
-                new AgentsMessageSendParams
+                new AgentsMessageSendBody
                 {
                     Message = new AgentsMessage
                     {
