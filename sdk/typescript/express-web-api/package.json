@@ -12,9 +12,9 @@
     "format": "biome format --write src/"
   },
   "dependencies": {
-    "@corti/sdk": "latest",
     "dotenv": "^16.4.5",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "@corti/sdk": "latest"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
