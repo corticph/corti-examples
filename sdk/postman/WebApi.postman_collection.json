@@ -276,6 +276,63 @@
       "response": []
     },
     {
+      "name": "Guided Templates",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/documents/templates",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "documents",
+            "templates"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guided Sections",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/documents/sections",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "documents",
+            "sections"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guided Documents",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/documents/generate",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "documents",
+            "generate"
+          ],
+          "query": []
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Agents",
       "request": {
         "method": "GET",
