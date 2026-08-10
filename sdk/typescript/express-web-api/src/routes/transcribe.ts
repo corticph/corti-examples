@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import { Corti } from "@corti/sdk";
+import { applyDictationTranscript, type DictationTranscriptSnapshot } from "@corti/sdk/utils";
 import type { Application, Request, Response } from "express";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { cortiErrorResponse, createCortiClient, sendCortiConfigError } from "../lib/corti.js";
@@ -39,6 +40,7 @@ async function handle(_req: Request, res: Response): Promise<void> {
     const socket = await client.transcribe.connect();
 
     const messages: unknown[] = [];
+    let snapshot: DictationTranscriptSnapshot | undefined;
     let configAcceptedResolve: () => void;
     let configAcceptedReject: (err: Error) => void;
     const configAcceptedPromise = new Promise<void>((resolve, reject) => {
@@ -69,6 +71,12 @@ async function handle(_req: Request, res: Response): Promise<void> {
       }
       if (m.type === "flushed") {
         flushedResolve();
+      }
+      if (m.type === "transcript") {
+        snapshot = applyDictationTranscript(
+          snapshot,
+          (msg as { type: "transcript"; data: Corti.TranscribeTranscriptData }).data,
+        );
       }
     });
 
@@ -106,6 +114,8 @@ async function handle(_req: Request, res: Response): Promise<void> {
     res.json({
       messageCount: messages.length,
       messages,
+      committedText: snapshot?.committedText ?? "",
+      interimText: snapshot?.interimText ?? "",
       message:
         "Transcribe WebSocket (SDK): config sent, audio sent by chunks, flush sent, flushed received.",
     });
