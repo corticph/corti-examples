@@ -1,0 +1,21 @@
+{
+  "name": "corti-ambient-scribe-quickstart",
+  "version": "1.0.0",
+  "description": "Minimal end-to-end ambient scribe demo: auth, interaction, transcript, facts, note — one command.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "demo": "tsx src/demo.ts",
+    "build": "tsc",
+    "start": "node dist/demo.js"
+  },
+  "dependencies": {
+    "@corti/sdk": "latest",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.19.2",
+    "typescript": "^5"
+  }
+}
