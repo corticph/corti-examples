@@ -33,7 +33,6 @@ app.MapDocumentsEndpoint();
 app.MapGuidedSectionsEndpoint();
 app.MapGuidedTemplatesEndpoint();
 app.MapGuidedDocumentsEndpoint();
-app.MapGuidedDocumentsCrudEndpoint();
 app.MapTranscribeEndpoint();
 app.MapTranscribeWithConfigEndpoint();
 app.MapStreamEndpoint();

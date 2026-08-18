@@ -82,8 +82,7 @@ The API listens on **port 8080** inside the container. Use `http://localhost:808
 | `/agents` | Agents v1: list, create, get, card, registry experts, message send, get task/context, delete (query: limit, offset, ephemeral) |
 | `/agentic` | Agentic v2: list/create/get/card, registry connectors, sendMessage, contexts list, usage, delete |
 | `/documents` | Classic interaction-scoped documents (`Documents.Classic`): list, create, get, update, delete |
-| `/documents/generate` | Guided generate (ephemeral): create section + template, generate, return `Sections` headings, cleanup |
-| `/documents/guided` | Guided persisted documents (`Documents`): list; get first if any |
+| `/documents/generate` | Guided documents: generate (ephemeral), list persisted, get first if any; returns `Sections` headings |
 | `/documents/templates` | Guided templates: list, create, get, update, versions, delete |
 | `/documents/sections` | Guided sections: list, create, get, update, delete |
 | `/transcribe` | Dictation **transcribe** WebSocket: `ConnectAsync()`, then `TranscribeConfigMessage`, stream sample MP3 in chunks, flush; returns JSON with captured messages |

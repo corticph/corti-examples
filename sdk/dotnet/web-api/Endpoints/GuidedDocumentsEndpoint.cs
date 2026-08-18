@@ -75,6 +75,11 @@ public static class GuidedDocumentsEndpoint
                         ],
                     }));
 
+            var listed = (await client.Documents.ListAsync(new GuidedDocumentsListRequest())).ToList();
+            GuidedDocument? retrieved = listed.Count > 0
+                ? await client.Documents.GetAsync(listed[0].Id)
+                : null;
+
             // 3. Clean up
             await client.Documents.Templates.DeleteAsync(template.Id);
             await client.Documents.Sections.DeleteAsync(section.Id);
@@ -86,7 +91,10 @@ public static class GuidedDocumentsEndpoint
                 generatedDocument = generateResponse.Document,
                 sections = generateResponse.Document.Sections,
                 usageInfo = generateResponse.UsageInfo,
-                message = "Create section, create template, generate document, and cleanup completed successfully",
+                listCount = listed.Count,
+                listed,
+                retrieved,
+                message = "Create section, create template, generate (ephemeral), list/get persisted guided documents, and cleanup completed successfully",
             });
         }
         catch (CortiClientApiException ex)

@@ -9,7 +9,6 @@ import { registerCodes } from "./codes.js";
 import { registerDocuments } from "./documents.js";
 import { registerFacts } from "./facts.js";
 import { registerGuidedDocuments } from "./guidedDocuments.js";
-import { registerGuidedDocumentsCrud } from "./guidedDocumentsCrud.js";
 import { registerGuidedSections } from "./guidedSections.js";
 import { registerGuidedTemplates } from "./guidedTemplates.js";
 import { registerInteractions } from "./interactions.js";
@@ -39,7 +38,6 @@ export function registerRoutes(app: Application): void {
   registerGuidedSections(app);
   registerGuidedTemplates(app);
   registerGuidedDocuments(app);
-  registerGuidedDocumentsCrud(app);
   registerStream(app);
   registerStreamWithConfig(app);
   registerTranscribe(app);

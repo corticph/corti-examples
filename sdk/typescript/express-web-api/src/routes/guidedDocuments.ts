@@ -62,6 +62,10 @@ async function handle(_req: Request, res: Response): Promise<void> {
       ],
     });
 
+    const listed = await client.documents.list();
+    const first = listed[0];
+    const retrieved = first?.id ? await client.documents.get(first.id) : null;
+
     // 3. Clean up
     await client.documents.templates.delete(template.id);
     await client.documents.sections.delete(section.id);
@@ -72,8 +76,11 @@ async function handle(_req: Request, res: Response): Promise<void> {
       generatedDocument: generateResponse.document,
       sections: generateResponse.document.sections ?? [],
       usageInfo: generateResponse.usageInfo,
+      listCount: listed.length,
+      listed,
+      retrieved,
       message:
-        "Create section, create template, generate document, and cleanup completed successfully",
+        "Create section, create template, generate (ephemeral), list/get persisted guided documents, and cleanup completed successfully",
     });
   } catch (e) {
     cortiErrorResponse(e, res);

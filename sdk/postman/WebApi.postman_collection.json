@@ -224,25 +224,6 @@
       "response": []
     },
     {
-      "name": "Guided documents (persisted)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{host}}/documents/guided",
-          "host": [
-            "{{host}}"
-          ],
-          "path": [
-            "documents",
-            "guided"
-          ],
-          "query": []
-        }
-      },
-      "response": []
-    },
-    {
       "name": "Templates",
       "request": {
         "method": "GET",

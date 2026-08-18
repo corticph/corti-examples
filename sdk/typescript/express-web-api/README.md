@@ -97,8 +97,7 @@ npm start
 | `/agents` | Agents v1: list, create, get, card, registry experts, message send, get task/context, delete (query: limit, offset, ephemeral) |
 | `/agentic` | Agentic v2: list/create/get/card/`getCardUrl`, registry connectors, sendMessage, contexts list, usage, delete |
 | `/documents` | Classic interaction-scoped documents (`client.documents.classic`): list, create, get, update, delete |
-| `/documents/generate` | Guided generate (ephemeral): create section + template, generate, return `sections` headings, cleanup |
-| `/documents/guided` | Guided persisted documents (`client.documents`): list; get first if any |
+| `/documents/generate` | Guided documents: generate (ephemeral), list persisted, get first if any; returns `sections` headings |
 | `/documents/templates` | Guided templates: list, create, get, update, versions, delete |
 | `/documents/sections` | Guided sections: list, create, get, update, delete |
 | `/transcribe` | `client.transcribe.connect()`, `sendConfiguration`, chunked `sendAudio`, `sendFlush`; returns JSON |
