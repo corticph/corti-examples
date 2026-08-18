@@ -1,0 +1,126 @@
+# search-documents-ui
+
+A React + Express app that connects to Corti, **provisions an orchestrator agent
+wired to a document-search MCP on first run**, lets a clinician sign in, and
+chats with the agent — minting scoped access tokens so the agent's MCP retrieval
+only returns records that clinician is allowed to see.
+
+It's the UI half of a shareable demo; the retrieval half is
+[search-documents-mcp](../../typescript/search-documents-mcp).
+
+## High-level flow
+
+```
+Connect to Corti  →  Agent setup  →  Clinician sign-in  →  Patient panel  →  Chat
+                      (detect by MCP URL;     (mock picker)   (+ Start chat)   (scoped to the
+                       create if missing)                                      clinician's panel)
+```
+
+- **Agent setup** detects an existing orchestrator by its **MCP URL** (any
+  agent name). If none exists, it shows a confirmation screen (the system prompt
+  + MCP config the agent will get) with a field for your preferred agent name,
+  then creates it in your tenant.
+- Each chat message carries a short-lived signed **scope token** (the clinician's
+  patient panel). Corti forwards it to the MCP, which verifies it and filters
+  retrieval. No agent-list page and no ID/config side panels — just the chat box.
+
+## Setup
+
+```bash
+npm install
+cp .env.example .env     # then fill it in (see below)
+```
+
+## Environment variables
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `CORTI_ENVIRONMENT` | no | Corti environment (`us` or `eu`). Defaults to `us`. |
+| `CORTI_TENANT_NAME` | yes | Your Corti tenant name. |
+| `CORTI_CLIENT_ID` | yes | OAuth client id for the Corti API. |
+| `CORTI_CLIENT_SECRET` | yes | OAuth client secret for the Corti API. Server-side only — no `VITE_` prefix, so Vite never bundles it into the browser. |
+| `MCP_URL` | **yes** | Public HTTPS URL of the Search Documents MCP (e.g. `https://<tunnel>/mcp`). Must be reachable by Corti. **The server won't start without it.** |
+| `MCP_NAME` | **yes** | Name the MCP server is registered under on the agent; the scope-token DataPart's `mcp_name` must match it. **The server won't start without it.** |
+| `MCP_SCOPE_SECRET` | **yes** | HMAC secret used to sign scope tokens. Must match the same variable in search-documents-mcp. No default: the server refuses to start if unset, so tokens can't be signed with a guessable key. Generate one with `openssl rand -hex 32`. |
+| `SYSTEM_PROMPT` | **yes** | The orchestrator's system prompt. No default; the server won't start without it. |
+
+`MCP_URL`, `MCP_NAME`, `SYSTEM_PROMPT`, and `MCP_SCOPE_SECRET` are required with
+no fallback; the server fails fast with a clear message if any is missing.
+
+## Running
+
+The MCP must be running and publicly reachable first, since `MCP_URL` is required
+at startup:
+
+```bash
+# 1. Start the MCP and expose it (in ../../typescript/search-documents-mcp)
+npm install && npm run build && npm run reindex && npm run start:http
+ngrok http 3000        # set this app's MCP_URL to the tunnel URL + /mcp
+
+# 2. Start this app
+npm start              # Express backend (:3003) + Vite frontend (:5175)
+```
+
+Then open http://localhost:5175 → **Connect → Agent setup** (name + create) **→
+pick a clinician → Start chat**. You can also run the halves separately:
+
+```bash
+npm run server   # backend only, :3003 (tsx watch)
+npm run dev      # frontend only, :5175 (proxies /api to :3003)
+```
+
+> Each user runs against their own Corti tenant; the setup step provisions the
+> orchestrator *in their tenant*. The MCP URL and secret are owner config (env),
+> so a person you share with mainly supplies their own Corti credentials.
+
+> **Uploads:** the document-upload page calls the MCP's `/ingest`, which is
+> disabled by default. To use it, start the MCP with `ALLOW_INGEST=true` (e.g.
+> `ALLOW_INGEST=true npm run start:http`). Leave it off if you don't need uploads.
+
+## Hardcoded / mock data
+
+There's no real identity provider — [directory.ts](server/directory.ts) holds two mock
+directories: `PATIENTS` (mock MRNs → display names) and `CLINICIANS` (each with a
+`patients` panel of MRNs they may see). The MRNs match the patient records in
+search-documents-mcp's docs so scoped retrieval lines up, and the signed-in
+clinician's panel becomes the scopes in the minted token.
+
+## How the token flow works
+
+On each message the backend mints an HMAC-signed JWT-style token containing the
+signed-in clinician's patient scopes (and display names) and attaches it as a
+bearer-auth DataPart. Corti forwards it to the MCP, which verifies the signature
+with the shared `MCP_SCOPE_SECRET`, records the scopes against the conversation's
+`contextId`, and filters retrieval. Tokens are short-lived (5 minutes). The
+signing logic lives in [token.ts](server/token.ts) and mirrors the MCP's verifier;
+[mcp.ts](server/mcp.ts) mints the token using the audience the MCP expects
+(`MCP_AUDIENCE = 'search-documents-mcp'`, defined in [config.ts](server/config.ts)).
+
+## Layout
+
+```
+server/                Express backend (TypeScript, run with tsx)
+  index.ts             Express app wiring; mounts the routers under /api
+  config.ts            env loading + fail-fast validation; MCP audience constant
+  corti.ts             Corti SDK connection + shared error/guard helpers
+  session.ts           in-process signed-in clinician + active MCP name
+  directory.ts         mock PATIENTS / CLINICIANS (stubbed identity)
+  mcp.ts               scope-token minting from the clinician's panel
+  token.ts             scope-token signing (HMAC); the MCP holds the verifier
+  routes/
+    auth.ts            connect to Corti
+    clinicians.ts      list clinicians / sign in
+    agent.ts           detect-by-URL / provision the orchestrator
+    chat.ts            start chat (warm-up + pre-bind) + message relay
+    documents.ts       upload a doc to the MCP, scope-authorized server-side
+src/
+  App.jsx              top-level flow/state
+  AuthView.jsx         connect to Corti
+  AgentSetupView.jsx   detect-by-URL / confirm + create the orchestrator
+  ClinicianSignInView.jsx  mock clinician picker
+  PatientPanelView.jsx the clinician's patients + Start chat / Upload
+  UploadView.jsx       upload a doc, scoped to a patient or shared
+  AgentChatView.jsx    the chat box (no side panels)
+  api.js               frontend API client
+  ui.jsx               shared UI primitives (Banner, ScreenHeader, …)
+```

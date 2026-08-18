@@ -109,3 +109,5 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 | Example                                                                              | Stack                      | Description                                                                                  |
 |--------------------------------------------------------------------------------------|----------------------------|----------------------------------------------------------------------------------------------|
 | [agents/react/next-agent-chat/](agents/react/next-agent-chat/)                       | TypeScript, Next.js, React | AI agent chat interface with A2A streaming, AI SDK integration, and real-time messaging      |
+| [agents/react/search-documents-ui/](agents/react/search-documents-ui/)               | TypeScript, React, Express | React/Express chat UI provisioning a Corti agent wired to a scoped document-search MCP       |
+| [agents/typescript/search-documents-mcp/](agents/typescript/search-documents-mcp/)   | TypeScript, MCP, Express   | MCP server exposing a RAG document-search tool with per-patient access control               |

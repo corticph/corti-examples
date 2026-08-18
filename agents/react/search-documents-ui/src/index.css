@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 6%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 6%;
+    --primary: 0 0% 6%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 0 0% 98%;
+    --muted-foreground: 0 0% 41%;
+    --border: 0 0% 93%;
+    --ring: 215 16% 47%;
+    --radius: 0.5rem;
+    --variant-error-bg: 0 100% 97%;
+    --variant-error-border: 0 93% 86%;
+    --variant-error-text: 0 72% 37%;
+    --variant-success-bg: 142 76% 97%;
+    --variant-success-border: 142 61% 86%;
+    --variant-success-text: 142 70% 28%;
+    --variant-warning-bg: 38 100% 96%;
+    --variant-warning-border: 38 94% 84%;
+    --variant-warning-text: 30 92% 34%;
+    --corti-lime: 77 94% 53%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", sans-serif;
+  }
+}
