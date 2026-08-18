@@ -40,6 +40,7 @@ jobs:
               - '.github/workflows/sdk-examples-ci.yml'
             applets:
               - 'sdk/typescript/applets/**'
+              - '.github/workflows/sdk-examples-ci.yml'
             search-documents-ui:
               - 'agents/react/search-documents-ui/**'
               - '.github/workflows/sdk-examples-ci.yml'
