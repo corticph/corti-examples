@@ -224,17 +224,18 @@
       "response": []
     },
     {
-      "name": "Guided documents",
+      "name": "Guided documents (persisted)",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{host}}/guided-documents",
+          "raw": "{{host}}/documents/guided",
           "host": [
             "{{host}}"
           ],
           "path": [
-            "guided-documents"
+            "documents",
+            "guided"
           ],
           "query": []
         }
@@ -362,6 +363,24 @@
               "disabled": true
             }
           ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Agentic",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/agentic",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "agentic"
+          ],
+          "query": []
         }
       },
       "response": []

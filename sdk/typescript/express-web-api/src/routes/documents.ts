@@ -38,10 +38,10 @@ async function handle(_req: Request, res: Response): Promise<void> {
       throw new Error("Missing interactionId");
     }
 
-    const listResp2 = await client.documents.list(demoInteractionId);
+    const listResp2 = await client.documents.classic.list(demoInteractionId);
     const listDocuments = listResp2.data ?? [];
 
-    const createdDocument = await client.documents.create(demoInteractionId, {
+    const createdDocument = await client.documents.classic.create(demoInteractionId, {
       context: [
         {
           type: "facts",
@@ -61,9 +61,9 @@ async function handle(_req: Request, res: Response): Promise<void> {
       throw new Error("Missing document id");
     }
 
-    const retrievedDocument = await client.documents.get(demoInteractionId, documentId);
+    const retrievedDocument = await client.documents.classic.get(demoInteractionId, documentId);
 
-    const updatedDocument = await client.documents.update(demoInteractionId, documentId, {
+    const updatedDocument = await client.documents.classic.update(demoInteractionId, documentId, {
       sections: [
         {
           key: "chief-complaint",
@@ -72,7 +72,7 @@ async function handle(_req: Request, res: Response): Promise<void> {
       ],
     });
 
-    await client.documents.delete(demoInteractionId, documentId);
+    await client.documents.classic.delete(demoInteractionId, documentId);
     await client.interactions.delete(demoInteractionId);
 
     res.json({

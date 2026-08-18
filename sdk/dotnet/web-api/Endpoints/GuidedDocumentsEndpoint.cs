@@ -84,6 +84,7 @@ public static class GuidedDocumentsEndpoint
                 templateId = template.Id,
                 sectionId = section.Id,
                 generatedDocument = generateResponse.Document,
+                sections = generateResponse.Document.Sections,
                 usageInfo = generateResponse.UsageInfo,
                 message = "Create section, create template, generate document, and cleanup completed successfully",
             });

@@ -56,7 +56,7 @@ public static class AmbientAsyncEndToEndEndpoint
                 }
             );
 
-            var document = await client.Documents.CreateAsync(
+            var document = await client.Documents.Classic.CreateAsync(
                 interaction.InteractionId,
                 DocumentsCreateRequest.FromDocumentsCreateRequestWithTemplateKey(
                     new DocumentsCreateRequestWithTemplateKey

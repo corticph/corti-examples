@@ -1,13 +1,13 @@
 # Corti SDK Examples – Express Web API
 
-A minimal **Express (TypeScript) API** that demonstrates the [`@corti/sdk`](https://www.npmjs.com/package/@corti/sdk): token, interactions, recordings, transcripts, facts, codes, templates, agents, documents, **stream**, and **transcribe** (WebSocket endpoints).
+A minimal **Express (TypeScript) API** that demonstrates the [`@corti/sdk`](https://www.npmjs.com/package/@corti/sdk): token, interactions, recordings, transcripts, facts, codes, templates, agents, **agentic** (v2), documents (classic and guided), **stream**, and **transcribe** (WebSocket endpoints).
 
 ## What this example represents
 
 This is a **server-side** reference API you can run locally. It shows how to:
 
 - **Authenticate** — Client credentials and ROPC token endpoints; optional scopes.
-- **Call Corti APIs** — Interactions (list, create, get, update, delete), recordings (list, upload sample, get, delete), transcripts (list, create from sample, get status, get, delete), facts (groups, list, create, update, batch, extract), codes (ICD-10-CM, CPT), languages, templates, agents, documents (standard and guided).
+- **Call Corti APIs** — Interactions (list, create, get, update, delete), recordings (list, upload sample, get, delete), transcripts (list, create from sample, get status, get, delete), facts (groups, list, create, update, batch, extract), codes (ICD-10-CM, CPT), languages, templates, agents (v1), agentic (v2), documents (classic interaction-scoped and guided).
 - **Stream and transcribe** — WebSocket endpoints for real-time audio 
 (TypeScript-only in this repo).
 - **Ambient** — `/ambient-async-end-to-end` and `/ambient-async-facts` (upload → transcript → document or facts); `/ambient-rt-streams` (real-time **stream** in facts mode, chunked `sendAudio`, then **`sendEnd`** / await ended).
@@ -94,9 +94,13 @@ npm start
 | `/codes` | Code prediction (ICD-10-CM, CPT) |
 | `/languages` | List supported languages (optional query: `endpoint=streams\|transcribe\|transcripts`) |
 | `/templates` | List templates, list sections, get by key (query: org, lang, status) |
-| `/agents` | List, create, get, card, registry experts, message send, get task/context, delete (query: limit, offset, ephemeral) |
-| `/documents` | List, create, get, update, delete document |
-| `/guided-documents` | Guided templates/sections: list, create, generate (template ref and dynamic), cleanup |
+| `/agents` | Agents v1: list, create, get, card, registry experts, message send, get task/context, delete (query: limit, offset, ephemeral) |
+| `/agentic` | Agentic v2: list/create/get/card/`getCardUrl`, registry connectors, sendMessage, contexts list, usage, delete |
+| `/documents` | Classic interaction-scoped documents (`client.documents.classic`): list, create, get, update, delete |
+| `/documents/generate` | Guided generate (ephemeral): create section + template, generate, return `sections` headings, cleanup |
+| `/documents/guided` | Guided persisted documents (`client.documents`): list; get first if any |
+| `/documents/templates` | Guided templates: list, create, get, update, versions, delete |
+| `/documents/sections` | Guided sections: list, create, get, update, delete |
 | `/transcribe` | `client.transcribe.connect()`, `sendConfiguration`, chunked `sendAudio`, `sendFlush`; returns JSON |
 | `/transcribe-with-config` | `client.transcribe.connect({ configuration })`, then chunked `sendAudio` and `sendFlush`; returns JSON |
 | `/stream` | Optional `?interactionId=` (else creates interaction); `client.stream.connect({ id })`, `sendConfiguration`, `sendAudio`, `sendFlush`; returns JSON |
@@ -113,7 +117,7 @@ Set Corti credentials in `.env` / `.env.local` or in the environment. Alternate 
 
 ### Client credentials (main)
 
-Required for `/token`, `/token/cc`, `/token/bearer`, and most API endpoints (interactions, recordings, transcripts, facts, codes, templates, agents, documents, `/transcribe`, `/transcribe-with-config`, `/stream`, `/stream-with-config`, `/ambient-async-end-to-end`, `/ambient-async-facts`, `/ambient-rt-streams`):
+Required for `/token`, `/token/cc`, `/token/bearer`, and most API endpoints (interactions, recordings, transcripts, facts, codes, templates, agents, agentic, documents, `/transcribe`, `/transcribe-with-config`, `/stream`, `/stream-with-config`, `/ambient-async-end-to-end`, `/ambient-async-facts`, `/ambient-rt-streams`):
 
 | Variable | Description |
 |----------|-------------|
@@ -179,4 +183,4 @@ The app depends on **`@corti/sdk`**. By default it uses the **published package 
    npm install file:../../../../corti-sdk-typescript
    ```
 
-To use the published package again: `npm install @corti/sdk@alpha`.
+To use the published package again: `npm install @corti/sdk@5.0.0-rc`.

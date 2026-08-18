@@ -1,4 +1,5 @@
 import type { Application } from "express";
+import { registerAgentic } from "./agentic.js";
 import { registerAgents } from "./agents.js";
 import { registerAmbientAsyncEndToEnd } from "./ambientAsyncEndToEnd.js";
 import { registerAmbientAsyncFacts } from "./ambientAsyncFacts.js";
@@ -8,6 +9,7 @@ import { registerCodes } from "./codes.js";
 import { registerDocuments } from "./documents.js";
 import { registerFacts } from "./facts.js";
 import { registerGuidedDocuments } from "./guidedDocuments.js";
+import { registerGuidedDocumentsCrud } from "./guidedDocumentsCrud.js";
 import { registerGuidedSections } from "./guidedSections.js";
 import { registerGuidedTemplates } from "./guidedTemplates.js";
 import { registerInteractions } from "./interactions.js";
@@ -32,10 +34,12 @@ export function registerRoutes(app: Application): void {
   registerLanguages(app);
   registerTemplates(app);
   registerAgents(app);
+  registerAgentic(app);
   registerDocuments(app);
   registerGuidedSections(app);
   registerGuidedTemplates(app);
   registerGuidedDocuments(app);
+  registerGuidedDocumentsCrud(app);
   registerStream(app);
   registerStreamWithConfig(app);
   registerTranscribe(app);

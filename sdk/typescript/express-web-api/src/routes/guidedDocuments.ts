@@ -70,6 +70,7 @@ async function handle(_req: Request, res: Response): Promise<void> {
       templateId: template.id,
       sectionId: section.id,
       generatedDocument: generateResponse.document,
+      sections: generateResponse.document.sections ?? [],
       usageInfo: generateResponse.usageInfo,
       message:
         "Create section, create template, generate document, and cleanup completed successfully",
