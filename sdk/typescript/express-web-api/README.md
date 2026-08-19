@@ -182,4 +182,4 @@ The app depends on **`@corti/sdk`**. By default it uses the **published package 
    npm install file:../../../../corti-sdk-typescript
    ```
 
-To use the published package again: `npm install @corti/sdk@5.0.0-rc`.
+To use the published package again: `npm install @corti/sdk@5.0.0`.
