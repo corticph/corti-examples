@@ -76,9 +76,6 @@ const startEmbeddedSession = () => {
 
   hasStarted = true;
   const config = bootstrapConfig;
-  (corti as CortiEmbeddedElement & { analytics?: Record<string, string> }).analytics = {
-    examples_repo: "embedded-assistant/c-sharp-wpf",
-  };
   corti.setAttribute("baseURL", config.baseUrl);
   corti.setAttribute("visibility", "visible");
 };

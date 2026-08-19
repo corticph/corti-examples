@@ -123,10 +123,6 @@ async function main() {
       setStatus(`Error: ${event.detail?.message || "Unknown error"}`, "error", true);
     });
 
-    (corti as CortiEmbeddedElement & { analytics?: Record<string, string> }).analytics = {
-      examples_repo: "embedded-assistant/vanilla-ts/basic-example",
-    };
-
     const readyPromise = waitForEvent(corti, "embedded.ready", EMBEDDED_READY_TIMEOUT_MS);
     const authPromise = fetchAuthData();
 

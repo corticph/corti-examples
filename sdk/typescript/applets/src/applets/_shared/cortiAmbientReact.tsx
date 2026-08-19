@@ -75,8 +75,7 @@ export const CortiAmbientComponent = React.forwardRef<
   const setRef = React.useCallback(
     (el: InstanceType<typeof CortiAmbient> | null) => {
       if (el) {
-        (el as typeof el & { analytics?: Record<string, string> }).analytics =
-          EXAMPLES_ANALYTICS;
+        (el as typeof el & { analytics?: Record<string, string> }).analytics = EXAMPLES_ANALYTICS;
       }
       innerRef.current = el;
       if (typeof forwardedRef === "function") {
