@@ -19,7 +19,7 @@ public static class TranscribeWithConfigEndpoint
             return credentialError;
         }
 
-        var client = new CortiClient(cc!.TenantName, cc.Environment, new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret));
+        var client = new CortiClient(cc!.TenantName, cc.Environment, new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret), CortiHelpers.ExampleRequestOptions);
 
         var samplePath = CortiHelpers.ResolveSampleFilePath(env.ContentRootPath, "trouble-breathing.mp3");
         if (samplePath is null)

@@ -22,7 +22,7 @@ public static class StreamEndpoint
             return credentialError;
         }
 
-        var client = new CortiClient(cc!.TenantName, cc.Environment, new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret));
+        var client = new CortiClient(cc!.TenantName, cc.Environment, new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret), CortiHelpers.ExampleRequestOptions);
 
         var interactionIdToUse = interactionId?.Trim();
         if (string.IsNullOrEmpty(interactionIdToUse))

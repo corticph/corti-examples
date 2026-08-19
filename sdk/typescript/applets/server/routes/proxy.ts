@@ -18,6 +18,10 @@ export function cortiProxy(): RequestHandler {
           proxyReq.setHeader("Authorization", `Bearer ${token}`);
         }
         proxyReq.setHeader("Tenant-Name", tenant);
+        proxyReq.setHeader(
+          "x-corti-analytics",
+          JSON.stringify({ examples_repo: "sdk/typescript/applets" }),
+        );
       },
     },
   });

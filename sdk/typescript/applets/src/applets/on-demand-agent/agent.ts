@@ -25,6 +25,7 @@ import {
   sendAgentMessage,
 } from "../_shared/cortiAgent";
 import type { EditorAdapter } from "../_shared/editorAdapter";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 
 export const COPY_EDIT_AGENT = {
@@ -107,7 +108,7 @@ export function configureCopyEdit(
   if (authConfig !== lastAuth) {
     lastAuth = authConfig;
     // REST (agents) is proxied via `environment`; WS stays direct.
-    client = new CortiClient({ environment, auth: authConfig });
+    client = new CortiClient({ environment, auth: authConfig, analytics: EXAMPLES_ANALYTICS });
   }
   const ns = identityNamespace(clientId, tenant);
   if (ns !== namespace) {

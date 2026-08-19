@@ -8,6 +8,7 @@ import {
   createCortiAuth,
   createCortiClient,
   createCortiClientRopc,
+  EXAMPLES_ANALYTICS,
   getAuthCodeConfig,
   getCortiConfig,
   getPkceConfig,
@@ -127,6 +128,7 @@ async function tokenBearer(_req: Request, res: Response): Promise<void> {
       tenantName: config.tenantName,
       environment: cortiEnvironment,
       auth: { accessToken },
+      analytics: EXAMPLES_ANALYTICS,
     });
 
     await bearerClient.facts.factGroupsList();
@@ -250,6 +252,7 @@ async function customRefresh(_req: Request, res: Response): Promise<void> {
             password: config.password,
           }),
       },
+      analytics: EXAMPLES_ANALYTICS,
     });
 
     await client.facts.factGroupsList();

@@ -24,7 +24,8 @@ public static class AmbientRtStreamsEndpoint
         var client = new CortiClient(
             cc!.TenantName,
             cc.Environment,
-            new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret)
+            new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret),
+            CortiHelpers.ExampleRequestOptions
         );
 
         var samplePath = CortiHelpers.ResolveSampleFilePath(env.ContentRootPath, "trouble-breathing.mp3");

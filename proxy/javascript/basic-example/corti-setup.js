@@ -13,6 +13,7 @@ const cortiClient = new CortiClient({
         clientId: CLIENT_ID,
         clientSecret: CLIENT_SECRET,
     },
+    analytics: { examples_repo: "proxy/javascript/basic-example" },
 });
 
 // Factory function to create/reuse Corti transcribe socket

@@ -115,6 +115,7 @@ export async function startSession(options: SessionOptions): Promise<ActiveSessi
       environment,
       tenantName,
       auth: { accessToken },
+      analytics: { examples_repo: "dictation/typescript/basic-example" },
     });
 
     socket = await client.transcribe.connect();

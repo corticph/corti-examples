@@ -37,6 +37,7 @@
 
       window.addEventListener("DOMContentLoaded", async () => {
         const ambient = document.querySelector("corti-ambient");
+        ambient.analytics = { examples_repo: "ambient/typescript/web-component" };
         const recordingButton = document.getElementById("recordingButton");
         const micSelector = document.getElementById("micSelector");
         const languageSelector = document.getElementById("languageSelector");

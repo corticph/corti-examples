@@ -3,6 +3,9 @@ import type { Response } from "express";
 
 export const cortiEnvironment = process.env.CORTI_ENVIRONMENT ?? "eu";
 
+/** Extra x-corti-analytics keys. SDK reserved keys (sdk_type, sdk_version) are set by the SDK. */
+export const EXAMPLES_ANALYTICS = { examples_repo: "sdk/typescript/express-web-api" } as const;
+
 /** Re-export SDK types and client so routes can import from one place. */
 export { Corti, CortiAuth, CortiClient, CortiEnvironment, CortiError };
 
@@ -168,6 +171,7 @@ export function createCortiClient(): {
     tenantName: config.tenantName,
     environment: config.environment,
     auth: { clientId: config.clientId, clientSecret: config.clientSecret },
+    analytics: EXAMPLES_ANALYTICS,
   });
 
   return { client, error: null };
@@ -192,6 +196,7 @@ export function createCortiClientRopc(): {
       username: config.username,
       password: config.password,
     },
+    analytics: EXAMPLES_ANALYTICS,
   });
 
   return { client, error: null };

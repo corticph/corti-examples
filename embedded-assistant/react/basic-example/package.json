@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@corti/embedded-web": "^1.0.0",
-    "@corti/sdk": "^0.10.1",
+    "@corti/sdk": "5.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

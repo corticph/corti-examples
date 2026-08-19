@@ -1,7 +1,13 @@
 import { CortiAuth, CortiClient, CortiEnvironment } from "@corti/sdk";
 import type { Application, Request, Response } from "express";
 import { asyncHandler } from "../lib/asyncHandler.js";
-import { getAuthCodeConfig, getCortiConfig, getPkceConfig, getRopcConfig } from "../lib/corti.js";
+import {
+  EXAMPLES_ANALYTICS,
+  getAuthCodeConfig,
+  getCortiConfig,
+  getPkceConfig,
+  getRopcConfig,
+} from "../lib/corti.js";
 
 type VariantResult = {
   name: string;
@@ -52,6 +58,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "cc-explicit",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: cc.tenantName,
           environment: cc.environment,
           auth: { clientId: cc.clientId, clientSecret: cc.clientSecret },
@@ -67,6 +74,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "ropc-explicit",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: ropc.tenantName,
           environment: ropc.environment,
           auth: { clientId: ropc.clientId, username: ropc.username, password: ropc.password },
@@ -82,6 +90,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "cc-env-library",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: cc.tenantName,
           environment: CortiEnvironment.Us,
           auth: { clientId: cc.clientId, clientSecret: cc.clientSecret },
@@ -97,6 +106,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "cc-env-custom-urls",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: cc.tenantName,
           environment: {
             base: `https://api.${cc.environment}.corti.app/v2`,
@@ -120,6 +130,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "env-custom-urls-no-auth",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           environment: {
             base: `https://api.${cc.environment}.corti.app/v2`,
             wss: `wss://api.${cc.environment}.corti.app/audio-bridge/v2`,
@@ -147,6 +158,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "bearer-explicit",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: cc.tenantName,
           environment: cc.environment,
           auth: { accessToken },
@@ -158,6 +170,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "bearer-auto-derive",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           auth: { accessToken },
         }),
     );
@@ -167,6 +180,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "bearer-with-refresh-fn",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: cc.tenantName,
           environment: cc.environment,
           auth: {
@@ -182,6 +196,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "bearer-custom-refresh-seeded",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: cc.tenantName,
           environment: cc.environment,
           auth: {
@@ -202,6 +217,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "baseUrl-cc",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: cc.tenantName,
           baseUrl: `https://api.${cc.environment}.corti.app/v2`,
           auth: { clientId: cc.clientId, clientSecret: cc.clientSecret },
@@ -232,6 +248,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "refresh-fn-explicit",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: ropc.tenantName,
           environment: ropc.environment,
           auth: { refreshAccessToken: getRopcToken },
@@ -243,6 +260,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "refresh-fn-auto-derive",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           auth: { refreshAccessToken: getRopcToken },
         }),
     );
@@ -260,6 +278,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
         "bearer-with-builtin-refresh",
         () =>
           new CortiClient({
+            analytics: EXAMPLES_ANALYTICS,
             tenantName: ropc.tenantName,
             environment: ropc.environment,
             auth: {
@@ -295,6 +314,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "auth-code-client",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: authCodeConfig.tenantName,
           environment: authCodeConfig.environment,
           auth: {
@@ -321,6 +341,7 @@ async function clientVariants(req: Request, res: Response): Promise<void> {
       "pkce-client",
       () =>
         new CortiClient({
+          analytics: EXAMPLES_ANALYTICS,
           tenantName: pkceConfig.tenantName,
           environment: pkceConfig.environment,
           auth: {

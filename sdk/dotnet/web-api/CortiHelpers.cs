@@ -76,6 +76,14 @@ public static class CortiHelpers
         return true;
     }
 
+    public static CortiRequestOptions ExampleRequestOptions { get; } = new()
+    {
+        Analytics = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["examples_repo"] = "sdk/dotnet/web-api",
+        },
+    };
+
     public static bool TryCreateCortiClient(
         IConfiguration config,
         out CortiClient? client,
@@ -90,7 +98,8 @@ public static class CortiHelpers
         client = new CortiClient(
             cortiConfig.TenantName,
             cortiConfig.Environment,
-            new CortiClientAuth.ClientCredentials(cortiConfig.ClientId, cortiConfig.ClientSecret));
+            new CortiClientAuth.ClientCredentials(cortiConfig.ClientId, cortiConfig.ClientSecret),
+            ExampleRequestOptions);
         return true;
     }
 
@@ -140,7 +149,8 @@ public static class CortiHelpers
         client = new CortiClient(
             ropcConfig.TenantName,
             ropcConfig.Environment,
-            new CortiClientAuth.Ropc(ropcConfig.ClientId, ropcConfig.Username, ropcConfig.Password));
+            new CortiClientAuth.Ropc(ropcConfig.ClientId, ropcConfig.Username, ropcConfig.Password),
+            ExampleRequestOptions);
         return true;
     }
 

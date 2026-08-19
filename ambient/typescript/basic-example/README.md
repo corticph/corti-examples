@@ -97,7 +97,7 @@ After a consultation ends, the server fetches the extracted facts and generates 
 const facts = await client.facts.list(interactionId);
 
 // 2. Create a document from the facts
-const document = await client.documents.create(interactionId, {
+const document = await client.documents.classic.create(interactionId, {
   context: [
     {
       type: "facts",

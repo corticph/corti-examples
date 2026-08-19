@@ -11,6 +11,7 @@
 import { CortiClient } from "@corti/sdk";
 import { Mic, Square } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { spliceSegment } from "../_shared/textInsertion";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
@@ -79,6 +80,7 @@ export function DictationSdk() {
       const client = new CortiClient({
         environment: sdkEnvironment,
         auth: { refreshAccessToken },
+        analytics: EXAMPLES_ANALYTICS,
       });
       // connect() with a configuration resolves only after CONFIG_ACCEPTED,
       // so audio is never sent before the handshake completes.
