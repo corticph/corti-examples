@@ -1,0 +1,10 @@
+---
+description: Do not document GitHub Actions or CI in READMEs unless the user asks
+alwaysApply: true
+---
+
+# READMEs — no CI churn
+
+Do not add bullets, sections, or paragraphs about GitHub Actions, CI workflows, path filters, pull-request checks, or “what runs in CI” to `README.md` files (or similar user-facing docs) in this repository unless the user **explicitly** requests that content.
+
+The workflow under `.github/workflows/` is the source of truth for automation; keep it out of example READMEs by default.

@@ -20,7 +20,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@corti/sdk": "5.0.0",
+    "@corti/sdk": "5",
     "dotenv": "^17.3.1",
     "express": "^4.18.2"
   },

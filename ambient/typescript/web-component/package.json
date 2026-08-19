@@ -9,7 +9,7 @@
   "keywords": ["corti", "ambient", "web-component"],
   "license": "MIT",
   "dependencies": {
-    "@corti/sdk": "5.0.0",
+    "@corti/sdk": "5",
     "dotenv": "^16.4.7",
     "express": "^4.18.2"
   },

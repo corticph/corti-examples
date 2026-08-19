@@ -99,6 +99,9 @@ export function EmbeddedAssistant({ baseUrl, authData }: EmbeddedAssistantProps)
     try {
       const corti = cortiRef.current;
       if (!corti) throw new Error("Embedded assistant not found");
+      (corti as typeof corti & { analytics?: Record<string, string> }).analytics = {
+        examples_repo: "embedded-assistant/react/basic-example",
+      };
       corti.hide();
 
       setStatus({ message: "Authenticating...", type: "loading" });
