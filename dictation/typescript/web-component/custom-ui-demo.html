@@ -42,6 +42,7 @@
 
       window.addEventListener("DOMContentLoaded", async () => {
         const dictation = document.querySelector("corti-dictation");
+        dictation.analytics = { examples_repo: "dictation/typescript/web-component" };
         const recordingButton = document.getElementById("recordingButton");
         const micSelector = document.getElementById("micSelector");
         const languageSelector = document.getElementById("languageSelector");

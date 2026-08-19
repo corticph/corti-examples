@@ -23,6 +23,7 @@ import type {
 import { CortiDictation } from "@corti/dictation-web";
 import { createComponent, type EventName } from "@lit/react";
 import * as React from "react";
+import { EXAMPLES_ANALYTICS } from "./examplesAnalytics";
 import { useHidRecordingControl } from "./useDictationDevice";
 
 const CortiDictationElement = createComponent({
@@ -158,6 +159,9 @@ export const CortiDictationComponent = React.forwardRef<
   const innerRef = React.useRef<InstanceType<typeof CortiDictation> | null>(null);
   const setRef = React.useCallback(
     (el: InstanceType<typeof CortiDictation> | null) => {
+      if (el) {
+        (el as typeof el & { analytics?: Record<string, string> }).analytics = EXAMPLES_ANALYTICS;
+      }
       innerRef.current = el;
       if (typeof forwardedRef === "function") {
         forwardedRef(el);

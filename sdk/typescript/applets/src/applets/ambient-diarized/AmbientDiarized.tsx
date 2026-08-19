@@ -19,6 +19,7 @@ import {
   groupBySpeakerRuns,
   mergeDiarizedSegments,
 } from "../_shared/diarizedTranscript";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
 import { type AmbientSettings, buildStreamConfig, DEFAULT_AMBIENT_SETTINGS } from "./config";
@@ -56,7 +57,12 @@ async function createInteraction(client: CortiClient): Promise<string> {
 export function AmbientDiarized() {
   const { authConfig, refreshAccessToken, sdkEnvironment } = useCortiAccessToken();
   const client = useMemo(
-    () => new CortiClient({ environment: sdkEnvironment, auth: { refreshAccessToken } }),
+    () =>
+      new CortiClient({
+        environment: sdkEnvironment,
+        auth: { refreshAccessToken },
+        analytics: EXAMPLES_ANALYTICS,
+      }),
     [sdkEnvironment, refreshAccessToken],
   );
   const [settings, setSettings] = useState<AmbientSettings>(DEFAULT_AMBIENT_SETTINGS);

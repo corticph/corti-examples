@@ -42,6 +42,7 @@ const cortiClient = new CortiClient({
     clientId: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
   },
+  analytics: { examples_repo: "agents/react/next-agent-chat" },
 });
 
 const A2AClientFactory = createA2AClientFactory(cortiClient);

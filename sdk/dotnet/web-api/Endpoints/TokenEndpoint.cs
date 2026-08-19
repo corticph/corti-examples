@@ -98,7 +98,8 @@ public static class TokenEndpoint
             var tokenResponse = await auth.GetTokenAsync(new OAuthTokenRequest { ClientId = cortiConfig.ClientId, ClientSecret = cortiConfig.ClientSecret });
 
             var client = new CortiClient(
-                new CortiClientAuth.Bearer(tokenResponse.AccessToken ?? string.Empty)
+                new CortiClientAuth.Bearer(tokenResponse.AccessToken ?? string.Empty),
+                CortiHelpers.ExampleRequestOptions
             );
 
             var factGroups = await client.Facts.FactGroupsListAsync();
@@ -237,7 +238,8 @@ public static class TokenEndpoint
                             RefreshToken = r.RefreshToken,
                             RefreshExpiresIn = r.RefreshExpiresIn,
                         };
-                    }));
+                    }),
+                CortiHelpers.ExampleRequestOptions);
 
             await client.Facts.FactGroupsListAsync();
             return Results.Ok(new { message = "Corti client (custom RefreshAccessToken) called Facts.FactGroupsListAsync successfully." });

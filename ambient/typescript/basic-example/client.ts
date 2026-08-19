@@ -81,6 +81,7 @@ export async function startSession(
     auth: {
       accessToken, // Token with "stream" scope only
     },
+    analytics: { examples_repo: "ambient/typescript/basic-example" },
   });
 
   // With a stream-scoped token these would fail:

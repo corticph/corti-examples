@@ -22,6 +22,7 @@ import type {
 import { CortiAmbient } from "@corti/ambient-web";
 import { createComponent, type EventName } from "@lit/react";
 import * as React from "react";
+import { EXAMPLES_ANALYTICS } from "./examplesAnalytics";
 import { useHidRecordingControl } from "./useDictationDevice";
 
 const CortiAmbientElement = createComponent({
@@ -73,6 +74,9 @@ export const CortiAmbientComponent = React.forwardRef<
   const innerRef = React.useRef<InstanceType<typeof CortiAmbient> | null>(null);
   const setRef = React.useCallback(
     (el: InstanceType<typeof CortiAmbient> | null) => {
+      if (el) {
+        (el as typeof el & { analytics?: Record<string, string> }).analytics = EXAMPLES_ANALYTICS;
+      }
       innerRef.current = el;
       if (typeof forwardedRef === "function") {
         forwardedRef(el);

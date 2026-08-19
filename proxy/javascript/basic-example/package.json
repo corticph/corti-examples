@@ -11,7 +11,7 @@
   "description": "",
   "type": "module",
   "dependencies": {
-    "@corti/sdk": "latest",
+    "@corti/sdk": "5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "ws": "^8.18.3"

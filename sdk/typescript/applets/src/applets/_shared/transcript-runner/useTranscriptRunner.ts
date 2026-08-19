@@ -8,6 +8,7 @@
  */
 import { CortiClient } from "@corti/sdk";
 import { useEffect, useMemo, useState } from "react";
+import { EXAMPLES_ANALYTICS } from "../examplesAnalytics";
 import { useCortiAccessToken } from "../useCortiAccessToken";
 import {
   createEmptyRunState,
@@ -100,7 +101,12 @@ export interface TranscriptRunner {
 export function useTranscriptRunner(): TranscriptRunner {
   const { refreshAccessToken, sdkEnvironment } = useCortiAccessToken();
   const client = useMemo(
-    () => new CortiClient({ environment: sdkEnvironment, auth: { refreshAccessToken } }),
+    () =>
+      new CortiClient({
+        environment: sdkEnvironment,
+        auth: { refreshAccessToken },
+        analytics: EXAMPLES_ANALYTICS,
+      }),
     [sdkEnvironment, refreshAccessToken],
   );
 

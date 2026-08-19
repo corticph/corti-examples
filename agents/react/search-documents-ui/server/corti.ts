@@ -18,6 +18,7 @@ export async function connect(): Promise<void> {
     environment: CORTI.env,
     tenantName: CORTI.tenant,
     auth: { clientId: CORTI.clientId, clientSecret: CORTI.clientSecret },
+    analytics: { examples_repo: "agents/react/search-documents-ui" },
   });
   await cortiClient.getAuthHeaders();
   client = cortiClient;

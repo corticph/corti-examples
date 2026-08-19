@@ -34,6 +34,7 @@ const client = new CortiClient({
     clientId: CLIENT_ID,
     clientSecret: CLIENT_SECRET,
   },
+  analytics: { examples_repo: "ambient/typescript/web-component" },
 });
 
 async function createInteraction() {

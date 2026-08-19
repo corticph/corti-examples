@@ -12,6 +12,7 @@ import {
   ensureAgent,
   sendAgentMessageWithContext,
 } from "../_shared/cortiAgent";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 import {
   appendDebugEntry,
@@ -164,7 +165,7 @@ export function configureConversation(
 ) {
   if (authConfig !== lastAuth) {
     lastAuth = authConfig;
-    client = new CortiClient({ environment, auth: authConfig });
+    client = new CortiClient({ environment, auth: authConfig, analytics: EXAMPLES_ANALYTICS });
   }
 
   const nextNamespace = identityNamespace(clientId, tenant);

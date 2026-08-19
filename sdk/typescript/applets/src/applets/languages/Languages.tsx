@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
 import {
@@ -44,7 +45,12 @@ function AvailabilityCell({ enabled }: { enabled: boolean }) {
 export function Languages() {
   const { refreshAccessToken, sdkEnvironment } = useCortiAccessToken();
   const client = useMemo(
-    () => new CortiClient({ environment: sdkEnvironment, auth: { refreshAccessToken } }),
+    () =>
+      new CortiClient({
+        environment: sdkEnvironment,
+        auth: { refreshAccessToken },
+        analytics: EXAMPLES_ANALYTICS,
+      }),
     [sdkEnvironment, refreshAccessToken],
   );
 

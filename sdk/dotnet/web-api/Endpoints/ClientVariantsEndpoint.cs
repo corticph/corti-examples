@@ -41,7 +41,8 @@ public static class ClientVariantsEndpoint
             await Run("cc-explicit", () => Task.FromResult(new CortiClient(
                 cc!.TenantName,
                 cc.Environment,
-                new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret))));
+                new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret),
+                CortiHelpers.ExampleRequestOptions)));
         else
             results.Add(new { name = "cc-explicit", status = "skipped" });
 
@@ -50,7 +51,8 @@ public static class ClientVariantsEndpoint
             await Run("ropc-explicit", () => Task.FromResult(new CortiClient(
                 ropc!.TenantName,
                 ropc.Environment,
-                new CortiClientAuth.Ropc(ropc.ClientId, ropc.Username, ropc.Password))));
+                new CortiClientAuth.Ropc(ropc.ClientId, ropc.Username, ropc.Password),
+                CortiHelpers.ExampleRequestOptions)));
         else
             results.Add(new { name = "ropc-explicit", status = "skipped" });
 
@@ -59,7 +61,8 @@ public static class ClientVariantsEndpoint
             await Run("cc-env-library", () => Task.FromResult(new CortiClient(
                 cc!.TenantName,
                 CortiClientEnvironment.Us,
-                new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret))));
+                new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret),
+                CortiHelpers.ExampleRequestOptions)));
         else
             results.Add(new { name = "cc-env-library", status = "skipped" });
 
@@ -74,7 +77,8 @@ public static class ClientVariantsEndpoint
                     Login = $"https://auth.{cc.Environment}.corti.app/realms",
                     Agents = $"https://api.{cc.Environment}.corti.app",
                 },
-                new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret))));
+                new CortiClientAuth.ClientCredentials(cc.ClientId, cc.ClientSecret),
+                CortiHelpers.ExampleRequestOptions)));
         else
             results.Add(new { name = "cc-env-custom-urls", status = "skipped" });
 
@@ -89,7 +93,7 @@ public static class ClientVariantsEndpoint
                 Wss = $"wss://api.{cc.Environment}.corti.app/audio-bridge/v2",
                 Login = $"https://auth.{cc.Environment}.corti.app/realms",
                 Agents = $"https://api.{cc.Environment}.corti.app",
-            })), expectedError: true);
+            }, CortiHelpers.ExampleRequestOptions)), expectedError: true);
         else
             results.Add(new { name = "env-custom-urls-no-auth", status = "skipped" });
 
@@ -111,10 +115,11 @@ public static class ClientVariantsEndpoint
             await Run("bearer-explicit", () => Task.FromResult(new CortiClient(
                 cc.TenantName,
                 cc.Environment,
-                new CortiClientAuth.Bearer(accessToken))));
+                new CortiClientAuth.Bearer(accessToken),
+                CortiHelpers.ExampleRequestOptions)));
 
             // 7. Bearer — auto-derive tenant + env from JWT
-            await Run("bearer-auto-derive", () => Task.FromResult(new CortiClient(new CortiClientAuth.Bearer(accessToken))));
+            await Run("bearer-auto-derive", () => Task.FromResult(new CortiClient(new CortiClientAuth.Bearer(accessToken), CortiHelpers.ExampleRequestOptions)));
 
             // 8. Bearer — explicit + custom refreshAccessToken (AccessToken is primary; fn called on expiry)
             await Run("bearer-with-refresh-fn", () => Task.FromResult(new CortiClient(
@@ -128,7 +133,8 @@ public static class ClientVariantsEndpoint
                             new OAuthTokenRequest { ClientId = cc.ClientId, ClientSecret = cc.ClientSecret },
                             cancellationToken: ct);
                         return new CustomRefreshResult { AccessToken = r.AccessToken, ExpiresIn = r.ExpiresIn, TokenType = r.TokenType };
-                    }))));
+                    }),
+                CortiHelpers.ExampleRequestOptions)));
 
             // 9. BearerCustomRefresh — refreshAccessToken as primary, seeded with initial accessToken
             //    The seeded AccessToken/ExpiresIn prevent an immediate refresh call on the first API request.
@@ -144,7 +150,8 @@ public static class ClientVariantsEndpoint
                         return new CustomRefreshResult { AccessToken = r.AccessToken, ExpiresIn = r.ExpiresIn, TokenType = r.TokenType };
                     },
                     AccessToken: accessToken,
-                    ExpiresIn: tokenResponse.ExpiresIn))));
+                    ExpiresIn: tokenResponse.ExpiresIn),
+                CortiHelpers.ExampleRequestOptions)));
         }
         else
         {
@@ -174,10 +181,11 @@ public static class ClientVariantsEndpoint
             await Run("refresh-fn-explicit", () => Task.FromResult(new CortiClient(
                 ropc.TenantName,
                 ropc.Environment,
-                new CortiClientAuth.BearerCustomRefresh(RefreshAccessToken: getRopcToken))));
+                new CortiClientAuth.BearerCustomRefresh(RefreshAccessToken: getRopcToken),
+                CortiHelpers.ExampleRequestOptions)));
 
             // 11. BearerCustomRefresh — auto-derive tenant + env from JWT
-            await Run("refresh-fn-auto-derive", () => Task.FromResult(new CortiClient(new CortiClientAuth.BearerCustomRefresh(RefreshAccessToken: getRopcToken))));
+            await Run("refresh-fn-auto-derive", () => Task.FromResult(new CortiClient(new CortiClientAuth.BearerCustomRefresh(RefreshAccessToken: getRopcToken), CortiHelpers.ExampleRequestOptions)));
 
             // 12. Bearer with built-in refresh (AccessToken + ClientId + RefreshToken — SDK calls refresh_token grant on expiry)
             //     ROPC is used here because client_credentials flows don't return a refresh token.
@@ -192,7 +200,8 @@ public static class ClientVariantsEndpoint
                         ClientId: ropc.ClientId,
                         RefreshToken: ropcTokenForRefresh.RefreshToken,
                         ExpiresIn: ropcTokenForRefresh.ExpiresIn,
-                        RefreshExpiresIn: ropcTokenForRefresh.RefreshExpiresIn))));
+                        RefreshExpiresIn: ropcTokenForRefresh.RefreshExpiresIn),
+                    CortiHelpers.ExampleRequestOptions)));
             else
                 results.Add(new { name = "bearer-with-builtin-refresh", status = "skipped", message = "ROPC response did not include a refresh token" });
         }
@@ -209,7 +218,8 @@ public static class ClientVariantsEndpoint
             await Run("auth-code-client", () => Task.FromResult(new CortiClient(
                 ac!.TenantName,
                 ac.Environment,
-                new CortiClientAuth.AuthorizationCode(ac.ClientId, ac.ClientSecret, authCode!, ac.RedirectUri))));
+                new CortiClientAuth.AuthorizationCode(ac.ClientId, ac.ClientSecret, authCode!, ac.RedirectUri),
+                CortiHelpers.ExampleRequestOptions)));
         else
             results.Add(new
             {
@@ -225,7 +235,8 @@ public static class ClientVariantsEndpoint
             await Run("pkce-client", () => Task.FromResult(new CortiClient(
                 pkce!.TenantName,
                 pkce.Environment,
-                new CortiClientAuth.Pkce(pkce.ClientId, pkceCode!, pkce.RedirectUri, pkceVerifier!))));
+                new CortiClientAuth.Pkce(pkce.ClientId, pkceCode!, pkce.RedirectUri, pkceVerifier!),
+                CortiHelpers.ExampleRequestOptions)));
         else
             results.Add(new
             {

@@ -36,6 +36,7 @@
       import "https://esm.sh/@corti/dictation-web";
 
       const dictation = document.querySelector("corti-dictation");
+      dictation.analytics = { examples_repo: "dictation/typescript/web-component" };
       const componentPlaceholder = document.getElementById("componentPlaceholder");
       const transcriptArea = document.getElementById("transcript");
       const commandOutput = document.getElementById("commandOutput");

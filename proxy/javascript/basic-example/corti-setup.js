@@ -13,6 +13,7 @@ const cortiClient = new CortiClient({
         clientId: CLIENT_ID,
         clientSecret: CLIENT_SECRET,
     },
+    analytics: { examples_repo: "proxy/javascript/basic-example" },
 });
 
 // Factory function to create/reuse Corti transcribe socket
@@ -68,7 +69,8 @@ const socketFactory = () => {
 //         const env = ENVIRONMENT_ID === 'us' ? CortiEnvironment.Us : CortiEnvironment.Eu;
 //         // Option 2: Construct manually for other environments
 //         // const wssBase = `wss://api.${ENVIRONMENT_ID}.corti.app/audio-bridge/v2`;
-//         const wsUrl = `${env.wss}/transcribe?tenant-name=${TENANT_NAME}&token=${tokenResponse.data.accessToken}`;
+//         const analytics = encodeURIComponent(JSON.stringify({ examples_repo: "proxy/javascript/basic-example" }));
+//         const wsUrl = `${env.wss}/transcribe?tenant-name=${TENANT_NAME}&token=${tokenResponse.data.accessToken}&x-corti-analytics=${analytics}`;
 //
 //         // Create native WebSocket connection
 //         socket = new WebSocket(wsUrl);

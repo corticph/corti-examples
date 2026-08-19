@@ -46,6 +46,7 @@ const client = new CortiClient({
     clientId: CLIENT_ID,
     clientSecret: CLIENT_SECRET,
   },
+  analytics: { examples_repo: "ambient/typescript/basic-example" },
 });
 
 // ---------------------------------------------------------------------------
@@ -145,7 +146,7 @@ app.post("/api/create-document", async (req, res) => {
     })) as Corti.FactsContext[];
 
     // Step 3: Create a document using the collected facts
-    const document = await client.documents.create(interactionId, {
+    const document = await client.documents.classic.create(interactionId, {
       context: [
         {
           type: "facts",

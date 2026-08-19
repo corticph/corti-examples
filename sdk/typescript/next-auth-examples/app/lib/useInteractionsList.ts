@@ -20,6 +20,7 @@ export function useInteractionsList(
         tenantName: t,
         environment: env,
         auth: { accessToken: token },
+        analytics: { examples_repo: "sdk/typescript/next-auth-examples" },
       });
       const pager = await client.interactions.list({
         pageSize: 10,
