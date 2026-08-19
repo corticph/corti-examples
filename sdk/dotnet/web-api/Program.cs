@@ -28,6 +28,7 @@ app.MapCodesEndpoint();
 app.MapLanguagesEndpoint();
 app.MapTemplatesEndpoint();
 app.MapAgentsEndpoint();
+app.MapAgenticEndpoint();
 app.MapDocumentsEndpoint();
 app.MapGuidedSectionsEndpoint();
 app.MapGuidedTemplatesEndpoint();

@@ -1,4 +1,5 @@
 import type { Application } from "express";
+import { registerAgentic } from "./agentic.js";
 import { registerAgents } from "./agents.js";
 import { registerAmbientAsyncEndToEnd } from "./ambientAsyncEndToEnd.js";
 import { registerAmbientAsyncFacts } from "./ambientAsyncFacts.js";
@@ -32,6 +33,7 @@ export function registerRoutes(app: Application): void {
   registerLanguages(app);
   registerTemplates(app);
   registerAgents(app);
+  registerAgentic(app);
   registerDocuments(app);
   registerGuidedSections(app);
   registerGuidedTemplates(app);

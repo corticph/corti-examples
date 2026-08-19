@@ -30,6 +30,6 @@ All requests use the `{{host}}` variable from the selected environment, so switc
 
 | Path | Description |
 |------|-------------|
-| `WebApi.postman_collection.json` | Collection: token (client credentials, ROPC, refresh, auth code, PKCE), client-variants, interactions, recordings, transcripts, facts, codes, documents, templates, agents, stream, transcribe |
+| `WebApi.postman_collection.json` | Collection: token (client credentials, ROPC, refresh, auth code, PKCE), client-variants, interactions, recordings, transcripts, facts, codes, documents (classic + guided), templates, agents, agentic, stream, transcribe |
 | `environments/` | Environment files with `host` set per server (JS, .NET, .NET Docker) |
 | `globals/` | Optional workspace globals |

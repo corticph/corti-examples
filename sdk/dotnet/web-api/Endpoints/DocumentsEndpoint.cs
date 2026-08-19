@@ -1,4 +1,5 @@
 using Corti;
+using Corti.Documents;
 using CortiApiExamples;
 
 namespace CortiApiExamples.Endpoints;
@@ -36,7 +37,7 @@ public static class DocumentsEndpoint
             });
             var demoInteractionId = created.InteractionId;
 
-            var listResp2 = await client.Documents.ListAsync(demoInteractionId);
+            var listResp2 = await client.Documents.Classic.ListAsync(demoInteractionId);
             var listDocuments = listResp2.Data?.ToList() ?? new List<DocumentsGetResponse>();
 
             var createBody = new DocumentsCreateRequestWithTemplateKey
@@ -57,12 +58,12 @@ public static class DocumentsEndpoint
                 OutputLanguage = "en",
                 Name = "Patient Consultation Note",
             };
-            var createdDocument = await client.Documents.CreateAsync(demoInteractionId, createBody);
+            var createdDocument = await client.Documents.Classic.CreateAsync(demoInteractionId, createBody);
             var documentId = createdDocument.Id;
 
-            var retrievedDocument = await client.Documents.GetAsync(demoInteractionId, documentId);
+            var retrievedDocument = await client.Documents.Classic.GetAsync(demoInteractionId, documentId);
 
-            var updatedDocument = await client.Documents.UpdateAsync(
+            var updatedDocument = await client.Documents.Classic.UpdateAsync(
                 demoInteractionId,
                 documentId,
                 new DocumentsUpdateRequest
@@ -77,7 +78,7 @@ public static class DocumentsEndpoint
                     ],
                 });
 
-            await client.Documents.DeleteAsync(demoInteractionId, documentId);
+            await client.Documents.Classic.DeleteAsync(demoInteractionId, documentId);
             await client.Interactions.DeleteAsync(demoInteractionId);
 
             return Results.Ok(new

@@ -224,24 +224,6 @@
       "response": []
     },
     {
-      "name": "Guided documents",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{host}}/guided-documents",
-          "host": [
-            "{{host}}"
-          ],
-          "path": [
-            "guided-documents"
-          ],
-          "query": []
-        }
-      },
-      "response": []
-    },
-    {
       "name": "Templates",
       "request": {
         "method": "GET",
@@ -362,6 +344,24 @@
               "disabled": true
             }
           ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Agentic",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{host}}/agentic",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "agentic"
+          ],
+          "query": []
         }
       },
       "response": []

@@ -67,7 +67,7 @@ async function handle(_req: Request, res: Response): Promise<void> {
       data: t,
     }));
 
-    const document = await client.documents.create(interactionId, {
+    const document = await client.documents.classic.create(interactionId, {
       context,
       templateKey: "soap",
       outputLanguage: "en",
