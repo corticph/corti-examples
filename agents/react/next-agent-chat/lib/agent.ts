@@ -73,11 +73,11 @@ async function initializeAgent() {
 
   // Create a new agent using the Corti SDK
   // This agent will handle all chat interactions
-  const agent = await cortiClient.agents.create({
+  const agent = await cortiClient.agentic.agents.create({
     name: "Next.js Chat Demo Agent",
     description: "A demo agent for showcasing A2A chat integration with Next.js",
     // Ephemeral agents are automatically cleaned up by Corti
-    ephemeral: true,
+    lifecycle: "ephemeral",
   });
 
   console.log(`[Agent] Created agent with ID: ${agent.id}`);
@@ -89,7 +89,7 @@ async function initializeAgent() {
    * the agent card resolver so all requests include the Bearer token.
    */
 
-  const cardUrl = await cortiClient.agents.getCardUrl(agent.id);
+  const cardUrl = await cortiClient.agentic.agents.getCardUrl(agent.id);
 
   // Construct the agent card URL from the Corti environment
 
