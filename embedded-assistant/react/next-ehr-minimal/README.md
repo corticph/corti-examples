@@ -110,7 +110,3 @@ next-ehr-minimal/
 ├── tsconfig.json         # TypeScript configuration
 └── package.json          # Dependencies and scripts
 ```
-
-## Brand Guidelines
-
-See [brand.md](./brand.md) for the Corti design system guidelines.
