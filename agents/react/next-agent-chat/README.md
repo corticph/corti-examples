@@ -34,7 +34,7 @@ This example shows how to:
 │  │  app/api/chat/route.ts                                     │ │
 │  │  • Receives messages from frontend                         │ │
 │  │  • Gets singleton agent instance from lib/agent.ts         │ │
-│  │  • Uses buildParams from @corti/ai-sdk-adapter             │ │
+│  │  • Uses convertToParams from @corti/ai-sdk-adapter         │ │
 │  │  • Calls sendMessageStream on A2A client                   │ │
 │  │  • Uses toUIMessageStream to convert A2A to UI format      │ │
 │  │  • Returns streaming response via createUIMessageStream    │ │
@@ -58,7 +58,7 @@ This example shows how to:
 │                         Corti Platform                          │
 │  • Agent execution and processing                               │
 │  • A2A protocol for real-time streaming                         │
-│  • Experts and capabilities integration                         │
+│  • Connectors and capabilities integration                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -146,7 +146,8 @@ This module creates a Corti agent **once when the server starts** and exports it
 
 **Key concepts:**
 - Initializes `CortiClient` with OAuth credentials (client credentials flow)
-- Creates an ephemeral agent that's automatically cleaned up
+- Creates an ephemeral agent (`lifecycle: "ephemeral"`) that's automatically cleaned up
+- Uses `client.agentic.agents` (Agentic API v2) to create and manage the agent
 - Uses `ClientFactory` from `@a2a-js/sdk/client` to create the A2A client
 - Calls `createFromUrl()` to initialize the client from the agent's base URL
 - Caches the agent promise to prevent multiple initializations
@@ -158,7 +159,7 @@ This Next.js API route handles incoming chat messages and streams responses back
 **Key concepts:**
 - Receives messages from the frontend via POST request
 - Gets the singleton agent instance (not creating a new one)
-- Uses `buildParams()` from `@corti/ai-sdk-adapter` to convert UI messages to A2A format
+- Uses `convertToParams()` from `@corti/ai-sdk-adapter` to convert UI messages to A2A format
 - Calls `sendMessageStream()` on the A2A client to get an async generator  
 - Uses `toUIMessageStream()` to convert A2A events to UI message chunks
 - Returns streaming responses via `createUIMessageStreamResponse()`
@@ -180,7 +181,7 @@ The main chat interface built with React using the AI SDK's `useChat` hook.
 
 ### What is A2A (Agent-to-Agent)?
 
-A2A is Corti's protocol for real-time communication with agents. It enables:
+A2A (Agent-to-Agent) is Corti's protocol for real-time communication with agents, currently at v1.0. It enables:
 - **Streaming responses** - Text appears in real-time as the agent generates it
 - **Tool usage** - Agents can call tools and return results
 - **Context management** - Maintain conversation state across multiple turns
@@ -188,7 +189,7 @@ A2A is Corti's protocol for real-time communication with agents. It enables:
 ### Why Use the AI SDK Adapter?
 
 The `@corti/ai-sdk-adapter` package acts as a bridge:
-- **Corti side**: Uses A2A protocol for agent communication
+- **Corti side**: Uses A2A v1.0 protocol for agent communication
 - **AI SDK side**: Converts A2A events to `UIMessage` format
 - **Benefit**: Seamlessly use AI SDK's powerful `useChat` hook with Corti's agent capabilities
 - **Developer experience**: Write less code - AI SDK handles streaming, state management, and error handling

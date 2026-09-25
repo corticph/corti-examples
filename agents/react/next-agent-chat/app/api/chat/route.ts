@@ -52,7 +52,12 @@ export async function POST(req: Request) {
       });
     }
 
-    console.log(`[API] Received message: ${lastMessage.content}`);
+    const lastMessageText = lastMessage.parts
+      ?.filter((part: { type: string }) => part.type === "text")
+      .map((part: { text?: string }) => part.text)
+      .join("");
+
+    console.log(`[API] Received message: ${lastMessageText}`);
 
     /**
      * Get the singleton agent instance
