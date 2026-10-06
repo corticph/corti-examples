@@ -92,7 +92,7 @@ public static class AmbientRtStreamsEndpoint
                     IsMultichannel = false,
                     Participants = new List<StreamConfigParticipant>
                     {
-                        new() { Channel = 0, Role = StreamConfigParticipantRole.Multiple },
+                        new() { Channel = 0, Role = "multiple" },
                     },
                 },
                 Mode = new StreamConfigMode
