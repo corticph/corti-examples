@@ -12,6 +12,7 @@ import {
   ensureAgent,
   sendAgentMessage,
 } from "../_shared/cortiAgent";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 
 export const SECOND_PASS_AGENT = {
@@ -101,7 +102,7 @@ export function configureSecondPassAgent(
   ) {
     lastRefresh = authConfig.refreshAccessToken;
     lastEnv = environment;
-    client = new CortiClient({ environment, auth: authConfig });
+    client = new CortiClient({ environment, auth: authConfig, analytics: EXAMPLES_ANALYTICS });
   }
 
   const nextNamespace = identityNamespace(clientId, tenant);

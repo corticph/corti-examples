@@ -30,6 +30,7 @@ import {
   OUTPUT_LANGUAGES,
   useGuidedTemplates,
 } from "./corti-documents";
+import { EXAMPLES_ANALYTICS } from "./examplesAnalytics";
 import { useCortiAccessToken } from "./useCortiAccessToken";
 
 export interface DocGenConfig {
@@ -82,6 +83,7 @@ export function DocumentGeneratorApplet({ config }: { config: DocGenConfig }) {
       const client = new CortiClient({
         environment: sdkEnvironment,
         auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
       });
       const response = await generateFromText(client, effectiveTemplateId, note, language);
       setDocument(response.document);

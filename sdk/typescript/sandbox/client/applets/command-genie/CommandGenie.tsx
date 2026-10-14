@@ -30,6 +30,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/pop
 import { dispatchCommand } from "../_shared/commandDispatch";
 import { CortiDictationComponent } from "../_shared/cortiDictationReact";
 import type { EditorAdapter } from "../_shared/editorAdapter";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { Range } from "../_shared/offsetMap";
 import { useSessionState } from "../_shared/sessionState";
 import { useActiveControl } from "../_shared/useActiveControl";
@@ -225,6 +226,7 @@ export function CommandGenie() {
       clientRef.current = new CortiClient({
         environment: sdkEnvironment,
         auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
       });
     } else {
       clientRef.current = null;
@@ -474,6 +476,7 @@ export function CommandGenie() {
         client = new CortiClient({
           environment: sdkEnvironment,
           auth: authConfig,
+          analytics: EXAMPLES_ANALYTICS,
         });
         clientRef.current = client;
       }

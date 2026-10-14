@@ -1,5 +1,6 @@
 import { CortiClient } from "@corti/sdk";
 import { useCallback, useRef, useState } from "react";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { buildComparisonConfigs } from "./config";
 import type { FormattingCategory, FormattingOption } from "./formattingOptions";
@@ -173,6 +174,7 @@ export function useComparisonConnections(language: string) {
         clientRef.current = new CortiClient({
           environment: sdkEnvironment,
           auth: { refreshAccessToken },
+          analytics: EXAMPLES_ANALYTICS,
         });
       }
       const client = clientRef.current;

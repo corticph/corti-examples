@@ -28,6 +28,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { findDefaultTemplate, useGuidedTemplates } from "../applets/_shared/corti-documents";
+import { EXAMPLES_ANALYTICS } from "../applets/_shared/examplesAnalytics";
 import { useCortiAccessToken } from "../applets/_shared/useCortiAccessToken";
 import { Highlighted } from "../components/docs/CodeBlock";
 import { Button } from "../components/ui/button";
@@ -320,6 +321,7 @@ export default function GettingStarted() {
       const client = new CortiClient({
         environment: sdkEnvironment,
         auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
       });
       switch (i) {
         case 0: {

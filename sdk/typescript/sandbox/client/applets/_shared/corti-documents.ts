@@ -10,6 +10,7 @@
 import type { Corti, CortiAuth } from "@corti/sdk";
 import { CortiClient } from "@corti/sdk";
 import { useEffect, useState } from "react";
+import { EXAMPLES_ANALYTICS } from "./examplesAnalytics";
 import type { CortiSdkEnvironment } from "./useCortiAccessToken";
 
 /** BCP 47 output-language options surfaced in every doc-gen applet. */
@@ -41,6 +42,7 @@ async function fetchTemplates(
     inFlight = new CortiClient({
       environment: sdkEnvironment,
       auth: authConfig,
+      analytics: EXAMPLES_ANALYTICS,
     }).documents.templates
       .list()
       .then((templates) => {

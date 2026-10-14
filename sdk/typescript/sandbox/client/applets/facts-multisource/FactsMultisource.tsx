@@ -18,6 +18,7 @@ import { Input } from "../../components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Textarea } from "../../components/ui/textarea";
 import { useAuth } from "../../context/AuthContext";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 
@@ -107,7 +108,11 @@ export function FactsMultisource() {
     setPersisted(null);
     setInteractionId(null);
     try {
-      const client = new CortiClient({ environment: sdkEnvironment, auth: authConfig });
+      const client = new CortiClient({
+        environment: sdkEnvironment,
+        auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
+      });
       // The API allows exactly one context entry, so all documents are merged
       // into a single labeled text block rather than one entry per document.
       const combinedText = active.map((d) => `${d.label}:\n${d.text}`).join("\n\n");
@@ -134,7 +139,11 @@ export function FactsMultisource() {
     setPersisted(null);
     setInteractionId(null);
     try {
-      const client = new CortiClient({ environment: sdkEnvironment, auth: authConfig });
+      const client = new CortiClient({
+        environment: sdkEnvironment,
+        auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
+      });
       const all: Corti.FactsExtractResponseFactsItem[] = [];
       for (const doc of active) {
         const response = await client.facts.extract({
@@ -164,7 +173,11 @@ export function FactsMultisource() {
     setPersisting(true);
     setError(null);
     try {
-      const client = new CortiClient({ environment: sdkEnvironment, auth: authConfig });
+      const client = new CortiClient({
+        environment: sdkEnvironment,
+        auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
+      });
       const interaction = await createInteraction();
       setInteractionId(interaction.interactionId);
       await client.facts.create(interaction.interactionId, {

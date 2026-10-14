@@ -1,6 +1,7 @@
 import { CortiClient } from "@corti/sdk";
 import { Loader2, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { type CodingCode, runNoteToCode, useNoteToCodeStore } from "./api";
@@ -36,6 +37,7 @@ export function NoteToCode() {
             const client = new CortiClient({
               environment: sdkEnvironment,
               auth: authConfig,
+              analytics: EXAMPLES_ANALYTICS,
             });
             void runNoteToCode(client, input);
           }}

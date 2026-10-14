@@ -14,6 +14,7 @@ import {
   ensureAgent,
   sendAgentMessage,
 } from "../_shared/cortiAgent";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 
 export const NOTE_DRAFTER_AGENT: AgentSpec = {
@@ -141,7 +142,7 @@ export function configureQaReviewer(
 ) {
   if (authConfig !== lastAuth) {
     lastAuth = authConfig;
-    client = new CortiClient({ environment, auth: authConfig });
+    client = new CortiClient({ environment, auth: authConfig, analytics: EXAMPLES_ANALYTICS });
     configVersion++;
   }
   const ns = identityNamespace(clientId, tenant);

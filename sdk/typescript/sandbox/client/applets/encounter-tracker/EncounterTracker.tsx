@@ -1,6 +1,7 @@
 import { CortiClient } from "@corti/sdk";
 import { CalendarRange, Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { type Encounter, runEncounterTracker, useEncounterTrackerStore } from "./api";
@@ -133,6 +134,7 @@ export function EncounterTracker() {
             const client = new CortiClient({
               environment: sdkEnvironment,
               auth: authConfig,
+              analytics: EXAMPLES_ANALYTICS,
             });
             void runEncounterTracker(client, encounters);
           }}

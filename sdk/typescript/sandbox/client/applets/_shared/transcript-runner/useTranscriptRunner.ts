@@ -9,6 +9,7 @@
 import { CortiClient } from "@corti/sdk";
 import { useEffect, useMemo } from "react";
 import { useSessionStatus } from "../../../context/SessionStatusContext";
+import { EXAMPLES_ANALYTICS } from "../examplesAnalytics";
 import { useSessionState } from "../sessionState";
 import { useCortiAccessToken } from "../useCortiAccessToken";
 import {
@@ -102,7 +103,12 @@ export interface TranscriptRunner {
 export function useTranscriptRunner(): TranscriptRunner {
   const { refreshAccessToken, sdkEnvironment } = useCortiAccessToken();
   const client = useMemo(
-    () => new CortiClient({ environment: sdkEnvironment, auth: { refreshAccessToken } }),
+    () =>
+      new CortiClient({
+        environment: sdkEnvironment,
+        auth: { refreshAccessToken },
+        analytics: EXAMPLES_ANALYTICS,
+      }),
     [sdkEnvironment, refreshAccessToken],
   );
 

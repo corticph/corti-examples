@@ -19,6 +19,7 @@ import {
   groupBySpeakerRuns,
   mergeDiarizedSegments,
 } from "../_shared/diarizedTranscript";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useDictationLanguage } from "../_shared/useDictationLanguage";
@@ -59,7 +60,12 @@ export function AmbientDiarized() {
   const { authConfig, refreshAccessToken, sdkEnvironment } = useCortiAccessToken();
   const { language, onLanguagesChanged } = useDictationLanguage();
   const client = useMemo(
-    () => new CortiClient({ environment: sdkEnvironment, auth: { refreshAccessToken } }),
+    () =>
+      new CortiClient({
+        environment: sdkEnvironment,
+        auth: { refreshAccessToken },
+        analytics: EXAMPLES_ANALYTICS,
+      }),
     [sdkEnvironment, refreshAccessToken],
   );
   const [settings, setSettings] = useSessionState<AmbientSettings>(

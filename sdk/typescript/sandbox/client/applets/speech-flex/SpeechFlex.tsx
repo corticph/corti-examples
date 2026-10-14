@@ -42,6 +42,7 @@ import { Switch } from "@/components/ui/switch";
 import { CortiAmbientComponent } from "../_shared/cortiAmbientReact";
 import { CortiDictationComponent } from "../_shared/cortiDictationReact";
 import { type DiarizedSegment, mergeDiarizedSegments } from "../_shared/diarizedTranscript";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { buildFormattingOverrides } from "../_shared/formatting";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
@@ -193,6 +194,7 @@ export function SpeechFlex() {
     return new CortiClient({
       environment: sdkEnvironment,
       auth: authConfig,
+      analytics: EXAMPLES_ANALYTICS,
     });
   }, [sdkEnvironment, authConfig, isReady]);
 
