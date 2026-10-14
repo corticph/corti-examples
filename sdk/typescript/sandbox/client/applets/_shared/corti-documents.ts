@@ -1,0 +1,246 @@
+/**
+ * Shared constants and helpers for the document-generation applets
+ * (`client.documents.generate` / `client.documents.templates.list`).
+ *
+ * `documents.generate` is context-only when no `interactionId` is supplied —
+ * no interaction has to be created first, and the response is the ephemeral
+ * (not persisted) document shape.
+ */
+
+import type { Corti, CortiAuth } from "@corti/sdk";
+import { CortiClient } from "@corti/sdk";
+import { useEffect, useState } from "react";
+import type { CortiSdkEnvironment } from "./useCortiAccessToken";
+
+/** BCP 47 output-language options surfaced in every doc-gen applet. */
+export const OUTPUT_LANGUAGES: { value: string; label: string }[] = [
+  { value: "en", label: "English" },
+  { value: "en-GB", label: "English (UK)" },
+  { value: "es", label: "Spanish" },
+  { value: "fr", label: "French" },
+  { value: "de", label: "German" },
+  { value: "nl", label: "Dutch" },
+  { value: "pt", label: "Portuguese" },
+  { value: "it", label: "Italian" },
+  { value: "da", label: "Danish" },
+  { value: "sv", label: "Swedish" },
+];
+
+/** Module-level cache: the template list is fetched at most once per session. */
+let cachedTemplates: Corti.GuidedTemplate[] | null = null;
+let inFlight: Promise<Corti.GuidedTemplate[]> | null = null;
+
+async function fetchTemplates(
+  authConfig: CortiAuth.AuthTokenDerivable,
+  sdkEnvironment: CortiSdkEnvironment,
+): Promise<Corti.GuidedTemplate[]> {
+  if (cachedTemplates) {
+    return cachedTemplates;
+  }
+  if (!inFlight) {
+    inFlight = new CortiClient({
+      environment: sdkEnvironment,
+      auth: authConfig,
+    }).documents.templates
+      .list()
+      .then((templates) => {
+        cachedTemplates = templates;
+        return templates;
+      })
+      .catch(() => {
+        // Don't cache the failure: leave cachedTemplates unset (null) so a
+        // future call retries the fetch instead of being poisoned forever.
+        // Callers of this failed attempt still get an empty list back.
+        return [];
+      })
+      .finally(() => {
+        inFlight = null;
+      });
+  }
+  return inFlight;
+}
+
+/** Fetches (and session-caches) the tenant's guided document templates.
+ * When `language` is provided, only templates that support it are returned. */
+export function useGuidedTemplates(
+  authConfig: CortiAuth.AuthTokenDerivable,
+  sdkEnvironment: CortiSdkEnvironment,
+  language?: string,
+) {
+  const [templates, setTemplates] = useState<Corti.GuidedTemplate[]>(
+    cachedTemplates ?? [],
+  );
+  const [loading, setLoading] = useState(!cachedTemplates);
+
+  useEffect(() => {
+    let active = true;
+    const apply = (all: Corti.GuidedTemplate[]) => {
+      if (!active) return;
+      const filtered = language
+        ? all.filter((t) => t.languages.includes(language))
+        : all;
+      setTemplates(filtered);
+      setLoading(false);
+    };
+    if (cachedTemplates) {
+      apply(cachedTemplates);
+      return;
+    }
+    setLoading(true);
+    fetchTemplates(authConfig, sdkEnvironment).then(apply);
+    return () => {
+      active = false;
+    };
+  }, [authConfig, sdkEnvironment, language]);
+
+  return { templates, loading };
+}
+
+/** Best-effort match of a template by name/key substring, falling back to the first template. */
+export function findDefaultTemplate(
+  templates: Corti.GuidedTemplate[],
+  ...keywords: string[]
+): Corti.GuidedTemplate | undefined {
+  const lower = keywords.map((k) => k.toLowerCase());
+  return (
+    templates.find((t) =>
+      lower.some((k) => t.name.toLowerCase().includes(k)),
+    ) ?? templates[0]
+  );
+}
+
+/**
+ * Deduplicate templates by name, keeping the "primary" variant when multiple
+ * share the same title.  Common causes of duplicates:
+ *   - auto-generated copies of a manually created template
+ *   - inherited children that kept the parent's name
+ *   - region/specialty/language variants (e.g. en-US vs en-GB)
+ *
+ * When more than one template has the same name, the one that is
+ * **not auto-generated** wins.  If both are auto-generated (or neither),
+ * the **non-inherited** one wins.  As a final tie-break, the one with the
+ * later `updatedAt` is kept.  If the top two score equally and differ by
+ * specialty, region, or language, both are kept — the non-primary variant
+ * gets a distinguishing suffix in parentheses (e.g. "Emergency Note (en-US)").
+ */
+export function deduplicateTemplates(
+  templates: Corti.GuidedTemplate[],
+): Corti.GuidedTemplate[] {
+  const byName = new Map<string, Corti.GuidedTemplate[]>();
+  for (const t of templates) {
+    const key = t.name.toLowerCase();
+    const group = byName.get(key) ?? [];
+    group.push(t);
+    byName.set(key, group);
+  }
+
+  const result: Corti.GuidedTemplate[] = [];
+  for (const group of byName.values()) {
+    if (group.length === 1) {
+      result.push(group[0]);
+      continue;
+    }
+
+    // Score each template: higher is better
+    const scored = group.map((t) => ({
+      t,
+      score: (t.autoGenerated ? 0 : 10) + (t.inheritedFromId ? 0 : 5),
+    }));
+
+    scored.sort((a, b) => {
+      if (a.score !== b.score) {
+        return b.score - a.score;
+      }
+      return b.t.updatedAt.getTime() - a.t.updatedAt.getTime();
+    });
+
+    const best = scored[0].t;
+
+    // If the top two have the same score and different specialties/regions,
+    // keep both but distinguish them
+    if (scored[0].score === scored[1].score) {
+      const [a, b] = [scored[0].t, scored[1].t];
+      const sameSpecialties =
+        a.specialties.length === b.specialties.length &&
+        a.specialties.every((s) => b.specialties.includes(s));
+      const sameRegions =
+        a.regions.length === b.regions.length &&
+        a.regions.every((r) => b.regions.includes(r));
+      const sameLanguages =
+        a.languages.length === b.languages.length &&
+        a.languages.every((l) => b.languages.includes(l));
+      if (!sameSpecialties || !sameRegions || !sameLanguages) {
+        // Keep both, distinguish by any metadata that differs
+        for (const t of group) {
+          let suffix = "";
+          if (
+            t.specialties.length > 0 &&
+            t.specialties[0] !== best.specialties[0]
+          ) {
+            suffix = t.specialties[0];
+          } else if (
+            t.regions.length > 0 &&
+            t.regions.length !== best.regions.length &&
+            t.regions[0] !== best.regions[0]
+          ) {
+            suffix = t.regions[0];
+          } else if (
+            t.languages.length > 1 &&
+            t.languages[1] !== best.languages[1]
+          ) {
+            suffix = t.languages[1];
+          }
+          result.push(suffix ? { ...t, name: `${t.name} (${suffix})` } : t);
+        }
+        continue;
+      }
+    }
+
+    result.push(best);
+  }
+
+  return result;
+}
+
+/** Generate a document from plain-text context against a stored template, no interaction required. */
+export async function generateFromText(
+  client: CortiClient,
+  templateId: string,
+  text: string,
+  outputLanguage: string,
+): Promise<Corti.GuidedDocumentsCreateEphemeralResponse> {
+  return client.documents.generate({
+    outputLanguage,
+    templateRef: { templateId },
+    context: [{ type: "text", text }],
+  });
+}
+
+/** Ordered [sectionName, sectionText] pairs from a generated document's string form.
+ * Uses the document's `sections` array to map section IDs to headings;
+ * falls back to raw keys when `sections` is absent. */
+export function documentSections(
+  doc: Corti.GuidedEphemeralDocument,
+): [string, string][] {
+  if (doc.sections && doc.sections.length > 0) {
+    return doc.sections
+      .map(
+        (s) =>
+          [s.heading, doc.stringDocument[s.sectionId] ?? ""] as [
+            string,
+            string,
+          ],
+      )
+      .filter(([, text]) => text.length > 0);
+  }
+  return Object.entries(doc.stringDocument);
+}
+
+/** Human-friendly error message with guidance for a 403 response. */
+export function describeDocumentsError(e: unknown): string {
+  const message = e instanceof Error ? e.message : String(e);
+  if (/403|forbidden/i.test(message)) {
+    return "Document generation failed (403). Verify the token scope, tenant, and environment.";
+  }
+  return message;
+}
