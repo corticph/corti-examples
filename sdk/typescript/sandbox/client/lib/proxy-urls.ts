@@ -12,5 +12,4 @@ export const PROXY_URLS = {
   auth: "/api/auth/token",
   streamToken: "/api/auth/stream-token",
   corti: "/api/corti",
-  uiConfigSession: "/api/ui-config/session",
 } as const;
