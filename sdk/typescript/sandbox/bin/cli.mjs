@@ -105,6 +105,17 @@ async function resolveCreds() {
       hidden: true,
     });
 
+  // Don't offer to save incomplete credentials: empty KEY= lines would block
+  // saving the real values on a later run. main() reports what's missing.
+  if (
+    !creds.CORTI_CLIENT_ID ||
+    !creds.CORTI_CLIENT_SECRET ||
+    !creds.CORTI_TENANT_NAME
+  ) {
+    close();
+    return creds;
+  }
+
   // Offer to persist to .env in the current directory for next time.
   const envPath = path.join(process.cwd(), ".env");
   const save = (
