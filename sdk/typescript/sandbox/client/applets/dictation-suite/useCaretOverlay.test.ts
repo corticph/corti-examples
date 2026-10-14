@@ -2,10 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from "vitest";
-import {
-  countTrailingBreaksAfter,
-  isStructuralTrailingBr,
-} from "./useCaretOverlay";
+import { countTrailingBreaksAfter, isStructuralTrailingBr } from "./useCaretOverlay";
 
 /** Build a contenteditable root from an HTML string. */
 function setupEditor(html: string): HTMLElement {
@@ -62,9 +59,7 @@ describe("isStructuralTrailingBr", () => {
 
   it("returns false when root has no element children", () => {
     const root = setupEditor("text only");
-    expect(isStructuralTrailingBr(document.createElement("br"), root)).toBe(
-      false,
-    );
+    expect(isStructuralTrailingBr(document.createElement("br"), root)).toBe(false);
   });
 
   it("returns true when the <br> is followed only by a ZWSP anchor text node", () => {
@@ -85,25 +80,19 @@ describe("countTrailingBreaksAfter (excludeStructural=false, out-of-editor)", ()
   });
 
   it("returns 1 for a single-line text with a trailing <br>", () => {
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br></div>");
     const point = endOfLastTextNode(root);
     expect(countTrailingBreaksAfter(root, point)).toBe(1);
   });
 
   it("returns 2 for new line (text + <br> + structural <br>)", () => {
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br><br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br><br></div>");
     const point = endOfLastTextNode(root);
     expect(countTrailingBreaksAfter(root, point)).toBe(2);
   });
 
   it("returns 3 for new paragraph (text + <br> + <br> + structural <br>)", () => {
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br><br><br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br><br><br></div>");
     const point = endOfLastTextNode(root);
     expect(countTrailingBreaksAfter(root, point)).toBe(3);
   });
@@ -130,9 +119,7 @@ describe("countTrailingBreaksAfter (excludeStructural=false, out-of-editor)", ()
   });
 
   it("handles text + trailing <br> with empty text node after <br>", () => {
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br></div>");
     const br = root.querySelector("br")!;
     const empty = document.createTextNode("");
     br.parentNode!.insertBefore(empty, br.nextSibling);
@@ -141,9 +128,7 @@ describe("countTrailingBreaksAfter (excludeStructural=false, out-of-editor)", ()
   });
 
   it("handles new line + empty text node after trailing <br>", () => {
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br><br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br><br></div>");
     const brs = root.querySelectorAll("br");
     const empty = document.createTextNode("");
     brs[1].parentNode!.insertBefore(empty, brs[1].nextSibling);
@@ -178,33 +163,25 @@ describe("countTrailingBreaksAfter (excludeStructural=true, in-editor)", () => {
   });
 
   it("returns 0 for a single-line text with a trailing structural <br>", () => {
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br></div>");
     const point = endOfLastTextNode(root);
     expect(countTrailingBreaksAfter(root, point, true)).toBe(0);
   });
 
   it("returns 1 for new line (text + <br> + structural <br>)", () => {
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br><br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br><br></div>");
     const point = endOfLastTextNode(root);
     expect(countTrailingBreaksAfter(root, point, true)).toBe(1);
   });
 
   it("returns 2 for new paragraph (text + <br> + <br> + structural <br>)", () => {
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br><br><br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br><br><br></div>");
     const point = endOfLastTextNode(root);
     expect(countTrailingBreaksAfter(root, point, true)).toBe(2);
   });
 
   it("handles text + trailing <br> with empty text node after <br>", () => {
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br></div>");
     const br = root.querySelector("br")!;
     const empty = document.createTextNode("");
     br.parentNode!.insertBefore(empty, br.nextSibling);
@@ -217,9 +194,7 @@ describe("countTrailingBreaksAfter (excludeStructural=true, in-editor)", () => {
     // ZWSP caret anchor: text<br>​<br> (structural). The overlay measures from
     // the ZWSP anchor (end of textContent including ZWSP), so point is at the
     // ZWSP end. Only the structural <br> follows → excludeStructural drops it.
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br><br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br><br></div>");
     const brs = root.querySelectorAll("br");
     const zwsp = document.createTextNode("​");
     brs[0].parentNode!.insertBefore(zwsp, brs[0].nextSibling);
@@ -230,9 +205,7 @@ describe("countTrailingBreaksAfter (excludeStructural=true, in-editor)", () => {
 
   it("handles new paragraph + ZWSP anchor between command <br>s and structural <br>", () => {
     // Simulates: text<br><br>​<br> (two command <br>s + ZWSP + structural)
-    const root = setupEditor(
-      "<div>The patient reports mild chest pain<br><br><br></div>",
-    );
+    const root = setupEditor("<div>The patient reports mild chest pain<br><br><br></div>");
     const brs = root.querySelectorAll("br");
     const zwsp = document.createTextNode("​");
     brs[1].parentNode!.insertBefore(zwsp, brs[1].nextSibling);

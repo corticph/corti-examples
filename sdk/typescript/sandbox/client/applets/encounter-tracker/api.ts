@@ -54,10 +54,7 @@ export function updateTrackerSystems(systems: string[]) {
   set({ systems });
 }
 
-export async function runEncounterTracker(
-  client: CortiClient,
-  encounters: Encounter[],
-) {
+export async function runEncounterTracker(client: CortiClient, encounters: Encounter[]) {
   const valid = encounters.filter((e) => e.text.trim());
   if (valid.length === 0) {
     return;

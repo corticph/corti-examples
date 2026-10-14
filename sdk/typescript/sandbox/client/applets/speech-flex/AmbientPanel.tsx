@@ -14,15 +14,7 @@
  */
 
 import type { Corti } from "@corti/sdk";
-import {
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Pencil,
-  Plus,
-  Radio,
-  X,
-} from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Pencil, Plus, Radio, X } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -95,8 +87,7 @@ export function RecordingStatusBar({
               className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground"
             >
               Clip {clip.clipIndex + 1}
-              {clip.durationMs != null &&
-                ` · ${Math.round(clip.durationMs / 1000)}s`}
+              {clip.durationMs != null && ` · ${Math.round(clip.durationMs / 1000)}s`}
             </span>
           ))}
         </div>
@@ -148,11 +139,7 @@ export function CollapsibleSection({
 /* ------------------------------------------------------------------ */
 
 /** Speaker-run list shared by both panel modes so a parsed paste previews the same way as ambient output. */
-function SpeakerRuns({
-  runs,
-}: {
-  runs: ReturnType<typeof groupBySpeakerRuns>;
-}) {
+function SpeakerRuns({ runs }: { runs: ReturnType<typeof groupBySpeakerRuns> }) {
   if (runs.length === 0) {
     return <p className="text-sm text-muted-foreground">No transcript yet.</p>;
   }
@@ -164,9 +151,7 @@ function SpeakerRuns({
           <span className="font-semibold text-lime-600 dark:text-corti-lime">
             {speakerLabel(run.speakerId, run.channel)}:
           </span>{" "}
-          <span className="text-foreground">
-            {run.segments.map((s) => s.transcript).join(" ")}
-          </span>
+          <span className="text-foreground">{run.segments.map((s) => s.transcript).join(" ")}</span>
         </div>
       ))}
     </div>
@@ -258,11 +243,7 @@ export function FactsPanel({
   const activeCount = facts.filter((f) => !f.isDiscarded).length;
 
   const toggleDiscard = (id: string) => {
-    setFacts((prev) =>
-      prev.map((f) =>
-        f.id === id ? { ...f, isDiscarded: !f.isDiscarded } : f,
-      ),
-    );
+    setFacts((prev) => prev.map((f) => (f.id === id ? { ...f, isDiscarded: !f.isDiscarded } : f)));
   };
 
   const startEdit = (fact: Corti.StreamFact) => {
@@ -276,9 +257,7 @@ export function FactsPanel({
     }
     setFacts((prev) =>
       prev.map((f) =>
-        f.id === editingFactId
-          ? { ...f, text: editingFactText, source: "user" }
-          : f,
+        f.id === editingFactId ? { ...f, text: editingFactText, source: "user" } : f,
       ),
     );
     setEditingFactId(null);
@@ -368,8 +347,7 @@ export function FactsPanel({
                           <span
                             className={cn(
                               "flex-1 text-foreground",
-                              fact.source === "user" &&
-                                "italic text-muted-foreground",
+                              fact.source === "user" && "italic text-muted-foreground",
                             )}
                           >
                             {fact.text}

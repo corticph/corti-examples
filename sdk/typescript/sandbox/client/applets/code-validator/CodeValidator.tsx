@@ -1,30 +1,16 @@
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Loader2,
-  ShieldCheck,
-  XCircle,
-} from "lucide-react";
 import { CortiClient } from "@corti/sdk";
+import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useSessionState } from "../_shared/sessionState";
-import {
-  type CodingCode,
-  runCodeValidation,
-  useCodeValidatorStore,
-} from "./api";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { type CodingCode, runCodeValidation, useCodeValidatorStore } from "./api";
 
 function CodePill({ code }: { code: CodingCode }) {
   return (
     <div className="rounded-md border border-border bg-card p-2.5">
       <div className="flex items-baseline gap-1.5">
-        <span className="font-mono text-sm font-semibold text-foreground">
-          {code.code}
-        </span>
-        <span className="font-mono text-xs text-muted-foreground">
-          {code.system}
-        </span>
+        <span className="font-mono text-sm font-semibold text-foreground">{code.code}</span>
+        <span className="font-mono text-xs text-muted-foreground">{code.system}</span>
       </div>
       <p className="mt-0.5 text-sm text-foreground">{code.display}</p>
     </div>
@@ -46,9 +32,7 @@ function Column({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-2">
-      <div
-        className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 ${color}`}
-      >
+      <div className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 ${color}`}>
         {icon}
         <p className="text-xs font-semibold">{label}</p>
         <span className="ml-auto font-mono text-xs">{count}</span>
@@ -68,13 +52,11 @@ export function CodeValidator() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Code validation checker
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Code validation checker</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Enter a clinical note alongside your proposed codes. The API's
-          predictions are compared against your proposal: confirmed matches,
-          codes you missed, and codes that aren't evidenced in the note.
+          Enter a clinical note alongside your proposed codes. The API's predictions are compared
+          against your proposal: confirmed matches, codes you missed, and codes that aren't
+          evidenced in the note.
         </p>
       </div>
 
@@ -104,9 +86,7 @@ export function CodeValidator() {
           placeholder="e.g. J18.9, Z87.891, I10"
           className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Comma or newline separated
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">Comma or newline separated</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -128,11 +108,7 @@ export function CodeValidator() {
           )}
           Validate codes
         </Button>
-        {busy && (
-          <span className="text-xs text-muted-foreground">
-            Running validation…
-          </span>
-        )}
+        {busy && <span className="text-xs text-muted-foreground">Running validation…</span>}
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -154,9 +130,7 @@ export function CodeValidator() {
                   None of your proposed codes were confirmed
                 </p>
               ) : (
-                result.confirmed.map((c) => (
-                  <CodePill key={`${c.system}-${c.code}`} code={c} />
-                ))
+                result.confirmed.map((c) => <CodePill key={`${c.system}-${c.code}`} code={c} />)
               )}
             </Column>
 
@@ -171,9 +145,7 @@ export function CodeValidator() {
                   No additional codes suggested
                 </p>
               ) : (
-                result.missed.map((c) => (
-                  <CodePill key={`${c.system}-${c.code}`} code={c} />
-                ))
+                result.missed.map((c) => <CodePill key={`${c.system}-${c.code}`} code={c} />)
               )}
             </Column>
 
@@ -189,13 +161,8 @@ export function CodeValidator() {
                 </p>
               ) : (
                 result.unsupported.map((c) => (
-                  <div
-                    key={c}
-                    className="rounded-md border border-border bg-card p-2.5"
-                  >
-                    <span className="font-mono text-sm font-semibold text-foreground">
-                      {c}
-                    </span>
+                  <div key={c} className="rounded-md border border-border bg-card p-2.5">
+                    <span className="font-mono text-sm font-semibold text-foreground">{c}</span>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       Not found in API response
                     </p>

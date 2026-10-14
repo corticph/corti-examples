@@ -1,5 +1,5 @@
-import { Columns2, Loader2 } from "lucide-react";
 import { CortiClient } from "@corti/sdk";
+import { Columns2, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,8 @@ import {
   OUTPUT_LANGUAGES,
   useGuidedTemplates,
 } from "../_shared/corti-documents";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useSessionState } from "../_shared/sessionState";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { runNoteDiff, useNoteDiffStore } from "./api";
 
 function SectionColumn({
@@ -34,16 +34,12 @@ function SectionColumn({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
       {allKeys.map((key) => {
         const text = byKey[key];
         return (
           <div key={key}>
-            <p className="mb-1 text-xs font-medium text-muted-foreground">
-              {key}
-            </p>
+            <p className="mb-1 text-xs font-medium text-muted-foreground">{key}</p>
             {text ? (
               <div className="rounded-md border border-border bg-background p-3 text-sm text-foreground whitespace-pre-wrap">
                 {text}
@@ -66,10 +62,7 @@ export function NoteDiff() {
   const [textA, setTextA] = useSessionState("textA", "");
   const [textB, setTextB] = useSessionState("textB", "");
   const [templateId, setTemplateId] = useSessionState("templateId", "");
-  const [manualTemplateId, setManualTemplateId] = useSessionState(
-    "manualTemplateId",
-    "",
-  );
+  const [manualTemplateId, setManualTemplateId] = useSessionState("manualTemplateId", "");
   const [language, setLanguage] = useSessionState("language", "en");
   const busy = status === "running";
 
@@ -78,19 +71,11 @@ export function NoteDiff() {
     sdkEnvironment,
     language,
   );
-  const uniqueTemplates = useMemo(
-    () => deduplicateTemplates(templates),
-    [templates],
-  );
+  const uniqueTemplates = useMemo(() => deduplicateTemplates(templates), [templates]);
 
   useEffect(() => {
     if (!templateId && uniqueTemplates.length > 0) {
-      const match = findDefaultTemplate(
-        uniqueTemplates,
-        "soap",
-        "brief",
-        "progress",
-      );
+      const match = findDefaultTemplate(uniqueTemplates, "soap", "brief", "progress");
       if (match) {
         setTemplateId(match.id);
       }
@@ -105,9 +90,7 @@ export function NoteDiff() {
   }, [sdkEnvironment, authConfig]);
 
   const effectiveTemplateId = templateId || manualTemplateId.trim();
-  const allKeys = Array.from(
-    new Set([...sectionsA.map(([k]) => k), ...sectionsB.map(([k]) => k)]),
-  );
+  const allKeys = Array.from(new Set([...sectionsA.map(([k]) => k), ...sectionsB.map(([k]) => k)]));
 
   const handleRun = () => {
     if (!client || !effectiveTemplateId) {
@@ -119,13 +102,10 @@ export function NoteDiff() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Two-note comparison
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Two-note comparison</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Generate the same document template for two different notes and view
-          the sections side-by-side. Useful for comparing visits, drafts, or how
-          phrasing affects the output.
+          Generate the same document template for two different notes and view the sections
+          side-by-side. Useful for comparing visits, drafts, or how phrasing affects the output.
         </p>
       </div>
 
@@ -207,26 +187,12 @@ export function NoteDiff() {
         <Button
           size="sm"
           onClick={handleRun}
-          disabled={
-            busy ||
-            !textA.trim() ||
-            !textB.trim() ||
-            !client ||
-            !effectiveTemplateId
-          }
+          disabled={busy || !textA.trim() || !textB.trim() || !client || !effectiveTemplateId}
         >
-          {busy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Columns2 className="h-4 w-4" />
-          )}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Columns2 className="h-4 w-4" />}
           Compare notes
         </Button>
-        {busy && (
-          <span className="text-xs text-muted-foreground">
-            Generating both…
-          </span>
-        )}
+        {busy && <span className="text-xs text-muted-foreground">Generating both…</span>}
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -237,17 +203,9 @@ export function NoteDiff() {
             Section comparison
           </p>
           <div className="flex gap-4">
-            <SectionColumn
-              label="Note A output"
-              sections={sectionsA}
-              allKeys={allKeys}
-            />
+            <SectionColumn label="Note A output" sections={sectionsA} allKeys={allKeys} />
             <div className="hidden w-px bg-border lg:block" />
-            <SectionColumn
-              label="Note B output"
-              sections={sectionsB}
-              allKeys={allKeys}
-            />
+            <SectionColumn label="Note B output" sections={sectionsB} allKeys={allKeys} />
           </div>
         </div>
       )}

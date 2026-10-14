@@ -67,16 +67,7 @@ const SPEAKER_COLORS = [
 ];
 
 const LEFT_ATTACH = new Set([",", ".", ":", ";", "!", "?", ")", "]", "}", "%"]);
-const NO_SPACE_AFTER = new Set([
-  "(",
-  "[",
-  "{",
-  "\u201C",
-  "\u201D",
-  '"',
-  "'",
-  "\u00AB",
-]);
+const NO_SPACE_AFTER = new Set(["(", "[", "{", "\u201C", "\u201D", '"', "'", "\u00AB"]);
 const FRENCH_NBSP_BEFORE = new Set([":", ";", "!", "?"]);
 const SENTENCE_END = new Set([".", "!", "?", "\u2026"]);
 
@@ -215,10 +206,7 @@ export function SyncedTranscriptPlayer({
   const [showJson, setShowJson] = useState(false);
   const wordRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
-  const sortedSegments = useMemo(
-    () => [...segments].sort((a, b) => a.start - b.start),
-    [segments],
-  );
+  const sortedSegments = useMemo(() => [...segments].sort((a, b) => a.start - b.start), [segments]);
 
   const { activeIndex, isPlaying } = usePlaybackSync(audioRef, sortedSegments);
 
@@ -297,10 +285,7 @@ export function SyncedTranscriptPlayer({
       return null;
     }
     for (let i = 0; i < commands.length; i++) {
-      if (
-        currentTimeMs >= commands[i].startMs &&
-        currentTimeMs <= commands[i].endMs
-      ) {
+      if (currentTimeMs >= commands[i].startMs && currentTimeMs <= commands[i].endMs) {
         return i;
       }
     }
@@ -343,12 +328,7 @@ export function SyncedTranscriptPlayer({
   return (
     <div className="flex flex-col gap-3">
       {/* biome-ignore lint/a11y/useMediaCaption: captions rendered via synced transcript UI */}
-      <audio
-        ref={audioRef}
-        src={audioUrl ?? undefined}
-        preload="auto"
-        className="hidden"
-      />
+      <audio ref={audioRef} src={audioUrl ?? undefined} preload="auto" className="hidden" />
 
       <div
         className={cn(
@@ -363,11 +343,7 @@ export function SyncedTranscriptPlayer({
           disabled={disabled || !audioUrl}
           className="h-10 w-10 shrink-0 rounded-full"
         >
-          {isPlaying ? (
-            <Pause className="h-4 w-4" />
-          ) : (
-            <Play className="h-4 w-4 translate-x-0.5" />
-          )}
+          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 translate-x-0.5" />}
         </Button>
 
         <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
@@ -376,10 +352,7 @@ export function SyncedTranscriptPlayer({
 
         <div className="relative flex-1">
           <div className="h-1.5 w-full cursor-pointer rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-corti-lime"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full rounded-full bg-corti-lime" style={{ width: `${progress}%` }} />
           </div>
           <input
             type="range"
@@ -419,10 +392,7 @@ export function SyncedTranscriptPlayer({
         <div className="relative h-5 w-full overflow-hidden rounded-sm bg-muted/30">
           {timeline.map((entry) => {
             const left = (entry.startMs / (duration * 1000)) * 100;
-            const width = Math.max(
-              ((entry.endMs - entry.startMs) / (duration * 1000)) * 100,
-              0.5,
-            );
+            const width = Math.max(((entry.endMs - entry.startMs) / (duration * 1000)) * 100, 0.5);
             const isActive =
               entry.type === "text"
                 ? entry.index === activeIndex
@@ -456,23 +426,15 @@ export function SyncedTranscriptPlayer({
 
       <div className="max-h-[420px] overflow-y-auto rounded-md border border-border p-4 text-sm leading-loose">
         {sortedSegments.length === 0 && (
-          <p className="text-muted-foreground">
-            No speech detected in this recording.
-          </p>
+          <p className="text-muted-foreground">No speech detected in this recording.</p>
         )}
         {sortedSegments.map((seg, i) => {
           const isActive = i === activeIndex;
           const showSpeaker = speakerBoundaries.has(i);
           const speakerId = seg.speakerId ?? 0;
           const prevSegText = i > 0 ? sortedSegments[i - 1].text : null;
-          const separator = buildWordSpacing(
-            prevSegText,
-            seg.text,
-            primaryLanguage,
-          );
-          const displayText = shouldCapitalize(prevSegText)
-            ? capitalizeFirst(seg.text)
-            : seg.text;
+          const separator = buildWordSpacing(prevSegText, seg.text, primaryLanguage);
+          const displayText = shouldCapitalize(prevSegText) ? capitalizeFirst(seg.text) : seg.text;
 
           return (
             <span key={`${seg.start}-${seg.end}`}>
@@ -552,8 +514,7 @@ export function SyncedTranscriptPlayer({
                     &ldquo;{cmd.rawTranscriptText}&rdquo;
                   </span>
                   <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                    {formatTime(cmd.startMs / 1000)}–
-                    {formatTime(cmd.endMs / 1000)}
+                    {formatTime(cmd.startMs / 1000)}–{formatTime(cmd.endMs / 1000)}
                   </span>
                 </button>
               );
@@ -570,11 +531,7 @@ export function SyncedTranscriptPlayer({
         </p>
         {rawResponse && transcriptId && (
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowJson(true)}
-            >
+            <Button size="sm" variant="outline" onClick={() => setShowJson(true)}>
               View JSON
             </Button>
             <Button
@@ -602,9 +559,7 @@ export function SyncedTranscriptPlayer({
           </DialogHeader>
           <ScrollArea className="h-[65vh] rounded-md border border-border bg-muted/20">
             <pre className="whitespace-pre-wrap p-4 text-xs text-foreground">
-              {rawResponse
-                ? JSON.stringify(rawResponse, null, 2)
-                : "No transcript JSON loaded."}
+              {rawResponse ? JSON.stringify(rawResponse, null, 2) : "No transcript JSON loaded."}
             </pre>
           </ScrollArea>
         </DialogContent>

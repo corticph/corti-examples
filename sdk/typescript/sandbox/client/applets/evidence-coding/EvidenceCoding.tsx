@@ -1,8 +1,8 @@
-import { BookOpen, Loader2 } from "lucide-react";
 import { CortiClient } from "@corti/sdk";
+import { BookOpen, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useSessionState } from "../_shared/sessionState";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import {
   type CodeEvidence,
   type CodingCode,
@@ -10,13 +10,7 @@ import {
   useEvidenceCodingStore,
 } from "./api";
 
-function HighlightedText({
-  text,
-  evidences,
-}: {
-  text: string;
-  evidences: CodeEvidence[];
-}) {
+function HighlightedText({ text, evidences }: { text: string; evidences: CodeEvidence[] }) {
   if (evidences.length === 0) {
     return <>{text}</>;
   }
@@ -51,10 +45,7 @@ export function EvidenceCoding() {
   const { status, codes, error } = useEvidenceCodingStore();
   const { authConfig, sdkEnvironment } = useCortiAccessToken();
   const [input, setInput] = useSessionState("input", "");
-  const [activeIndex, setActiveIndex] = useSessionState<number | null>(
-    "activeIndex",
-    null,
-  );
+  const [activeIndex, setActiveIndex] = useSessionState<number | null>("activeIndex", null);
   const busy = status === "running";
 
   const handleRun = () => {
@@ -72,13 +63,11 @@ export function EvidenceCoding() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Evidence-based coding review
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Evidence-based coding review</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Paste a clinical note and get ICD-10-CM code predictions with evidence
-          spans — character offsets into the source text that support each code.
-          Click a code card to highlight the supporting text in the note.
+          Paste a clinical note and get ICD-10-CM code predictions with evidence spans — character
+          offsets into the source text that support each code. Click a code card to highlight the
+          supporting text in the note.
         </p>
       </div>
 
@@ -92,16 +81,10 @@ export function EvidenceCoding() {
 
       <div className="flex items-center gap-3">
         <Button size="sm" onClick={handleRun} disabled={busy || !input.trim()}>
-          {busy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <BookOpen className="h-4 w-4" />
-          )}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
           Review and code
         </Button>
-        {busy && (
-          <span className="text-xs text-muted-foreground">Reviewing note…</span>
-        )}
+        {busy && <span className="text-xs text-muted-foreground">Reviewing note…</span>}
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -112,9 +95,7 @@ export function EvidenceCoding() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Source note
               {activeCode && (
-                <span className="ml-1 normal-case font-normal">
-                  — evidence highlighted
-                </span>
+                <span className="ml-1 normal-case font-normal">— evidence highlighted</span>
               )}
             </p>
             <div className="rounded-md border border-border bg-background p-3 font-mono text-sm text-foreground whitespace-pre-wrap">

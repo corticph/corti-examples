@@ -1,18 +1,6 @@
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-  Loader2,
-  RotateCw,
-} from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { version as sdkVersion } from "@corti/sdk/package.json";
+import { Check, ChevronLeft, ChevronRight, Copy, Loader2, RotateCw } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { configureButtonMappings } from "../../applets/device-buttons/mappingStore";
 import { useAuth } from "../../context/AuthContext";
@@ -20,7 +8,6 @@ import { useSessionStatus } from "../../context/SessionStatusContext";
 import { cn } from "../../lib/utils";
 import { DocsSidebar } from "../docs/DocsSidebar";
 import { Navbar } from "./Navbar";
-import { version as sdkVersion } from "@corti/sdk/package.json";
 
 const NAVBAR_HEIGHT = 52;
 
@@ -119,15 +106,10 @@ export function AppLayout() {
         <aside
           className={cn(
             "hidden shrink-0 transition-[width] duration-200 ease-in-out lg:block",
-            sidebarCollapsed
-              ? "w-0 overflow-hidden border-0"
-              : "w-72 border-r border-border",
+            sidebarCollapsed ? "w-0 overflow-hidden border-0" : "w-72 border-r border-border",
           )}
         >
-          <div
-            className="sticky top-[52px]"
-            style={{ maxHeight: sidebarMaxHeight }}
-          >
+          <div className="sticky top-[52px]" style={{ maxHeight: sidebarMaxHeight }}>
             <div
               ref={sidebarScrollRef}
               onScroll={updateSidebarFade}
@@ -170,14 +152,11 @@ export function AppLayout() {
         </main>
       </div>
 
-      <footer
-        ref={footerRef}
-        className="sticky bottom-0 z-30 border-t border-border bg-card"
-      >
+      <footer ref={footerRef} className="sticky bottom-0 z-30 border-t border-border bg-card">
         <div className="mx-auto flex w-full max-w-[1400px] flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-xs text-muted-foreground md:px-10">
           <span>
-            <span className="font-medium">Environment:</span>{" "}
-            {authConfig.cluster}/{authConfig.tenant}
+            <span className="font-medium">Environment:</span> {authConfig.cluster}/
+            {authConfig.tenant}
           </span>
           <span>
             <span className="font-medium">SDK:</span> v{sdkVersion}
@@ -215,11 +194,7 @@ export function AppLayout() {
                 <span>
                   {label}: {id}
                 </span>
-                {copiedId === id ? (
-                  <Check className="h-3 w-3" />
-                ) : (
-                  <Copy className="h-3 w-3" />
-                )}
+                {copiedId === id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
               </button>
             );
           })()}

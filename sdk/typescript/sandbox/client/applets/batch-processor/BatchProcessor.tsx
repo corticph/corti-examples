@@ -1,3 +1,4 @@
+import { CortiClient } from "@corti/sdk";
 import {
   AlertCircle,
   CheckCircle2,
@@ -7,7 +8,6 @@ import {
   ListChecks,
   Loader2,
 } from "lucide-react";
-import { CortiClient } from "@corti/sdk";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,14 +25,9 @@ import {
   OUTPUT_LANGUAGES,
   useGuidedTemplates,
 } from "../_shared/corti-documents";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useSessionState } from "../_shared/sessionState";
-import {
-  type BatchJob,
-  runBatch,
-  splitNotes,
-  useBatchProcessorStore,
-} from "./api";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { type BatchJob, runBatch, splitNotes, useBatchProcessorStore } from "./api";
 
 const PLACEHOLDER = `Patient is a 67-year-old male presenting with chest pain…
 
@@ -68,9 +63,7 @@ function JobRow({ job }: { job: BatchJob }) {
       >
         {icon}
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted-foreground font-medium">
-            Note {job.index + 1}
-          </p>
+          <p className="text-xs text-muted-foreground font-medium">Note {job.index + 1}</p>
           <p className="truncate text-sm text-foreground">{job.preview}</p>
         </div>
         {job.status === "done" && (
@@ -96,9 +89,7 @@ function JobRow({ job }: { job: BatchJob }) {
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {name}
                 </p>
-                <p className="whitespace-pre-wrap text-sm text-foreground">
-                  {text}
-                </p>
+                <p className="whitespace-pre-wrap text-sm text-foreground">{text}</p>
               </div>
             ))}
           </div>
@@ -119,10 +110,7 @@ export function BatchProcessor() {
   const { status, jobs, doneCount, error } = useBatchProcessorStore();
   const [raw, setRaw] = useSessionState("raw", "");
   const [templateId, setTemplateId] = useSessionState("templateId", "");
-  const [manualTemplateId, setManualTemplateId] = useSessionState(
-    "manualTemplateId",
-    "",
-  );
+  const [manualTemplateId, setManualTemplateId] = useSessionState("manualTemplateId", "");
   const [language, setLanguage] = useSessionState("language", "en");
   const busy = status === "running";
 
@@ -131,19 +119,11 @@ export function BatchProcessor() {
     sdkEnvironment,
     language,
   );
-  const uniqueTemplates = useMemo(
-    () => deduplicateTemplates(templates),
-    [templates],
-  );
+  const uniqueTemplates = useMemo(() => deduplicateTemplates(templates), [templates]);
 
   useEffect(() => {
     if (!templateId && uniqueTemplates.length > 0) {
-      const match = findDefaultTemplate(
-        uniqueTemplates,
-        "soap",
-        "brief",
-        "progress",
-      );
+      const match = findDefaultTemplate(uniqueTemplates, "soap", "brief", "progress");
       if (match) {
         setTemplateId(match.id);
       }
@@ -171,13 +151,10 @@ export function BatchProcessor() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Batch note processor
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Batch note processor</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Paste multiple clinical notes separated by{" "}
-          <code className="font-mono text-xs">---</code> lines. All notes are
-          processed in parallel with the same template. Results expand inline
+          Paste multiple clinical notes separated by <code className="font-mono text-xs">---</code>{" "}
+          lines. All notes are processed in parallel with the same template. Results expand inline
           per note.
         </p>
       </div>
@@ -247,8 +224,7 @@ export function BatchProcessor() {
           className="mt-1 w-full resize-y rounded-md border border-border bg-background p-3 font-mono text-sm text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
         <p className="mt-1 text-xs text-muted-foreground">
-          Separate notes with a line containing only{" "}
-          <code className="font-mono">---</code>
+          Separate notes with a line containing only <code className="font-mono">---</code>
         </p>
       </div>
 
@@ -258,13 +234,8 @@ export function BatchProcessor() {
           onClick={handleRun}
           disabled={busy || count === 0 || !client || !effectiveTemplateId}
         >
-          {busy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <ListChecks className="h-4 w-4" />
-          )}
-          Process{" "}
-          {count > 0 ? `${count} note${count !== 1 ? "s" : ""}` : "notes"}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ListChecks className="h-4 w-4" />}
+          Process {count > 0 ? `${count} note${count !== 1 ? "s" : ""}` : "notes"}
         </Button>
         {busy && (
           <span className="text-xs text-muted-foreground">

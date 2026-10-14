@@ -80,15 +80,9 @@ export function MedicalCodingBatch() {
   const [docs, setDocs] = useSessionState<BatchDoc[]>("docs", SAMPLE_DOCS);
   const [include, setInclude] = useSessionState("include", "");
   const [exclude, setExclude] = useSessionState("exclude", "");
-  const [system] = useState<Corti.CommonCodingSystemEnum[]>([
-    "icd10cm-outpatient",
-    "cpt",
-  ]);
+  const [system] = useState<Corti.CommonCodingSystemEnum[]>(["icd10cm-outpatient", "cpt"]);
   const [rounds, setRounds] = useSessionState<Round[]>("rounds", []);
-  const [decisions, setDecisions] = useSessionState<Record<string, Decision>>(
-    "decisions",
-    {},
-  );
+  const [decisions, setDecisions] = useSessionState<Record<string, Decision>>("decisions", {});
   const [auditLog, setAuditLog] = useSessionState<AuditEntry[]>("auditLog", []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useSessionState<string | null>("error", null);
@@ -136,15 +130,9 @@ export function MedicalCodingBatch() {
         environment: sdkEnvironment,
         auth: authConfig,
       });
-      const manualInclude = include.trim()
-        ? include.split(",").map((s) => s.trim())
-        : [];
-      const manualExclude = exclude.trim()
-        ? exclude.split(",").map((s) => s.trim())
-        : [];
-      const excludeUsed = Array.from(
-        new Set([...manualExclude, ...learnedExclude()]),
-      );
+      const manualInclude = include.trim() ? include.split(",").map((s) => s.trim()) : [];
+      const manualExclude = exclude.trim() ? exclude.split(",").map((s) => s.trim()) : [];
+      const excludeUsed = Array.from(new Set([...manualExclude, ...learnedExclude()]));
       const filter: Corti.CodesFilter | undefined =
         manualInclude.length || excludeUsed.length
           ? {
@@ -230,8 +218,8 @@ export function MedicalCodingBatch() {
           Batch coding with a review queue that learns
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Run the batch, clear the queue, then re-run with a filter built from
-          every code reviewers rejected across the whole batch.
+          Run the batch, clear the queue, then re-run with a filter built from every code reviewers
+          rejected across the whole batch.
         </p>
       </div>
 
@@ -244,11 +232,7 @@ export function MedicalCodingBatch() {
                 onChange={(e) => updateDoc(doc.id, { label: e.target.value })}
                 className="h-8 max-w-xs text-sm"
               />
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => removeDoc(doc.id)}
-              >
+              <Button size="sm" variant="ghost" onClick={() => removeDoc(doc.id)}>
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -307,32 +291,22 @@ export function MedicalCodingBatch() {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-sm text-variant-error-foreground">{error}</p>
-      )}
+      {error && <p className="text-sm text-variant-error-foreground">{error}</p>}
 
       {latestRound && (
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Round {rounds.length}: auto-applied ({latestRound.accepted.length}
-              )
+              Round {rounds.length}: auto-applied ({latestRound.accepted.length})
             </h3>
             <div className="space-y-2">
               {latestRound.accepted.map((row) => (
-                <div
-                  key={rowKey(row)}
-                  className="rounded-md border border-border p-2 text-sm"
-                >
+                <div key={rowKey(row)} className="rounded-md border border-border p-2 text-sm">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono font-semibold text-foreground">
-                      {row.item.code}
-                    </span>
+                    <span className="font-mono font-semibold text-foreground">{row.item.code}</span>
                     <Badge variant="outline">{row.docLabel}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {row.item.display}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{row.item.display}</p>
                 </div>
               ))}
             </div>
@@ -346,42 +320,27 @@ export function MedicalCodingBatch() {
                 const key = rowKey(row);
                 const decision = decisions[key];
                 return (
-                  <div
-                    key={key}
-                    className="rounded-md border border-border p-2 text-sm"
-                  >
+                  <div key={key} className="rounded-md border border-border p-2 text-sm">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-mono font-semibold text-foreground">
                         {row.item.code}
                       </span>
                       <Badge variant="outline">{row.docLabel}</Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {row.item.display}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{row.item.display}</p>
                     {decision ? (
                       <Badge
-                        variant={
-                          decision === "accepted" ? "default" : "destructive"
-                        }
+                        variant={decision === "accepted" ? "default" : "destructive"}
                         className="mt-1"
                       >
                         {decision}
                       </Badge>
                     ) : (
                       <div className="mt-1 flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => decide(row, "accepted")}
-                        >
+                        <Button size="sm" variant="outline" onClick={() => decide(row, "accepted")}>
                           Accept
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => decide(row, "rejected")}
-                        >
+                        <Button size="sm" variant="outline" onClick={() => decide(row, "rejected")}>
                           Reject
                         </Button>
                       </div>
@@ -390,9 +349,7 @@ export function MedicalCodingBatch() {
                 );
               })}
               {latestRound.queue.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Empty queue for this round.
-                </p>
+                <p className="text-sm text-muted-foreground">Empty queue for this round.</p>
               )}
             </div>
           </div>
@@ -431,8 +388,7 @@ export function MedicalCodingBatch() {
 
       {rounds.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Total credits consumed across all rounds:{" "}
-          {rounds.reduce((sum, r) => sum + r.credits, 0)}
+          Total credits consumed across all rounds: {rounds.reduce((sum, r) => sum + r.credits, 0)}
         </p>
       )}
     </div>

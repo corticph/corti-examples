@@ -111,10 +111,7 @@ export const capitalizeLastSegment: CommandHandler = (adapter, _cmd, ctx) => {
   }
   const text = adapter.getText();
   const target = text.slice(last.start, last.end);
-  const capped = target.replace(
-    /^(\s*)(\p{L})/u,
-    (_m, ws, ch) => ws + ch.toUpperCase(),
-  );
+  const capped = target.replace(/^(\s*)(\p{L})/u, (_m, ws, ch) => ws + ch.toUpperCase());
   if (capped !== target) {
     adapter.replaceRange(last.start, last.end, capped);
   }
@@ -216,8 +213,7 @@ export type CommandAction =
 /** True on macOS / iOS — the Alt key is labelled "Option" there. */
 export function isMacPlatform(): boolean {
   return (
-    typeof navigator !== "undefined" &&
-    /Mac/i.test(navigator.platform || navigator.userAgent || "")
+    typeof navigator !== "undefined" && /Mac/i.test(navigator.platform || navigator.userAgent || "")
   );
 }
 
@@ -244,9 +240,7 @@ function isPrintable(c: KeyCombo): boolean {
   if (c.ctrl || c.meta || c.alt) {
     return false;
   }
-  return (
-    c.key.length === 1 || c.key === "Enter" || c.key === "Tab" || c.key === " "
-  );
+  return c.key.length === 1 || c.key === "Enter" || c.key === "Tab" || c.key === " ";
 }
 
 function literalOf(c: KeyCombo): string {
@@ -365,9 +359,7 @@ function deleteRange(
 /** Human-readable rendering of a captured key sequence. */
 export function describeSequence(combos: KeyCombo[]): string {
   return combos
-    .map((c) =>
-      isPrintable(c) ? (c.key === " " ? "␣" : c.key) : describeCombo(c),
-    )
+    .map((c) => (isPrintable(c) ? (c.key === " " ? "␣" : c.key) : describeCombo(c)))
     .join(" ");
 }
 
@@ -383,10 +375,7 @@ export function describeSequence(combos: KeyCombo[]): string {
  * Line-scoped deletion goes through `adapter.extendToLineBoundary`, never
  * through text scanning — see the note on that branch.
  */
-export function applyKeyCombo(
-  adapter: EditorAdapter,
-  combo: KeyCombo,
-): CommandOutcome {
+export function applyKeyCombo(adapter: EditorAdapter, combo: KeyCombo): CommandOutcome {
   const mod = combo.meta || combo.ctrl;
   const k = combo.key.toLowerCase();
   if (mod && !combo.alt && adapter.applyFormat) {
@@ -505,20 +494,10 @@ export function applyKeyCombo(
    */
   if (!mod && !combo.alt) {
     if (k === "backspace") {
-      return deleteRange(
-        adapter,
-        prevCharStart,
-        "back",
-        "character before caret",
-      );
+      return deleteRange(adapter, prevCharStart, "back", "character before caret");
     }
     if (k === "delete") {
-      return deleteRange(
-        adapter,
-        nextCharEnd,
-        "forward",
-        "character after caret",
-      );
+      return deleteRange(adapter, nextCharEnd, "forward", "character after caret");
     }
   }
   if (typeof document !== "undefined" && document.activeElement) {
@@ -544,10 +523,7 @@ export function applyKeyCombo(
  * literally into the editor; modifier combos (e.g. Ctrl+B) are applied via
  * applyKeyCombo. This lets a macro like ". v i t a l s" insert ". vitals".
  */
-export function applyKeySequence(
-  adapter: EditorAdapter,
-  combos: KeyCombo[],
-): CommandOutcome {
+export function applyKeySequence(adapter: EditorAdapter, combos: KeyCombo[]): CommandOutcome {
   let literal = "";
   const flush = () => {
     if (!literal) {

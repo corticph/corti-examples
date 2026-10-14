@@ -116,33 +116,23 @@ export async function runRecordingTranscriptPipeline(
   let attempt = 0;
   while (status === "processing") {
     if (Date.now() - start > POLL_TIMEOUT_MS) {
-      throw new Error(
-        "Timed out waiting for the transcript to finish processing",
-      );
+      throw new Error("Timed out waiting for the transcript to finish processing");
     }
     attempt += 1;
     onProgress?.({ step: "polling", pollAttempt: attempt });
     await sleep(POLL_INTERVAL_MS);
-    const polled = await client.transcripts.getStatus(
-      interaction.interactionId,
-      transcriptId,
-    );
+    const polled = await client.transcripts.getStatus(interaction.interactionId, transcriptId);
     status = polled.status;
   }
 
   const wallClockMs = Date.now() - start;
 
   if (status === "failed") {
-    throw new Error(
-      "Transcript processing failed — the API reported status: failed",
-    );
+    throw new Error("Transcript processing failed — the API reported status: failed");
   }
 
   onProgress?.({ step: "fetching-result" });
-  const final = await client.transcripts.get(
-    interaction.interactionId,
-    transcriptId,
-  );
+  const final = await client.transcripts.get(interaction.interactionId, transcriptId);
 
   return {
     interactionId: interaction.interactionId,

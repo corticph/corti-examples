@@ -1,11 +1,13 @@
 import dotenv from "dotenv";
+
 dotenv.config({ override: true });
+
 import cors from "cors";
 import express from "express";
 import { getCreds, hasCreds } from "./lib/cortiToken";
+import { getSessionId } from "./lib/session";
 import authRouter from "./routes/auth";
 import { cortiProxy } from "./routes/corti-proxy";
-import { getSessionId } from "./lib/session";
 
 export function createServer() {
   const app = express();

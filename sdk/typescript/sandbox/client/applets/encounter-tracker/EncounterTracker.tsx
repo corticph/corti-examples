@@ -1,13 +1,9 @@
-import { CalendarRange, Loader2, Plus, X } from "lucide-react";
 import { CortiClient } from "@corti/sdk";
+import { CalendarRange, Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useSessionState } from "../_shared/sessionState";
-import {
-  type Encounter,
-  runEncounterTracker,
-  useEncounterTrackerStore,
-} from "./api";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { type Encounter, runEncounterTracker, useEncounterTrackerStore } from "./api";
 
 const SYSTEM_LABELS: Record<string, string> = {
   "icd10cm-outpatient": "ICD-10-CM",
@@ -24,10 +20,7 @@ function makeEncounter(label: string): Encounter {
   return { id: String(nextId++), label, text: "" };
 }
 
-const DEFAULT_ENCOUNTERS: Encounter[] = [
-  makeEncounter("Visit 1"),
-  makeEncounter("Visit 2"),
-];
+const DEFAULT_ENCOUNTERS: Encounter[] = [makeEncounter("Visit 1"), makeEncounter("Visit 2")];
 
 export function EncounterTracker() {
   const { status, results, error } = useEncounterTrackerStore();
@@ -39,19 +32,14 @@ export function EncounterTracker() {
   const busy = status === "running";
 
   const update = (id: string, patch: Partial<Encounter>) => {
-    setEncounters((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-    );
+    setEncounters((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
   };
 
   const addEncounter = () => {
     if (encounters.length >= 4) {
       return;
     }
-    setEncounters((prev) => [
-      ...prev,
-      makeEncounter(`Visit ${prev.length + 1}`),
-    ]);
+    setEncounters((prev) => [...prev, makeEncounter(`Visit ${prev.length + 1}`)]);
   };
 
   const removeEncounter = (id: string) => {
@@ -64,10 +52,7 @@ export function EncounterTracker() {
   const doneResults = results.filter((r) => r.status === "done");
 
   type CodeKey = string;
-  const codeMap = new Map<
-    CodeKey,
-    { code: string; display: string; system: string }
-  >();
+  const codeMap = new Map<CodeKey, { code: string; display: string; system: string }>();
   for (const r of doneResults) {
     for (const c of r.codes) {
       const key = `${c.system}::${c.code}`;
@@ -81,20 +66,16 @@ export function EncounterTracker() {
     }
   }
 
-  const allCodes = Array.from(codeMap.entries()).sort(([a], [b]) =>
-    a.localeCompare(b),
-  );
+  const allCodes = Array.from(codeMap.entries()).sort(([a], [b]) => a.localeCompare(b));
 
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Multi-encounter code tracker
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Multi-encounter code tracker</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Paste notes from up to four encounters for the same patient. The
-          matrix shows which codes appear across each visit. Useful for spotting
-          persistent diagnoses, newly emerging conditions, and resolved issues.
+          Paste notes from up to four encounters for the same patient. The matrix shows which codes
+          appear across each visit. Useful for spotting persistent diagnoses, newly emerging
+          conditions, and resolved issues.
         </p>
       </div>
 
@@ -165,11 +146,7 @@ export function EncounterTracker() {
           Track codes across {filledCount} encounter
           {filledCount !== 1 ? "s" : ""}
         </Button>
-        {busy && (
-          <span className="text-xs text-muted-foreground">
-            Coding encounters…
-          </span>
-        )}
+        {busy && <span className="text-xs text-muted-foreground">Coding encounters…</span>}
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -178,8 +155,8 @@ export function EncounterTracker() {
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Code matrix · {allCodes.length} unique code
-            {allCodes.length !== 1 ? "s" : ""} across {doneResults.length}{" "}
-            encounter{doneResults.length !== 1 ? "s" : ""}
+            {allCodes.length !== 1 ? "s" : ""} across {doneResults.length} encounter
+            {doneResults.length !== 1 ? "s" : ""}
           </p>
           <div className="overflow-x-auto rounded-lg border border-border">
             <table className="w-full text-sm">
@@ -214,11 +191,7 @@ export function EncounterTracker() {
                     <tr
                       key={key}
                       className={`border-b border-border last:border-0 ${
-                        allPresent
-                          ? "bg-green-500/5"
-                          : somePresent
-                            ? "bg-yellow-500/5"
-                            : ""
+                        allPresent ? "bg-green-500/5" : somePresent ? "bg-yellow-500/5" : ""
                       }`}
                     >
                       <td className="whitespace-nowrap px-3 py-2 font-mono text-xs font-semibold text-foreground">
@@ -227,26 +200,15 @@ export function EncounterTracker() {
                           {SYSTEM_LABELS[info.system] ?? info.system}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-sm text-foreground">
-                        {info.display}
-                      </td>
+                      <td className="px-3 py-2 text-sm text-foreground">{info.display}</td>
                       {doneResults.map((r) => {
-                        const present = r.codes.some(
-                          (c) => `${c.system}::${c.code}` === key,
-                        );
+                        const present = r.codes.some((c) => `${c.system}::${c.code}` === key);
                         return (
-                          <td
-                            key={r.encounter.id}
-                            className="px-3 py-2 text-center"
-                          >
+                          <td key={r.encounter.id} className="px-3 py-2 text-center">
                             {present ? (
-                              <span className="text-green-600 dark:text-green-400">
-                                yes
-                              </span>
+                              <span className="text-green-600 dark:text-green-400">yes</span>
                             ) : (
-                              <span className="text-muted-foreground/40">
-                                no
-                              </span>
+                              <span className="text-muted-foreground/40">no</span>
                             )}
                           </td>
                         );
@@ -258,16 +220,14 @@ export function EncounterTracker() {
             </table>
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Green rows appear in all encounters. Yellow rows appear in some.
-            Includes both confirmed codes and candidates.
+            Green rows appear in all encounters. Yellow rows appear in some. Includes both confirmed
+            codes and candidates.
           </p>
         </div>
       )}
 
       {results.length > 0 && allCodes.length === 0 && status === "done" && (
-        <p className="text-sm text-muted-foreground">
-          No codes returned for these encounters.
-        </p>
+        <p className="text-sm text-muted-foreground">No codes returned for these encounters.</p>
       )}
     </div>
   );

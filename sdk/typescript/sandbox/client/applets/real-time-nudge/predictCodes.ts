@@ -27,9 +27,7 @@ export interface PredictRequest {
   filter?: PredictFilter;
 }
 
-const stage = new RequestStage<Corti.CodesGeneralResponse>(
-  stageReporter("predict"),
-);
+const stage = new RequestStage<Corti.CodesGeneralResponse>(stageReporter("predict"));
 let currentScope = "";
 let controller: AbortController | undefined;
 let activeKey: string | undefined;
@@ -38,9 +36,7 @@ export function invalidateCache() {
   stage.invalidate();
   controller?.abort();
 }
-export async function predictCodes(
-  req: PredictRequest,
-): Promise<Corti.CodesGeneralResponse> {
+export async function predictCodes(req: PredictRequest): Promise<Corti.CodesGeneralResponse> {
   const scope = req.scope ?? "default";
   if (scope !== currentScope) {
     invalidateCache();

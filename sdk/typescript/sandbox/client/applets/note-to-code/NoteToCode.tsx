@@ -1,8 +1,8 @@
-import { Loader2, Tag } from "lucide-react";
 import { CortiClient } from "@corti/sdk";
+import { Loader2, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useSessionState } from "../_shared/sessionState";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { type CodingCode, runNoteToCode, useNoteToCodeStore } from "./api";
 
 export function NoteToCode() {
@@ -16,9 +16,8 @@ export function NoteToCode() {
       <div>
         <h2 className="text-lg font-semibold text-foreground">Note-to-code</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Paste a clinical note and get medical code predictions from the
-          configured coding systems. Uses <code>client.codes.predict()</code>{" "}
-          directly — no agent required.
+          Paste a clinical note and get medical code predictions from the configured coding systems.
+          Uses <code>client.codes.predict()</code> directly — no agent required.
         </p>
       </div>
 
@@ -42,16 +41,10 @@ export function NoteToCode() {
           }}
           disabled={busy || !input.trim()}
         >
-          {busy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Tag className="h-4 w-4" />
-          )}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Tag className="h-4 w-4" />}
           Suggest codes
         </Button>
-        {busy && (
-          <span className="text-xs text-muted-foreground">Analyzing note…</span>
-        )}
+        {busy && <span className="text-xs text-muted-foreground">Analyzing note…</span>}
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -73,16 +66,11 @@ export function NoteToCode() {
               </thead>
               <tbody>
                 {codes.map((c: CodingCode) => (
-                  <tr
-                    key={`${c.system}-${c.code}`}
-                    className="border-t border-border"
-                  >
+                  <tr key={`${c.system}-${c.code}`} className="border-t border-border">
                     <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
                       {c.system}
                     </td>
-                    <td className="px-3 py-2 font-mono font-semibold text-foreground">
-                      {c.code}
-                    </td>
+                    <td className="px-3 py-2 font-mono font-semibold text-foreground">{c.code}</td>
                     <td className="px-3 py-2 text-foreground">{c.display}</td>
                     <td className="px-3 py-2 text-muted-foreground">
                       {c.alternatives && c.alternatives.length > 0 ? (
@@ -120,16 +108,11 @@ export function NoteToCode() {
               </thead>
               <tbody>
                 {candidates.map((c: CodingCode) => (
-                  <tr
-                    key={`${c.system}-${c.code}`}
-                    className="border-t border-border opacity-60"
-                  >
+                  <tr key={`${c.system}-${c.code}`} className="border-t border-border opacity-60">
                     <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
                       {c.system}
                     </td>
-                    <td className="px-3 py-2 font-mono font-semibold text-foreground">
-                      {c.code}
-                    </td>
+                    <td className="px-3 py-2 font-mono font-semibold text-foreground">{c.code}</td>
                     <td className="px-3 py-2 text-foreground">{c.display}</td>
                   </tr>
                 ))}

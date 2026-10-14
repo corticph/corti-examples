@@ -2,8 +2,8 @@ import type { Corti, CortiClient } from "@corti/sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   describeTranscriptError,
-  runPlaybackHighlightingPipeline,
   type PipelineProgress,
+  runPlaybackHighlightingPipeline,
 } from "./pipeline";
 
 function makeClient(opts: {
@@ -20,16 +20,12 @@ function makeClient(opts: {
         vi.fn().mockResolvedValue({ interactionId: "int-1", websocketUrl: "" }),
     },
     recordings: {
-      upload:
-        opts.uploadRecording ??
-        vi.fn().mockResolvedValue({ recordingId: "rec-1" }),
+      upload: opts.uploadRecording ?? vi.fn().mockResolvedValue({ recordingId: "rec-1" }),
     },
     transcripts: {
       create:
-        opts.createTranscript ??
-        vi.fn().mockResolvedValue({ id: "tr-1", status: "processing" }),
-      getStatus:
-        opts.getStatus ?? vi.fn().mockResolvedValue({ status: "completed" }),
+        opts.createTranscript ?? vi.fn().mockResolvedValue({ id: "tr-1", status: "processing" }),
+      getStatus: opts.getStatus ?? vi.fn().mockResolvedValue({ status: "completed" }),
       get:
         opts.getTranscript ??
         vi.fn().mockResolvedValue({
@@ -95,8 +91,7 @@ describe("runPlaybackHighlightingPipeline", () => {
     await promise;
 
     expect(createInteraction).toHaveBeenCalledOnce();
-    const arg = createInteraction.mock
-      .calls[0][0] as Corti.InteractionsCreateRequest;
+    const arg = createInteraction.mock.calls[0][0] as Corti.InteractionsCreateRequest;
     expect(arg.encounter.status).toBe("planned");
     expect(arg.encounter.type).toBe("first_consultation");
     expect(arg.encounter.identifier).toMatch(/^[\da-f-]{36}$/);
@@ -221,9 +216,7 @@ describe("runPlaybackHighlightingPipeline", () => {
       transcripts: segments,
     });
     const client = makeClient({
-      createTranscript: vi
-        .fn()
-        .mockResolvedValue({ id: "tr-1", status: "completed" }),
+      createTranscript: vi.fn().mockResolvedValue({ id: "tr-1", status: "completed" }),
       getTranscript,
     });
 
@@ -252,8 +245,6 @@ describe("describeTranscriptError", () => {
   });
 
   it("passes through non-403 messages", () => {
-    expect(describeTranscriptError(new Error("Network error"))).toBe(
-      "Network error",
-    );
+    expect(describeTranscriptError(new Error("Network error"))).toBe("Network error");
   });
 });

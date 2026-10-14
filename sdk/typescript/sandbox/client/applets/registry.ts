@@ -53,12 +53,12 @@ import { AppControlDetails } from "./app-control/AppControlDetails";
 import { BatchProcessor } from "./batch-processor/BatchProcessor";
 import { ChartPrepWorkflow } from "./chart-prep-workflow/ChartPrepWorkflow";
 import { ChartPrepWorkflowDetails } from "./chart-prep-workflow/ChartPrepWorkflowDetails";
-import { CommandGenie } from "./command-genie/CommandGenie";
-import { CommandGenieDetails } from "./command-genie/CommandGenieDetails";
 import { CodeCrosswalk } from "./code-crosswalk/CodeCrosswalk";
 import { CodeCrosswalkDetails } from "./code-crosswalk/CodeCrosswalkDetails";
 import { CodeValidator } from "./code-validator/CodeValidator";
 import { CodeValidatorDetails } from "./code-validator/CodeValidatorDetails";
+import { CommandGenie } from "./command-genie/CommandGenie";
+import { CommandGenieDetails } from "./command-genie/CommandGenieDetails";
 import { ConversationalAgent } from "./conversational-agent/ConversationalAgent";
 import { ConversationalAgentDetails } from "./conversational-agent/ConversationalAgentDetails";
 import { DeviceButtons } from "./device-buttons/DeviceButtons";
@@ -105,6 +105,8 @@ import { NoteToCode } from "./note-to-code/NoteToCode";
 import { NoteToCodeDetails } from "./note-to-code/NoteToCodeDetails";
 import { OnDemandAgent } from "./on-demand-agent/OnDemandAgent";
 import { OnDemandAgentDetails } from "./on-demand-agent/OnDemandAgentDetails";
+import { PlaybackHighlighting } from "./playback-highlighting/PlaybackHighlighting";
+import { PlaybackHighlightingDetails } from "./playback-highlighting/PlaybackHighlightingDetails";
 import { PriorAuthWorkflow } from "./prior-auth-workflow/PriorAuthWorkflow";
 import { PriorAuthWorkflowDetails } from "./prior-auth-workflow/PriorAuthWorkflowDetails";
 import { ProcedureNote } from "./procedure-note/ProcedureNote";
@@ -114,8 +116,6 @@ import { RealTimeNudge } from "./real-time-nudge/RealTimeNudge";
 import { RealTimeNudgeDetails } from "./real-time-nudge/RealTimeNudgeDetails";
 import { RecordingTranscript } from "./recording-transcript/RecordingTranscript";
 import { RecordingTranscriptDetails } from "./recording-transcript/RecordingTranscriptDetails";
-import { PlaybackHighlighting } from "./playback-highlighting/PlaybackHighlighting";
-import { PlaybackHighlightingDetails } from "./playback-highlighting/PlaybackHighlightingDetails";
 import { ReferralLetter } from "./referral-letter/ReferralLetter";
 import { ScribeLikeMe } from "./scribe-like-me/ScribeLikeMe";
 import { ScribeLikeMeDetails } from "./scribe-like-me/ScribeLikeMeDetails";
@@ -176,8 +176,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "dictation-suite",
     title: "Dictation suite",
-    description:
-      "Every dictation feature on one editor, one microphone, one config",
+    description: "Every dictation feature on one editor, one microphone, one config",
     workflow: "dictation",
     icon: LayoutGrid,
     Component: DictationSuite,
@@ -229,8 +228,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "formatting",
     title: "Formatting playground",
-    description:
-      "Configure formatting preferences and compare options side-by-side",
+    description: "Configure formatting preferences and compare options side-by-side",
     workflow: "dictation",
     icon: SpellCheck,
     Component: FormattingApplet,
@@ -284,8 +282,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "dictation-box",
     title: "Dictation box",
-    description:
-      "Target a dictation box, then transfer text to the active editor",
+    description: "Target a dictation box, then transfer text to the active editor",
     workflow: "dictation",
     icon: PanelRight,
     Component: DictationBox,
@@ -419,8 +416,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "template-showdown",
     title: "Template showdown",
-    description:
-      "Fire one note through every tenant template simultaneously and compare outputs",
+    description: "Fire one note through every tenant template simultaneously and compare outputs",
     workflow: "text-generation",
     icon: LayoutGrid,
     Component: TemplateShowdown,
@@ -428,8 +424,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "note-diff",
     title: "Two-note comparison",
-    description:
-      "Generate the same template for two notes and view sections side-by-side",
+    description: "Generate the same template for two notes and view sections side-by-side",
     workflow: "text-generation",
     icon: Columns2,
     Component: NoteDiff,
@@ -437,8 +432,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "batch-processor",
     title: "Batch note processor",
-    description:
-      "Process multiple notes in parallel with one template using --- separators",
+    description: "Process multiple notes in parallel with one template using --- separators",
     workflow: "text-generation",
     icon: ListChecks,
     Component: BatchProcessor,
@@ -446,8 +440,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "chart-prep-workflow",
     title: "Multi-agent chart prep",
-    description:
-      "Extract facts → draft note → suggest codes (3-agent pipeline)",
+    description: "Extract facts → draft note → suggest codes (3-agent pipeline)",
     workflow: "agentic",
     icon: GitBranch,
     Component: ChartPrepWorkflow,
@@ -505,8 +498,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "conversational-agent",
     title: "Conversational agent",
-    description:
-      "Always-on voice chat with speculative prefetch for instant responses",
+    description: "Always-on voice chat with speculative prefetch for instant responses",
     workflow: "agentic",
     icon: Mic,
     Component: ConversationalAgent,
@@ -516,8 +508,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "command-genie",
     title: "Command Genie",
-    description:
-      "Describe a command or nudge in plain language — an agent builds it for you",
+    description: "Describe a command or nudge in plain language — an agent builds it for you",
     workflow: "agentic",
     icon: Wand2,
     Component: CommandGenie,
@@ -528,8 +519,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "recording-transcript",
     title: "Recording to transcript (REST)",
-    description:
-      "Upload a recording, create an async transcript, and poll it to completion",
+    description: "Upload a recording, create an async transcript, and poll it to completion",
     workflow: "dictation",
     icon: FileAudio,
     Component: RecordingTranscript,
@@ -611,8 +601,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "scribe-like-me",
     title: "Scribe like me",
-    description:
-      "Two agents tailor a template to a clinician's style from their historical notes",
+    description: "Two agents tailor a template to a clinician's style from their historical notes",
     workflow: "extended",
     icon: Fingerprint,
     Component: ScribeLikeMe,
@@ -656,9 +645,8 @@ export function workflowSlug(area: WorkflowArea): string {
 
 export function workflowAreaFromSlug(slug: string): WorkflowArea | undefined {
   return (
-    (Object.entries(WORKFLOW_SLUGS) as [WorkflowArea, string][]).find(
-      ([, s]) => s === slug,
-    )?.[0] ?? undefined
+    (Object.entries(WORKFLOW_SLUGS) as [WorkflowArea, string][]).find(([, s]) => s === slug)?.[0] ??
+    undefined
   );
 }
 

@@ -45,7 +45,12 @@ router.post("/token", async (req, res) => {
     );
 
     const sessionId = getSessionId(req, res);
-    setRuntimeCreds(sessionId, { clientId: client_id, clientSecret: client_secret, cluster, tenant });
+    setRuntimeCreds(sessionId, {
+      clientId: client_id,
+      clientSecret: client_secret,
+      cluster,
+      tenant,
+    });
     res.json({ access_token: data.access_token, expires_in: data.expires_in });
   } catch (error) {
     const isAxiosError = axios.isAxiosError(error);

@@ -12,22 +12,19 @@ export function MedicalCodingLiveDetails() {
       </div>
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Body
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Body</p>
         <ul className="ml-4 mt-1 list-disc text-muted-foreground">
           <li>
             <code>system</code>: array of coding systems, for example{" "}
             <code>icd10cm-outpatient</code> or <code>cpt</code>
           </li>
           <li>
-            <code>context</code>: array of{" "}
-            <code>{'{ type: "text", text }'}</code> or{" "}
+            <code>context</code>: array of <code>{'{ type: "text", text }'}</code> or{" "}
             <code>{'{ type: "documentId", documentId }'}</code>
           </li>
           <li>
-            optional <code>filter</code>: <code>include</code> and{" "}
-            <code>exclude</code> as condition objects
+            optional <code>filter</code>: <code>include</code> and <code>exclude</code> as condition
+            objects
           </li>
         </ul>
       </div>
@@ -37,10 +34,10 @@ export function MedicalCodingLiveDetails() {
           Response
         </p>
         <p className="mt-1 text-muted-foreground">
-          <code>codes</code> (accepted) and <code>candidates</code> (lower
-          confidence), each with <code>system</code>, <code>code</code>,{" "}
-          <code>display</code>, and an <code>evidences</code> array pointing
-          back at the <code>context</code> index that justified it.
+          <code>codes</code> (accepted) and <code>candidates</code> (lower confidence), each with{" "}
+          <code>system</code>, <code>code</code>, <code>display</code>, and an{" "}
+          <code>evidences</code> array pointing back at the <code>context</code> index that
+          justified it.
         </p>
       </div>
 

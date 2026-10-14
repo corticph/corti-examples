@@ -15,11 +15,7 @@
  */
 import type { Corti } from "@corti/sdk";
 import { buildFormattingOverrides } from "../_shared/formatting";
-import type {
-  FormattingConfig,
-  KeytermsConfig,
-  TranscribeTerm,
-} from "../_shared/types";
+import type { FormattingConfig, KeytermsConfig, TranscribeTerm } from "../_shared/types";
 import type { Term } from "../dictionary-terms/terms";
 import type { Replacement } from "../text-replacements/replacements";
 
@@ -43,9 +39,7 @@ export function buildSuiteConfig(
   const keyterms: KeytermsConfig | undefined =
     termPayload.length > 0 ? { terms: termPayload } : undefined;
 
-  const formattingOverrides = formatting
-    ? buildFormattingOverrides(formatting)
-    : undefined;
+  const formattingOverrides = formatting ? buildFormattingOverrides(formatting) : undefined;
 
   return {
     primaryLanguage,

@@ -36,24 +36,12 @@
 
 import type { Corti } from "@corti/sdk";
 import { CortiClient } from "@corti/sdk";
-import {
-  Loader2,
-  Mic,
-  Pencil,
-  Radio,
-  Save,
-  Stethoscope,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Loader2, Mic, Pencil, Radio, Save, Stethoscope, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { CortiAmbientComponent } from "../_shared/cortiAmbientReact";
 import { CortiDictationComponent } from "../_shared/cortiDictationReact";
-import {
-  type DiarizedSegment,
-  mergeDiarizedSegments,
-} from "../_shared/diarizedTranscript";
+import { type DiarizedSegment, mergeDiarizedSegments } from "../_shared/diarizedTranscript";
 import { buildFormattingOverrides } from "../_shared/formatting";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
@@ -81,11 +69,7 @@ import {
 import { DictationPanel } from "./DictationPanel";
 import { type ExistingNote, NoteGeneration } from "./NoteGeneration";
 import { parsePastedTranscript } from "./pastedTranscript";
-import {
-  loadSettings,
-  SpeechFlexConfig,
-  type SpeechFlexSettings,
-} from "./SpeechFlexConfig";
+import { loadSettings, SpeechFlexConfig, type SpeechFlexSettings } from "./SpeechFlexConfig";
 import { useInteractions } from "./useInteractions";
 import { VisitSchedule } from "./VisitSchedule";
 import type { WorkspaceMode } from "./workspaceState";
@@ -117,8 +101,7 @@ function DisabledMicControl({ message }: { message: string }) {
 }
 
 export function SpeechFlex() {
-  const { authConfig, clientId, sdkEnvironment, isReady, tenantName } =
-    useCortiAccessToken();
+  const { authConfig, clientId, sdkEnvironment, isReady, tenantName } = useCortiAccessToken();
   const { language, onLanguagesChanged } = useDictationLanguage();
   const [mode, setMode] = useSessionState<WorkspaceMode>("mode", "dictation");
   const [creatingVisit, setCreatingVisit] = useState(false);
@@ -133,8 +116,7 @@ export function SpeechFlex() {
   const [ambientClips, setAmbientClips] = useState<AmbientClip[]>([]);
   const [ambientRecording, setAmbientRecording] = useState(false);
   const [pastedText, setPastedText] = useState("");
-  const [transcriptPanelMode, setTranscriptPanelMode] =
-    useState<TranscriptPanelMode>("ambient");
+  const [transcriptPanelMode, setTranscriptPanelMode] = useState<TranscriptPanelMode>("ambient");
   const [existingNotes, setExistingNotes] = useState<ExistingNote[]>([]);
   const [interactionLoading, setInteractionLoading] = useState(false);
   const fetchedRef = useRef<string | null>(null);
@@ -188,9 +170,7 @@ export function SpeechFlex() {
 
   // Ref bridge: the dictation web component lives in the header, the
   // DictationPanel lives below. The ref forwards transcript events.
-  const dictationTranscriptRef = useRef<((e: CustomEvent) => void) | null>(
-    null,
-  );
+  const dictationTranscriptRef = useRef<((e: CustomEvent) => void) | null>(null);
   const commandHandlerRef = useRef<((e: CustomEvent) => void) | null>(null);
 
   // Ambient event handlers — returns callbacks for the ambient web component.
@@ -216,15 +196,8 @@ export function SpeechFlex() {
     });
   }, [sdkEnvironment, authConfig, isReady]);
 
-  const {
-    visits,
-    loading,
-    error,
-    selectedVisitId,
-    selectVisit,
-    createVisit,
-    updateVisit,
-  } = useInteractions(client);
+  const { visits, loading, error, selectedVisitId, selectVisit, createVisit, updateVisit } =
+    useInteractions(client);
 
   const selectedVisit = visits.find((v) => v.interactionId === selectedVisitId);
 
@@ -245,8 +218,7 @@ export function SpeechFlex() {
     () => parsePastedTranscript(debouncedPastedText),
     [debouncedPastedText],
   );
-  const effectiveSegments =
-    transcriptPanelMode === "paste" ? pastedSegments : ambientSegments;
+  const effectiveSegments = transcriptPanelMode === "paste" ? pastedSegments : ambientSegments;
 
   // Inline edit state for the patient context bar
   const [editingVisit, setEditingVisit] = useState(false);
@@ -275,9 +247,7 @@ export function SpeechFlex() {
       encounterType: selectedVisit.encounter.type ?? "outpatient",
       encounterStatus: selectedVisit.encounter.status ?? "planned",
       scheduledAt: selectedVisit.encounter.period.startedAt
-        ? new Date(selectedVisit.encounter.period.startedAt)
-            .toISOString()
-            .slice(0, 16)
+        ? new Date(selectedVisit.encounter.period.startedAt).toISOString().slice(0, 16)
         : "",
     });
     setEditingVisit(true);
@@ -295,9 +265,7 @@ export function SpeechFlex() {
         patientIdentifier: editForm.patientIdentifier,
         encounterType: editForm.encounterType,
         encounterStatus: editForm.encounterStatus,
-        scheduledAt: editForm.scheduledAt
-          ? new Date(editForm.scheduledAt)
-          : undefined,
+        scheduledAt: editForm.scheduledAt ? new Date(editForm.scheduledAt) : undefined,
       });
       setEditingVisit(false);
     } catch (e) {
@@ -368,9 +336,7 @@ export function SpeechFlex() {
         }
         if (allSegments.length > 0) {
           setAmbientSegments((prev) =>
-            prev.length === 0
-              ? allSegments
-              : mergeDiarizedSegments(prev, allSegments),
+            prev.length === 0 ? allSegments : mergeDiarizedSegments(prev, allSegments),
           );
         }
 
@@ -413,10 +379,7 @@ export function SpeechFlex() {
                     ? doc.sections
                         .map(
                           (s) =>
-                            [
-                              s.heading,
-                              doc.stringDocument[s.sectionId] ?? "",
-                            ] as [string, string],
+                            [s.heading, doc.stringDocument[s.sectionId] ?? ""] as [string, string],
                         )
                         .filter(([, content]) => content.length > 0)
                     : [],
@@ -544,10 +507,7 @@ export function SpeechFlex() {
 
         {/* Config wrench — right-aligned in header */}
         <div className="ml-auto">
-          <SpeechFlexConfig
-            settings={settings}
-            onSettingsChange={setSettings}
-          />
+          <SpeechFlexConfig settings={settings} onSettingsChange={setSettings} />
         </div>
       </header>
 
@@ -561,9 +521,7 @@ export function SpeechFlex() {
         />
         <Switch
           checked={mode === "ambient"}
-          onCheckedChange={(checked) =>
-            setMode(checked ? "ambient" : "dictation")
-          }
+          onCheckedChange={(checked) => setMode(checked ? "ambient" : "dictation")}
           aria-label="Toggle between dictation and ambient mode"
         />
         <Radio
@@ -607,10 +565,7 @@ export function SpeechFlex() {
                 /* Inline edit form */
                 <div className="flex flex-1 flex-wrap items-end gap-3">
                   <div className="flex flex-1 flex-col gap-1 min-w-[120px]">
-                    <label
-                      htmlFor="edit-patient-name"
-                      className="text-xs text-muted-foreground"
-                    >
+                    <label htmlFor="edit-patient-name" className="text-xs text-muted-foreground">
                       Patient name
                     </label>
                     <input
@@ -627,10 +582,7 @@ export function SpeechFlex() {
                     />
                   </div>
                   <div className="flex flex-col gap-1 min-w-[80px]">
-                    <label
-                      htmlFor="edit-mrn"
-                      className="text-xs text-muted-foreground"
-                    >
+                    <label htmlFor="edit-mrn" className="text-xs text-muted-foreground">
                       MRN
                     </label>
                     <input
@@ -647,10 +599,7 @@ export function SpeechFlex() {
                     />
                   </div>
                   <div className="flex flex-col gap-1 min-w-[120px]">
-                    <label
-                      htmlFor="edit-visit-type"
-                      className="text-xs text-muted-foreground"
-                    >
+                    <label htmlFor="edit-visit-type" className="text-xs text-muted-foreground">
                       Visit type
                     </label>
                     <select
@@ -664,20 +613,15 @@ export function SpeechFlex() {
                       }
                       className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
-                      {Object.entries(ENCOUNTER_TYPE_LABELS).map(
-                        ([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ),
-                      )}
+                      {Object.entries(ENCOUNTER_TYPE_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="flex flex-col gap-1 min-w-[120px]">
-                    <label
-                      htmlFor="edit-visit-date"
-                      className="text-xs text-muted-foreground"
-                    >
+                    <label htmlFor="edit-visit-date" className="text-xs text-muted-foreground">
                       Visit date
                     </label>
                     <input
@@ -720,9 +664,7 @@ export function SpeechFlex() {
                 /* View mode */
                 <>
                   <span className="text-sm font-medium text-foreground">
-                    {selectedVisit.patient?.name ??
-                      selectedVisit.encounter.title ??
-                      "Unknown"}
+                    {selectedVisit.patient?.name ?? selectedVisit.encounter.title ?? "Unknown"}
                   </span>
                   <span className="text-muted-foreground/30">|</span>
                   <span className="text-sm text-muted-foreground">
@@ -731,9 +673,7 @@ export function SpeechFlex() {
                   </span>
                   <span className="text-muted-foreground/30">|</span>
                   <span className="text-sm text-muted-foreground">
-                    {new Date(
-                      selectedVisit.encounter.period.startedAt,
-                    ).toLocaleString([], {
+                    {new Date(selectedVisit.encounter.period.startedAt).toLocaleString([], {
                       month: "short",
                       day: "numeric",
                       hour: "2-digit",
@@ -768,9 +708,7 @@ export function SpeechFlex() {
                 </>
               )
             ) : (
-              <span className="text-sm text-muted-foreground">
-                No visit selected
-              </span>
+              <span className="text-sm text-muted-foreground">No visit selected</span>
             )}
           </div>
 
@@ -810,18 +748,13 @@ export function SpeechFlex() {
                     key={`${entry.at}-${entry.id}`}
                     className="flex items-baseline gap-2 px-3 py-1.5 text-xs"
                   >
-                    <code className="shrink-0 font-semibold text-foreground">
-                      {entry.id}
-                    </code>
-                    {entry.variables &&
-                      Object.keys(entry.variables).length > 0 && (
-                        <code className="shrink-0 text-muted-foreground">
-                          {JSON.stringify(entry.variables)}
-                        </code>
-                      )}
-                    <span className="truncate text-foreground">
-                      {entry.description}
-                    </span>
+                    <code className="shrink-0 font-semibold text-foreground">{entry.id}</code>
+                    {entry.variables && Object.keys(entry.variables).length > 0 && (
+                      <code className="shrink-0 text-muted-foreground">
+                        {JSON.stringify(entry.variables)}
+                      </code>
+                    )}
+                    <span className="truncate text-foreground">{entry.description}</span>
                   </li>
                 ))}
               </ul>
@@ -830,10 +763,7 @@ export function SpeechFlex() {
 
           {/* Recording status bar — ambient mode only, when a visit is selected */}
           {mode === "ambient" && selectedVisitId && (
-            <RecordingStatusBar
-              isRecording={ambientRecording}
-              clips={ambientClips}
-            />
+            <RecordingStatusBar isRecording={ambientRecording} clips={ambientClips} />
           )}
 
           {/* Collapsible transcript + facts panels — visible when a visit is selected */}
@@ -842,9 +772,7 @@ export function SpeechFlex() {
               {interactionLoading && (
                 <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    Loading interaction data…
-                  </span>
+                  <span className="text-xs text-muted-foreground">Loading interaction data…</span>
                 </div>
               )}
               <TranscriptPanel

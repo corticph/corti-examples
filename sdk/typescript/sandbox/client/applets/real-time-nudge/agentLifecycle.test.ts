@@ -21,16 +21,12 @@ vi.mock("@corti/sdk", () => ({
   },
 }));
 vi.mock("react", () => ({
-  useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) =>
-    snapshot(),
+  useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
 }));
 
-import {
-  createLocalConfigStore,
-  identityNamespace,
-} from "../_shared/configStore";
-import { CATALOG } from "./nudgeRules";
+import { createLocalConfigStore, identityNamespace } from "../_shared/configStore";
 import { codeCriteria } from "./evaluation";
+import { CATALOG } from "./nudgeRules";
 import {
   configureNudgeAgent,
   DEFAULT_SYSTEM_PROMPT,
@@ -64,12 +60,10 @@ function setup(tenant = "a") {
           {
             kind: "text",
             text: JSON.stringify({
-              decisions: payload.criteria.map(
-                (c: { id: string; condition?: string }) => ({
-                  id: c.id,
-                  outcome: c.condition === "absent" ? "matched" : "not-matched",
-                }),
-              ),
+              decisions: payload.criteria.map((c: { id: string; condition?: string }) => ({
+                id: c.id,
+                outcome: c.condition === "absent" ? "matched" : "not-matched",
+              })),
             }),
           },
         ],
@@ -143,9 +137,7 @@ describe("agent lifecycle and completed caches", () => {
       trigger: {
         icd10: {
           mode: "all" as const,
-          conditions: [
-            { code: "I50.9", op: "=" as const, condition: "absent" as const },
-          ],
+          conditions: [{ code: "I50.9", op: "=" as const, condition: "absent" as const }],
         },
       },
       resolve: {},
@@ -182,12 +174,9 @@ describe("agent lifecycle and completed caches", () => {
     });
     const saveCall = mock.agents.update.mock.calls.find(
       ([, arg]) =>
-        typeof arg?.systemPrompt === "string" &&
-        arg.systemPrompt.startsWith("New prompt"),
+        typeof arg?.systemPrompt === "string" && arg.systemPrompt.startsWith("New prompt"),
     );
-    expect(saveCall?.[1].systemPrompt).toContain(
-      "Required response protocol v4",
-    );
+    expect(saveCall?.[1].systemPrompt).toContain("Required response protocol v4");
     configureNudgeAgent({ accessToken: "test" }, env, "client", "a", "us");
     await evaluatePromptWithAgent(client, {
       text: "note",
@@ -201,9 +190,7 @@ describe("agent lifecycle and completed caches", () => {
       message: { parts: [{ kind: "text", text: '{"decisions":[]}' }] },
     });
     const req = { text: "note", criteria: [{ id: "a", prompt: "A" }] };
-    expect(
-      (await evaluatePromptWithAgent(client, req)).decisions[0].outcome,
-    ).toBe("unknown");
+    expect((await evaluatePromptWithAgent(client, req)).decisions[0].outcome).toBe("unknown");
     await evaluatePromptWithAgent(client, req);
     expect(mock.agents.messageSend).toHaveBeenCalledTimes(2);
   });
@@ -261,9 +248,7 @@ describe("agent lifecycle and completed caches", () => {
       nudgeState,
     };
     await evaluateCodesWithAgent(client, req, false);
-    const payload = JSON.parse(
-      mock.agents.messageSend.mock.calls[0][1].message.parts[0].text,
-    );
+    const payload = JSON.parse(mock.agents.messageSend.mock.calls[0][1].message.parts[0].text);
     expect(payload.nudgeState).toEqual(nudgeState);
   });
 
@@ -283,11 +268,7 @@ describe("agent lifecycle and completed caches", () => {
     expect(firstPayload.appendedText).toBeUndefined();
 
     // Second call: still full text, no contextId (stateless)
-    await evaluateCodesWithAgent(
-      client,
-      { ...req, text: "CHF more text" },
-      false,
-    );
+    await evaluateCodesWithAgent(client, { ...req, text: "CHF more text" }, false);
     const secondCall = mock.agents.messageSend.mock.calls[1][1];
     expect(secondCall.message.contextId).toBeUndefined();
     const secondPayload = JSON.parse(secondCall.message.parts[0].text);
@@ -341,13 +322,7 @@ describe("agent lifecycle and completed caches", () => {
         contextId: "ctx-1",
       },
     });
-    configureNudgeAgent(
-      { accessToken: "test" },
-      env,
-      "client",
-      "items-test",
-      "eu",
-    );
+    configureNudgeAgent({ accessToken: "test" }, env, "client", "items-test", "eu");
     const req = { text: "note", criteria: [{ id: "a", prompt: "A" }] };
     await evaluatePromptWithAgent(client, req);
     expect(mock.agents.messageSend).toHaveBeenCalledTimes(1);

@@ -29,11 +29,7 @@ import { RuleManager } from "../_shared/RuleManager";
 import type { FormattingConfig } from "../_shared/types";
 import { cn } from "../_shared/utils";
 import { CommandManager } from "../dictation-commands/CommandManager";
-import {
-  type Term,
-  termStore,
-  toExport as termsToExport,
-} from "../dictionary-terms/terms";
+import { type Term, termStore, toExport as termsToExport } from "../dictionary-terms/terms";
 import { CleanupPromptLibrary } from "../on-demand-agent/CleanupPromptLibrary";
 import {
   type Replacement,
@@ -86,13 +82,7 @@ function saveSettings(s: SpeechFlexSettings) {
   }
 }
 
-type TabId =
-  | "commands"
-  | "replacements"
-  | "dictionary"
-  | "cleanup"
-  | "formatting"
-  | "ambient";
+type TabId = "commands" | "replacements" | "dictionary" | "cleanup" | "formatting" | "ambient";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "commands", label: "Commands" },
@@ -108,8 +98,7 @@ function ReplacementsPanel() {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-muted-foreground">
-        Rewrites spoken phrases in the final transcript, server-side (e.g. "BID"
-        → "twice daily").
+        Rewrites spoken phrases in the final transcript, server-side (e.g. "BID" → "twice daily").
       </p>
       <RuleManager<Replacement>
         items={items}
@@ -138,8 +127,8 @@ function TermsPanel() {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-muted-foreground">
-        Biases recognition toward custom vocabulary, so domain words come back
-        right instead of needing a replacement afterwards.
+        Biases recognition toward custom vocabulary, so domain words come back right instead of
+        needing a replacement afterwards.
       </p>
       <RuleManager<Term>
         items={items}
@@ -166,8 +155,8 @@ function FormattingPanel({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
-        Controls how dates, times, numbers, measurements, and ordinals appear in
-        transcript output. Applies to both dictation and ambient modes.
+        Controls how dates, times, numbers, measurements, and ordinals appear in transcript output.
+        Applies to both dictation and ambient modes.
       </p>
       <div className="grid grid-cols-[140px_auto] grid-rows-6 items-center gap-x-3 gap-y-2">
         {FORMATTING_FIELD_LABELS.map(({ key, label }) => (
@@ -202,9 +191,7 @@ function FormattingPanel({
       </div>
       <button
         type="button"
-        onClick={() =>
-          onChange({ ...settings, formatting: { ...DEFAULT_FORMATTING } })
-        }
+        onClick={() => onChange({ ...settings, formatting: { ...DEFAULT_FORMATTING } })}
         className="mt-1 self-start rounded border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       >
         Reset to defaults
@@ -224,12 +211,10 @@ function AmbientPanel({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium text-foreground">
-            Facts extraction
-          </span>
+          <span className="text-sm font-medium text-foreground">Facts extraction</span>
           <span className="text-xs text-muted-foreground">
-            Enable real-time facts extraction during ambient recording. When
-            disabled, ambient mode uses transcription-only mode.
+            Enable real-time facts extraction during ambient recording. When disabled, ambient mode
+            uses transcription-only mode.
           </span>
         </div>
         <Switch
@@ -255,12 +240,9 @@ function AmbientPanel({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-foreground">
-          Document generation source
-        </span>
+        <span className="text-sm font-medium text-foreground">Document generation source</span>
         <span className="text-xs text-muted-foreground">
-          Choose what the note generator uses as input context when generating a
-          note.
+          Choose what the note generator uses as input context when generating a note.
         </span>
         <div className="mt-2 flex flex-col gap-1.5">
           {(
@@ -326,17 +308,13 @@ function AmbientPanel({
                   name="doc-source"
                   value={opt.value}
                   checked={settings.documentSource === opt.value}
-                  onChange={() =>
-                    onChange({ ...settings, documentSource: opt.value })
-                  }
+                  onChange={() => onChange({ ...settings, documentSource: opt.value })}
                   disabled={disabled}
                   className="mt-0.5 accent-lime-600 dark:accent-corti-lime"
                 />
                 <div className="flex flex-col">
                   <span className="text-sm text-foreground">{opt.label}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {opt.desc}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
                 </div>
               </label>
             );
@@ -404,10 +382,7 @@ export function SpeechFlexConfig({
           {tab === "dictionary" && <TermsPanel />}
           {tab === "cleanup" && <CleanupPromptLibrary />}
           {tab === "formatting" && (
-            <FormattingPanel
-              settings={settings}
-              onChange={handleSettingsChange}
-            />
+            <FormattingPanel settings={settings} onChange={handleSettingsChange} />
           )}
           {tab === "ambient" && (
             <AmbientPanel settings={settings} onChange={handleSettingsChange} />

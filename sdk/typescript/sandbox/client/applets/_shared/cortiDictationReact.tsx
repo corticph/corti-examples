@@ -40,19 +40,13 @@ const CortiDictationElement = createComponent({
     onRecordingDevicesChanged: "recording-devices-changed" as EventName<
       CustomEvent<RecordingDevicesChangedEventDetail>
     >,
-    onLanguagesChanged: "languages-changed" as EventName<
-      CustomEvent<LanguagesChangedEventDetail>
-    >,
+    onLanguagesChanged: "languages-changed" as EventName<CustomEvent<LanguagesChangedEventDetail>>,
     onAudioLevelChanged: "audio-level-changed" as EventName<
       CustomEvent<AudioLevelChangedEventDetail>
     >,
-    onAudioEvent: "audio-event" as EventName<
-      CustomEvent<AudioEventEventDetail>
-    >,
+    onAudioEvent: "audio-event" as EventName<CustomEvent<AudioEventEventDetail>>,
     onUsage: "usage" as EventName<CustomEvent<UsageEventDetail>>,
-    onDeltaUsage: "delta-usage" as EventName<
-      CustomEvent<DeltaUsageEventDetail>
-    >,
+    onDeltaUsage: "delta-usage" as EventName<CustomEvent<DeltaUsageEventDetail>>,
     onKeybindingChanged: "keybinding-changed" as EventName<
       CustomEvent<KeybindingChangedEventDetail>
     >,
@@ -112,9 +106,9 @@ async function installSettingsPopoverViewportFix(
 ): Promise<void> {
   await element.updateComplete;
 
-  const settingsMenu = element.shadowRoot?.querySelector(
-    "dictation-settings-menu",
-  ) as (HTMLElement & { updateComplete?: Promise<unknown> }) | null;
+  const settingsMenu = element.shadowRoot?.querySelector("dictation-settings-menu") as
+    | (HTMLElement & { updateComplete?: Promise<unknown> })
+    | null;
   if (!settingsMenu) {
     return;
   }
@@ -134,9 +128,7 @@ function isEditable(el: Element | null): boolean {
   }
   const tag = el.tagName;
   return (
-    tag === "INPUT" ||
-    tag === "TEXTAREA" ||
-    (el instanceof HTMLElement && el.isContentEditable)
+    tag === "INPUT" || tag === "TEXTAREA" || (el instanceof HTMLElement && el.isContentEditable)
   );
 }
 
@@ -217,9 +209,7 @@ function useKeybindingPassthrough(
  * Surfacing it here (rather than per-applet) means every dictation-based
  * applet gets the shared footer's troubleshooting id for free.
  */
-function useSessionIdCapture(
-  ref: React.RefObject<InstanceType<typeof CortiDictation> | null>,
-) {
+function useSessionIdCapture(ref: React.RefObject<InstanceType<typeof CortiDictation> | null>) {
   const { setStatus, clear } = useSessionStatus();
   React.useEffect(() => {
     const el = ref.current;
@@ -231,9 +221,7 @@ function useSessionIdCapture(
       if (detail?.direction !== "received") {
         return;
       }
-      const data = detail.data as
-        | { type?: string; sessionId?: string }
-        | undefined;
+      const data = detail.data as { type?: string; sessionId?: string } | undefined;
       if (data?.type === "CONFIG_ACCEPTED" && data.sessionId) {
         setStatus({ sessionId: data.sessionId });
       }
@@ -250,15 +238,8 @@ export const CortiDictationComponent = React.forwardRef<
   InstanceType<typeof CortiDictation>,
   CortiDictationProps
 >(function CortiDictationComponent(props, forwardedRef) {
-  const {
-    onKeybindingChanged,
-    onError,
-    hidRecordingControl = true,
-    ...rest
-  } = props;
-  const innerRef = React.useRef<InstanceType<typeof CortiDictation> | null>(
-    null,
-  );
+  const { onKeybindingChanged, onError, hidRecordingControl = true, ...rest } = props;
+  const innerRef = React.useRef<InstanceType<typeof CortiDictation> | null>(null);
 
   // The web component dispatches "error" events with bubbles:false (events.js),
   // so @lit/react's bubble-phase listener never fires. A capture-phase listener
@@ -294,16 +275,9 @@ export const CortiDictationComponent = React.forwardRef<
 
   // Locked keys, seeded from the (possibly overridden) defaults and kept in sync
   // with the component's keybinding-changed event when the user re-binds.
-  const pushKeyRef = React.useRef(
-    props.pushToTalkKeybinding ?? DEFAULT_PUSH_TO_TALK_KEY,
-  );
-  const toggleKeyRef = React.useRef(
-    props.toggleToTalkKeybinding ?? DEFAULT_TOGGLE_TO_TALK_KEY,
-  );
-  const keys = React.useMemo(
-    () => ({ push: pushKeyRef, toggle: toggleKeyRef }),
-    [],
-  );
+  const pushKeyRef = React.useRef(props.pushToTalkKeybinding ?? DEFAULT_PUSH_TO_TALK_KEY);
+  const toggleKeyRef = React.useRef(props.toggleToTalkKeybinding ?? DEFAULT_TOGGLE_TO_TALK_KEY);
+  const keys = React.useMemo(() => ({ push: pushKeyRef, toggle: toggleKeyRef }), []);
   useKeybindingPassthrough(innerRef, keys);
   useHidRecordingControl(innerRef, hidRecordingControl);
   useSessionIdCapture(innerRef);

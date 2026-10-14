@@ -10,9 +10,7 @@ import type {
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_ATTEMPTS = 120;
 
-export async function listInteractions(
-  client: CortiClient,
-): Promise<InteractionSummary[]> {
+export async function listInteractions(client: CortiClient): Promise<InteractionSummary[]> {
   const page = await client.interactions.list({});
   const items: InteractionSummary[] = [];
   for await (const interaction of page) {
@@ -31,9 +29,7 @@ export async function listInteractions(
   });
 }
 
-export async function createExamplesInteraction(
-  client: CortiClient,
-): Promise<string> {
+export async function createExamplesInteraction(client: CortiClient): Promise<string> {
   const data = await client.interactions.create({
     encounter: {
       identifier: `corti-examples-${Date.now()}`,
@@ -91,11 +87,7 @@ export async function getTranscriptStatus(
   transcriptId: string,
 ): Promise<TranscriptProcessingStatus> {
   const data = await client.transcripts.getStatus(interactionId, transcriptId);
-  if (
-    data.status !== "processing" &&
-    data.status !== "completed" &&
-    data.status !== "failed"
-  ) {
+  if (data.status !== "processing" && data.status !== "completed" && data.status !== "failed") {
     throw new Error("Transcript status response was missing a valid status.");
   }
   return data.status;
@@ -115,11 +107,7 @@ export async function pollTranscriptUntilReady(
   const intervalMs = options?.intervalMs || POLL_INTERVAL_MS;
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const status = await getTranscriptStatus(
-      client,
-      interactionId,
-      transcriptId,
-    );
+    const status = await getTranscriptStatus(client, interactionId, transcriptId);
     options?.onStatus?.(status);
     if (status !== "processing") {
       return status;

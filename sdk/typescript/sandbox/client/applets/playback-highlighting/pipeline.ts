@@ -100,9 +100,7 @@ export async function runPlaybackHighlightingPipeline(
     onProgress,
   } = opts;
 
-  const formattingOverrides = formatting
-    ? buildFormattingOverrides(formatting)
-    : undefined;
+  const formattingOverrides = formatting ? buildFormattingOverrides(formatting) : undefined;
 
   const pipelineStart = Date.now();
 
@@ -140,24 +138,17 @@ export async function runPlaybackHighlightingPipeline(
   let attempt = 0;
   while (status === "processing") {
     if (Date.now() - start > POLL_TIMEOUT_MS) {
-      throw new Error(
-        "Timed out waiting for the transcript to finish processing",
-      );
+      throw new Error("Timed out waiting for the transcript to finish processing");
     }
     attempt += 1;
     onProgress?.({ step: "polling", pollAttempt: attempt });
     await sleep(POLL_INTERVAL_MS);
-    const polled = await client.transcripts.getStatus(
-      interactionId,
-      transcriptId,
-    );
+    const polled = await client.transcripts.getStatus(interactionId, transcriptId);
     status = polled.status;
   }
 
   if (status === "failed") {
-    throw new Error(
-      "Transcript processing failed — the API reported status: failed",
-    );
+    throw new Error("Transcript processing failed — the API reported status: failed");
   }
 
   onProgress?.({ step: "fetching-result" });
