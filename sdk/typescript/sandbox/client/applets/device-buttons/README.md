@@ -92,17 +92,17 @@ on reload.
 
 - npm: `dictation_support` (plus `@corti/dictation-web` / `@corti/ambient-web` +
   `@lit/react` for the recording surfaces the buttons drive)
-- shared files: `../_shared/hid-recording.ts`, `../_shared/dictation-device.ts`,
-  `../_shared/useDictationDevice.ts`, `../_shared/config-store.ts`,
+- shared files: `../_shared/hidRecording.ts`, `../_shared/dictationDevice.ts`,
+  `../_shared/useDictationDevice.ts`, `../_shared/configStore.ts`,
   `../_shared/useCortiAccessToken.ts`, and the
-  `../_shared/corti-dictation-react.tsx` / `../_shared/corti-ambient-react.tsx`
+  `../_shared/cortiDictationReact.tsx` / `../_shared/cortiAmbientReact.tsx`
   wrappers (which call `useHidRecordingControl`)
 - local files: `DeviceButtons.tsx`, `DeviceButtonsDetails.tsx`, `mappingStore.ts`
 
 ## Persistence
 
 Button mappings persist per **API client** (`clientId:tenant`) via
-`../_shared/config-store.ts` (localStorage today; swap for a server store when
+`../_shared/configStore.ts` (localStorage today; swap for a server store when
 hosted). Global mappings are stored under `buttonMappings`; per-applet
 overrides under `buttonMappings:overrides:${appletId}`.
 

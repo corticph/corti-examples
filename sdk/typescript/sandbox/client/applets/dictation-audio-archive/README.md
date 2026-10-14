@@ -27,8 +27,8 @@ tool.
 ## Shared dependencies
 
 - `../_shared/useCortiAccessToken.ts`
-- `../_shared/text-insertion.ts`
-- `../_shared/config-store.ts`
-- `../_shared/audio-archive.ts`
-- `../_shared/audio-archive-store.ts`
+- `../_shared/textInsertion.ts`
+- `../_shared/configStore.ts`
+- `../_shared/audioArchive.ts`
+- `../_shared/audioArchiveStore.ts`
 - `../_shared/useAudioArchive.ts`

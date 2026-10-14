@@ -7,7 +7,7 @@ grouped by speaker.
 can arrive out of order across speakers (no interim results). This applet merges
 them with `mergeDiarizedSegments` (ordered by `time.start`, tie-break
 `time.end`) and renders speaker runs with `groupBySpeakerRuns` from
-`../_shared/diarized-transcript.ts` — never appending in arrival order.
+`../_shared/diarizedTranscript.ts` — never appending in arrival order.
 
 It also toggles:
 
@@ -21,8 +21,8 @@ passed to `<corti-ambient>`.
 ## Dependencies to copy
 
 - npm: `@corti/sdk`, `@corti/ambient-web`, `@lit/react`
-- shared files: `../_shared/corti-ambient-react.tsx`,
-  `../_shared/diarized-transcript.ts`, `../_shared/useCortiAccessToken.ts`
+- shared files: `../_shared/cortiAmbientReact.tsx`,
+  `../_shared/diarizedTranscript.ts`, `../_shared/useCortiAccessToken.ts`
 - local files: `config.ts`
 - host integration: an interaction id (`POST /interactions`) — here via
   `useAuth().createInteraction()`.

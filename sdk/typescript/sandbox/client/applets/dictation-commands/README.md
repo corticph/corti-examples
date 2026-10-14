@@ -22,28 +22,28 @@ action executed.
   the UI surfaces the recognition constraints.
 - **Editor awareness:** the editor is driven through the framework-agnostic
   `EditorAdapter`; dictation-segment ranges stay valid across dictation,
-  commands, and manual typing via `../_shared/offset-map.ts`.
+  commands, and manual typing via `../_shared/offsetMap.ts`.
 - **Persistence:** user-created commands persist per **API client**
-  (`clientId:tenant`) via `../_shared/config-store.ts` (localStorage today;
+  (`clientId:tenant`) via `../_shared/configStore.ts` (localStorage today;
   swap for a server store when hosted).
 
 ## Key files
 
-- `command-model.ts` — `ManagedCommand`, the preloaded `CATALOG`,
+- `commandModel.ts` — `ManagedCommand`, the preloaded `CATALOG`,
   `toTranscribeCommands`, `buildRegistry`.
-- `command-store.ts` — identity-namespaced store (commands + monitor log).
+- `commandStore.ts` — identity-namespaced store (commands + monitor log).
 - `CommandManager.tsx` / `CommandEditor.tsx` — the manager UI + create/edit form.
 - `config.ts` — `buildDictationConfig`.
 
 ## Dependencies to copy
 
 - npm: `@corti/sdk`, `@corti/dictation-web`, `@lit/react`
-- shared files: `../_shared/corti-dictation-react.tsx`,
-  `../_shared/editor-adapter.ts`, `../_shared/command-dispatch.ts`,
-  `../_shared/offset-map.ts`, `../_shared/text-insertion.ts`,
-  `../_shared/useActiveControl.ts`, `../_shared/config-store.ts`,
+- shared files: `../_shared/cortiDictationReact.tsx`,
+  `../_shared/editorAdapter.ts`, `../_shared/commandDispatch.ts`,
+  `../_shared/offsetMap.ts`, `../_shared/textInsertion.ts`,
+  `../_shared/useActiveControl.ts`, `../_shared/configStore.ts`,
   `../_shared/useCortiAccessToken.ts`
-- local files: `command-model.ts`, `command-store.ts`, `CommandManager.tsx`,
+- local files: `commandModel.ts`, `commandStore.ts`, `CommandManager.tsx`,
   `CommandEditor.tsx`, `config.ts`
 
 ## Auth

@@ -28,8 +28,8 @@ on SDK/cluster support.
 
 - npm: `@corti/sdk`, `@corti/dictation-web`, `@lit/react`
 - shared files: `../_shared/DictationField.tsx`, `../_shared/RuleManager.tsx`,
-  `../_shared/rule-store.ts`, `../_shared/config-store.ts`,
-  `../_shared/corti-dictation-react.tsx`, `../_shared/editor-adapter.ts`,
-  `../_shared/text-insertion.ts`, `../_shared/useActiveControl.ts`,
+  `../_shared/ruleStore.ts`, `../_shared/configStore.ts`,
+  `../_shared/cortiDictationReact.tsx`, `../_shared/editorAdapter.ts`,
+  `../_shared/textInsertion.ts`, `../_shared/useActiveControl.ts`,
   `../_shared/useCortiAccessToken.ts`
 - local files: `replacements.ts`

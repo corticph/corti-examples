@@ -43,8 +43,8 @@ routing and drive the form:
 ## Dependencies to copy
 
 - npm: `@corti/sdk`, `@corti/dictation-web`, `@lit/react`
-- shared files: `../_shared/corti-dictation-react.tsx`,
-  `../_shared/editor-adapter.ts`, `../_shared/text-insertion.ts`,
+- shared files: `../_shared/cortiDictationReact.tsx`,
+  `../_shared/editorAdapter.ts`, `../_shared/textInsertion.ts`,
   `../_shared/useActiveControl.ts`, `../_shared/useCortiAccessToken.ts`
 - local files: `DictationBox.tsx`, `MockForm.tsx`, `Dropdown.tsx`, `commands.ts`,
   `config.ts`

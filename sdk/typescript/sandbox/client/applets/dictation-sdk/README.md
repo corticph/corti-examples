@@ -19,5 +19,5 @@ down on stop / unmount.
 ## Dependencies to copy
 
 - npm: `@corti/sdk`
-- shared files: `../_shared/text-insertion.ts`, `../_shared/useCortiAccessToken.ts`
+- shared files: `../_shared/textInsertion.ts`, `../_shared/useCortiAccessToken.ts`
 - local files: `config.ts`
