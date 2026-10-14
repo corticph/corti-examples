@@ -551,9 +551,10 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
     // setStart; every other insert keeps setStartAfter so the caret lands
     // after the inserted text.
     let anchoredInTextNode = false;
-    if (lastNode.nodeName === "BR") {
+    const lastParent = lastNode.parentNode;
+    if (lastNode.nodeName === "BR" && lastParent) {
       const anchor = document.createTextNode("​");
-      lastNode.parentNode!.insertBefore(anchor, lastNode.nextSibling);
+      lastParent.insertBefore(anchor, lastNode.nextSibling);
       lastNode = anchor;
       anchoredInTextNode = true;
     }

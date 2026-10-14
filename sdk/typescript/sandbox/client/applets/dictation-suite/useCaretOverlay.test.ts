@@ -12,6 +12,15 @@ function setupEditor(html: string): HTMLElement {
   return root;
 }
 
+/** querySelector that fails the test loudly when nothing matches. */
+function query(root: ParentNode, selector: string): Element {
+  const el = root.querySelector(selector);
+  if (!el) {
+    throw new Error(`No element matches "${selector}"`);
+  }
+  return el;
+}
+
 /** Resolve the last text node and its length for the end-of-content caret. */
 function endOfLastTextNode(root: HTMLElement): {
   node: Node;
@@ -29,25 +38,25 @@ function endOfLastTextNode(root: HTMLElement): {
   if (!last) {
     return { node: root, offset: 0 };
   }
-  return { node: last, offset: last.textContent!.length };
+  return { node: last, offset: (last.textContent ?? "").length };
 }
 
 describe("isStructuralTrailingBr", () => {
   it("returns true when the <br> is the last element child of root", () => {
     const root = setupEditor("<br>");
-    const br = root.querySelector("br")!;
+    const br = query(root, "br");
     expect(isStructuralTrailingBr(br, root)).toBe(true);
   });
 
   it("returns true when the <br> is the last element child of the root's last child div", () => {
     const root = setupEditor("<div>hello<br></div>");
-    const br = root.querySelector("br")!;
+    const br = query(root, "br");
     expect(isStructuralTrailingBr(br, root)).toBe(true);
   });
 
   it("returns false when the <br> is followed by a text node", () => {
     const root = setupEditor("<div>hello<br>world</div>");
-    const br = root.querySelector("br")!;
+    const br = query(root, "br");
     expect(isStructuralTrailingBr(br, root)).toBe(false);
   });
 
@@ -64,9 +73,9 @@ describe("isStructuralTrailingBr", () => {
 
   it("returns true when the <br> is followed only by a ZWSP anchor text node", () => {
     const root = setupEditor("<div>hello<br></div>");
-    const br = root.querySelector("br")!;
+    const br = query(root, "br");
     const zwsp = document.createTextNode("​");
-    br.parentNode!.insertBefore(zwsp, br.nextSibling);
+    br.after(zwsp);
     expect(isStructuralTrailingBr(br, root)).toBe(true);
   });
 });
@@ -100,14 +109,14 @@ describe("countTrailingBreaksAfter (excludeStructural=false, out-of-editor)", ()
   it("returns 0 for a <br> in the middle of text (not at end of text node)", () => {
     const root = setupEditor("<div>hello<br>world<br></div>");
     // Point at the end of "hello" (before the <br>) — offset 5
-    const textNode = root.querySelector("div")!.firstChild as Text;
+    const textNode = query(root, "div").firstChild as Text;
     const point = { node: textNode, offset: 5 };
     expect(countTrailingBreaksAfter(root, point)).toBe(0);
   });
 
   it("returns 0 when point is not at end of its text node", () => {
     const root = setupEditor("<div>hello world<br></div>");
-    const textNode = root.querySelector("div")!.firstChild as Text;
+    const textNode = query(root, "div").firstChild as Text;
     const point = { node: textNode, offset: 5 };
     expect(countTrailingBreaksAfter(root, point)).toBe(0);
   });
@@ -120,9 +129,9 @@ describe("countTrailingBreaksAfter (excludeStructural=false, out-of-editor)", ()
 
   it("handles text + trailing <br> with empty text node after <br>", () => {
     const root = setupEditor("<div>The patient reports mild chest pain<br></div>");
-    const br = root.querySelector("br")!;
+    const br = query(root, "br");
     const empty = document.createTextNode("");
-    br.parentNode!.insertBefore(empty, br.nextSibling);
+    br.after(empty);
     const point = endOfLastTextNode(root);
     expect(countTrailingBreaksAfter(root, point)).toBe(1);
   });
@@ -131,7 +140,7 @@ describe("countTrailingBreaksAfter (excludeStructural=false, out-of-editor)", ()
     const root = setupEditor("<div>The patient reports mild chest pain<br><br></div>");
     const brs = root.querySelectorAll("br");
     const empty = document.createTextNode("");
-    brs[1].parentNode!.insertBefore(empty, brs[1].nextSibling);
+    brs[1].after(empty);
     const point = endOfLastTextNode(root);
     expect(countTrailingBreaksAfter(root, point)).toBe(2);
   });
@@ -182,9 +191,9 @@ describe("countTrailingBreaksAfter (excludeStructural=true, in-editor)", () => {
 
   it("handles text + trailing <br> with empty text node after <br>", () => {
     const root = setupEditor("<div>The patient reports mild chest pain<br></div>");
-    const br = root.querySelector("br")!;
+    const br = query(root, "br");
     const empty = document.createTextNode("");
-    br.parentNode!.insertBefore(empty, br.nextSibling);
+    br.after(empty);
     const point = endOfLastTextNode(root);
     expect(countTrailingBreaksAfter(root, point, true)).toBe(0);
   });
@@ -197,7 +206,7 @@ describe("countTrailingBreaksAfter (excludeStructural=true, in-editor)", () => {
     const root = setupEditor("<div>The patient reports mild chest pain<br><br></div>");
     const brs = root.querySelectorAll("br");
     const zwsp = document.createTextNode("​");
-    brs[0].parentNode!.insertBefore(zwsp, brs[0].nextSibling);
+    brs[0].after(zwsp);
     // Point is at end of the ZWSP text node (the adapter's caret anchor)
     const point = { node: zwsp, offset: 1 };
     expect(countTrailingBreaksAfter(root, point, true)).toBe(0);
@@ -208,7 +217,7 @@ describe("countTrailingBreaksAfter (excludeStructural=true, in-editor)", () => {
     const root = setupEditor("<div>The patient reports mild chest pain<br><br><br></div>");
     const brs = root.querySelectorAll("br");
     const zwsp = document.createTextNode("​");
-    brs[1].parentNode!.insertBefore(zwsp, brs[1].nextSibling);
+    brs[1].after(zwsp);
     // Point at end of ZWSP. The ZWSP is already 2 lines down (after two command
     // <br>s). Only the structural <br> follows → excludeStructural drops it → 0.
     // The caret rect at the ZWSP is already at the correct line, no additional
