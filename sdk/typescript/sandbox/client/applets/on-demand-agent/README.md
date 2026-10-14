@@ -9,7 +9,7 @@ Dictate into the editor, then say **“copy edit”** (or click **Run copy-edit*
 The text is sent to a copy-editor agent and the editor is replaced with the
 result.
 
-## Agent lifecycle (mirrors Tympany)
+## Agent lifecycle
 
 - On first use, `client.agents.list()` looks for an agent named
   “Sandbox Copy Editor”; if absent, `client.agents.create({ name,

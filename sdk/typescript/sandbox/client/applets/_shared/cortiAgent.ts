@@ -1,6 +1,6 @@
 /**
  * Thin helpers over the Corti Agentic Framework (`client.agents.*`), following
- * the Tympany pattern: ensure an agent exists by name (create if missing), then
+ * a get-or-create pattern: ensure an agent exists by name (create if missing), then
  * send it a message and read the text back. The agent's behavior lives entirely
  * in its systemPrompt (set at creation); messages carry only the payload, with
  * no contextId (each call is isolated).
