@@ -33,3 +33,6 @@ dist-ssr
 /docs
 
 .claude/
+
+# Root .gitignore ignores bin/ for .NET output; keep the launcher
+!/bin/
