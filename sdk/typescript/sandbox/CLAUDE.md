@@ -1,82 +1,84 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this folder.
 
 ## Overview
 
-A browser-based testing tool for Corti's Speech-to-Text APIs. Exercises three endpoints:
+A documentation-style sandbox of runnable Corti SDK and web-component examples ("applets"). It lives in `corti-examples` at `sdk/typescript/sandbox/` and is a self-contained project with its own `package.json`, lockfile, and `.npmrc`. Run every command from this folder.
 
-- **WebSocket `/transcribe`** — connects directly with a token; supports voice commands and formatting.
-- **WebSocket `/streams`** — requires an interaction ID; supports diarization, facts extraction, and a `mode` of `facts` or `transcription`.
-- **REST `/transcripts`** — async transcript creation from uploaded recordings.
+Each applet page combines a writeup, a details/configuration card, the applet's real source files (imported via Vite `?raw`), and a live demo against a real Corti tenant. API reference: <https://docs.corti.ai/api-reference>.
 
-API reference docs are at https://docs.corti.ai/api-reference.
-
-## Common commands
+## Commands
 
 ```bash
-npm run dev          # Vite dev server on http://localhost:8080 (with Express middleware mounted)
-npm run build        # build:client + build:server
-npm run start        # run the production server bundle (dist/server/node-build.mjs)
-npm run test         # vitest --run (single pass, no watch)
-npm run typecheck    # tsc --noEmit
-npm run format.fix   # prettier --write .
+npm run dev          # Vite on http://localhost:8080, with the Express app mounted as middleware
+npm run build        # build:client (dist/spa) + build:server (dist/server)
+npm start            # production server: dist/server/node-build.mjs on :3000 or $PORT
+npm test             # vitest --run
+npm run typecheck    # tsc (noEmit is set in tsconfig.json)
+npm run lint         # biome check client/ server/
+node bin/cli.mjs     # launcher: needs a build first; prompts for missing creds, can write ./.env
 ```
 
-Run a single test: `npx vitest run client/hooks/useLiveTranscript.test.ts` (or pass `-t "<name>"` to match by test name).
+Run a single test: `npx vitest run client/applets/_shared/offsetMap.test.ts` (or `-t "<name>"`). Tests sit next to the code as `*.test.ts`; DOM tests opt in with a `@vitest-environment jsdom` header.
 
-**No CI.** There are no `.github/workflows` — nothing enforces lint/test/typecheck/prettier on push. `main` is not uniformly prettier-clean and `npm run format.fix` rewrites the **whole repo** (huge noisy diffs), so format only the files you touched (`npx prettier --check <files>`). Two pre-existing `tsc` errors in `client/hooks/useDictationSupportButtonMapping.ts` (`HIDDevice.serialNumber`) are unrelated to most work — don't chase them.
+**CI.** `.github/workflows/sdk-examples-ci.yml` at the repo root runs `npm ci`, typecheck, test, lint, and build for this folder on every PR that touches it, using Node from `.nvmrc` (22). Lint must be clean.
 
-## Testing in-browser (Playwright + Chromium)
+**Formatting.** Biome (`biome.json`, 100-column lines) is the formatter and linter. Use `npx biome check --write <files>` on files you touch. Do not run `npm run format.fix`: it runs Prettier at 80 columns over the whole folder, rewrites everything, and breaks `npm run lint`.
 
-Most behavior (auth, the REST transcript flow, RTFx timing) can only be verified by driving the real UI — the app talks to a live Corti cluster (uploads and transcript calls go browser→cluster directly, not through the Express proxy).
-
-- **Credentials & safety.** Credentials live on the **server**, read from `.env` (`CORTI_CLIENT_ID` / `_SECRET` / `_ENVIRONMENT` / `_TENANT_NAME`) by `server/lib/cortiToken.ts` — never bundled into the browser. The browser fetches non-secret cluster/tenant from `GET /api/config`, mints streaming-only tokens via `POST /api/auth/stream-token`, and routes all REST through the `/api/corti` proxy (which injects auth server-side). The app auto-authenticates once `/api/config` resolves; a "Re-authenticate" button shows once ready. Driving the flows performs **real writes** (creates interactions, uploads recordings, creates transcripts) against whatever cluster/tenant `.env` points at. **Before testing, confirm `.env` targets a non-prod cluster (e.g. `dev-weu`, `staging-eu`) and a disposable test tenant — never run test flows against production credentials.** Never print the client secret in logs/output.
-- **Playwright isn't a dependency** — install it in an isolated temp dir so it doesn't race the running dev server's `node_modules` (a repo-local `npm i` collides with Vite and fails `ENOTEMPTY`):
-  ```bash
-  mkdir -p /tmp/pw && (cd /tmp/pw && npm init -y && npm i playwright)
-  npx playwright install chromium      # browser cache is global (~/Library/Caches/ms-playwright)
-  # then require('/tmp/pw/node_modules/playwright') from a CommonJS (.cjs) script
-  ```
-- **Selectors.** Endpoint buttons render multiline text (e.g. `📜\nTranscripts\nREST`) — match with `button:has-text("Transcripts")`, not `getByRole({ name })`.
-- **Transcripts happy path:** select Transcripts → **Create Interaction** → `setInputFiles` on `input[type=file]` (only present after the interaction exists; pass an array of the same path to stage N concurrent jobs) → **"Create transcripts for N uploaded recording(s)"** → poll for the `Done · N×` pill on each job row. The pill is rendered straight from `job.timing.rtfx`, so a non-bare pill is sufficient proof timing finalized.
+**Dependencies.** `@corti/sdk` is pinned to an exact version in both `devDependencies` and `overrides`, and bumped with the rest of the repo. Keep `.npmrc` (`legacy-peer-deps=true`): `npm ci` needs it to resolve the committed lockfile.
 
 ## Architecture
 
-**Hybrid Vite + Express app.** `vite.config.ts` registers an `expressPlugin` that mounts `createServer()` from `server/index.ts` as middleware on the Vite dev server, so `/api/*` calls hit Express directly during development. In production, `server/node-build.ts` serves the built SPA from `dist/spa` and the same Express routes from `dist/server`.
+**Hybrid Vite + Express.** `vite.config.ts` registers `expressPlugin`, which mounts `createServer()` from `server/index.ts` on the Vite dev server, so `/api/*` hits Express in development. In production, `server/node-build.ts` serves `dist/spa` and the same Express app. `dotenv` reads `.env` from the working directory with `override: true`.
 
-**Why the Express layer exists.** The browser cannot talk to Keycloak directly because of CORS, so `server/routes/auth.ts` proxies `POST /api/auth/token` to `https://auth.<cluster>.corti.app/realms/<tenant>/protocol/openid-connect/token`. `server/routes/interactions.ts` similarly proxies interaction create/get to `https://api.<cluster>.corti.ai/v2/interactions`. **Everything else (WebSocket connections, recording uploads, transcript REST calls) is made directly from the browser** — see `client/lib/proxy-urls.ts`, which intentionally lists only `auth`.
+**Server (`server/`).**
 
-**Frontend layout.**
+- `index.ts`: mounts `/api/corti` (proxy) before the body parsers, then `GET /api/config`, `GET /api/ping`, and `/api/auth`.
+- `routes/auth.ts`: `POST /api/auth/token` validates UI-entered credentials and stores them for the session; `POST /api/auth/stream-token` mints a short-lived token scoped to `transcribe` and/or `streams` for direct browser WebSockets.
+- `routes/corti-proxy.ts`: forwards `/api/corti/*` to `https://api.<cluster>.corti.app`, injecting the full-scope token, `Tenant-Name`, and `x-corti-analytics` (when missing). One proxy instance per cluster. The token is resolved before proxying because `proxyReq` fires synchronously. It must stay mounted before `express.json()` so uploads stream through.
+- `lib/cortiToken.ts`: credentials come from `CORTI_*` env vars (shared) or from the UI (scoped to the session). The full-scope token never leaves the server.
+- `lib/session.ts`: `corti_sid` httpOnly cookie that scopes UI-entered credentials to one browser.
 
-- `client/pages/Index.tsx` is the single-page UI orchestrator (~44KB) — most user state lives here and is passed into hooks.
-- `client/components/ConnectionPanel.tsx` (~127KB) is the dominant UI component; it renders config for all three endpoints. Treat it as a controlled monolith — prefer extracting hooks over splitting the component when adding behavior.
-- Heavy logic lives in `client/hooks/`, not in components: `useWebSocket` (~34KB) handles streaming/config/dispatch for both WS endpoints; `useCortiAuth` owns auth and env-config persistence; `useAudio` wraps MediaRecorder; `useRestTranscripts` drives the REST flow; `usePdcButtonMapping` and `useDictationSupportButtonMapping` map hardware buttons (Philips PDC and WebHID).
-- Types are centralized in `client/types/` — `websocket.ts` is the source of truth for WS message shapes and config interfaces; `rest-api.ts` for REST.
+**Client (`client/`).**
 
-**Path aliases** (defined in both `tsconfig.json` and `vite.config.ts`): `@/*` and `client/*` → `./client`, `server/*` → `./server`, `@shared/*` and `shared/*` → `./shared`. Use the `client/` form in new code; both work.
+- `App.tsx` routes: `/` (Home), `/getting-started`, `/:workflow/:applet` (AppletPage), and `*` (NotFound).
+- `pages/Home.tsx` renders both the home page (stats, credential form) and `AppletPage`, which assembles writeup, details, sources, and live demo for one applet.
+- `applets/registry.ts` is the manifest: each `AppletDefinition` has `id`, `title`, `description`, `workflow` (sidebar area), `icon`, `Component`, and optional `Details`/`ExtraSection`/`wide`. **Adding an applet:** create `client/applets/<id>/`, add one registry entry, then optionally add sources in `sources.ts` and a writeup in `writeups.ts`.
+- `applets/sources.ts` imports source files with `?raw` and shows them verbatim. Those files are teaching code read by customers, so keep them readable and self-explanatory.
+- `applets/writeups.ts` holds per-applet prose and code snippets (snippets are strings, not compiled).
+- Auth: `context/AuthContext.tsx` holds one `useCortiAuth` instance (non-secret config persisted in localStorage as `corti-sandbox-auth`) and feeds `AppletAuthProvider` (`applets/_shared/authContext.tsx`). Applets read it through `applets/_shared/useCortiAccessToken.ts`, which returns `authConfig` (token + refresh) and `sdkEnvironment` (REST and agents through `/api/corti`, WebSockets direct to the cluster).
+- `applets/_shared/` holds the shared seams: editor adapter, command dispatch, offset map, text insertion, diarized transcript, audio archive, device buttons, `configStore` (namespaced localStorage), `sessionState`, and the `@lit/react` wrappers `cortiDictationReact.tsx` / `cortiAmbientReact.tsx`.
 
-## Project-specific rules
+**Path aliases** (in `tsconfig.json` and `vite.config.ts`): `@/*` and `client/*` → `./client`, `server/*` → `./server`, `@shared/*` and `shared/*` → `./shared`.
 
-**Corti API field casing.** REST request bodies use **camelCase**, matching the Corti API spec (`recordingId`, `primaryLanguage`, `modelName`, `isDictation`, `async`, `isMultichannel`, `diarize`, `participants`). The internal config types and the `Api*` wire interfaces (e.g. `ApiTranscriptCreateRequest`) are both camelCase; `useRestConfig.toApiRequest` builds the wire body and `Index.tsx` injects each job's `recordingId`. The API response uses `id`, not `transcriptId`.
+## Rules
 
-**WebSocket handshake.** Both WS endpoints require a `CONFIG_ACCEPTED` server message before audio frames may be sent. Sending audio before config acceptance will fail silently or with an error.
+**Runtime contract.** Users rely on these staying the same: ports 8080 (dev and launcher) and 3000 (`npm start`), the `CORTI_*` env var names, the `/api/*` routes, the UI routes, the `corti_sid` cookie, and every localStorage key (saved settings carry over between versions).
 
-**`/transcribe` vs `/streams` differences worth keeping straight:**
+**Analytics tagging.** Every `new CortiClient({...})` passes `analytics: EXAMPLES_ANALYTICS` from `client/applets/_shared/examplesAnalytics.ts`, inline at the call site. The web-component wrappers set `el.analytics` the same way. Code snippets inside strings (`writeups.ts`, `getting-started.tsx`) stay untagged.
 
-- `/transcribe`: no interaction ID, flat config (`primaryLanguage`, `model`, `formatting`, `commands`), returns single transcript objects, supports voice commands.
-- `/streams`: needs an interaction ID created first, nested config (`transcription` + `mode`), returns transcript arrays, supports facts and diarization.
+**Home page stats** count `applets/_shared/**/*.tsx` and `components/ui/**/*.tsx` files via `import.meta.glob`, so adding or removing `.tsx` files there changes numbers users see.
 
-**REST workflow order:** authenticate → create interaction → upload recording → create transcript → poll/view. None of those steps work without the interaction ID. `useRestTranscripts.createTranscript` auto-starts the GET poll loop when the create response comes back with `status: "processing"`, so the manual "Get Transcript" button is only needed for arbitrary IDs or to override the poll timeout.
+**Corti API field casing.** REST request bodies use camelCase, matching the Corti API spec (`recordingId`, `primaryLanguage`, `modelName`, `isDictation`, `async`, `isMultichannel`, `diarize`, `participants`). Transcript responses use `id`, not `transcriptId`.
 
-**`/transcripts` `async` parameter.** When `async: true` (the tester's default), the API skips the synchronous-processing window and returns `202 Accepted` + a `Location` header immediately with a `processing` body; the auto-poll above then drives it to completion.
+**WebSocket endpoints.** Both require a `CONFIG_ACCEPTED` server message before audio frames may be sent. `/transcribe` takes no interaction ID and a flat config (`primaryLanguage`, `model`, `formatting`, `commands`), returns single transcript objects, and supports voice commands. `/streams` needs an interaction ID, takes a nested config (`transcription` + `mode`), returns transcript arrays, and supports facts and diarization.
 
-**REST timing / RTFx** (`useRestTranscripts` + `TranscriptJobsList`). RTFx is measured **per recording**: `rtfx = audioDurationMs / wallClock(POST→paint)`, with an individual start (its own POST) and stop (its own paint) per job — concurrent recordings are each timed independently. Audio duration is the **real uploaded-file duration** measured client-side (`getAudioFileDurationMs`, an `<audio>`-metadata read), falling back to the last transcript segment's `end` only when the file duration is unavailable (e.g. the fetch-by-id debug job). The finalize step (`markJobRendered`) is **paint-gated and must require `status === "completed"`**: `pollForJob` patches partial `details` on every interim "processing" poll, and `pendingTimingRef` is only staged at completion — so a `JobRow` paint signal that fires on an interim render races ahead of staging and permanently drops `job.timing` (symptom: row stuck at `Done` with no RTFx pill).
+**REST workflow order:** authenticate → create interaction → upload recording → create transcript → poll. Every step after the first needs the interaction ID. With `async: true`, transcript creation returns `202 Accepted` with a `processing` body and must be polled.
 
-**UI conventions.** Tailwind utilities only — no inline styles, no CSS modules. Combine classes with `cn()` from `client/lib/utils.ts`. UI primitives in `client/components/ui/` follow shadcn/ui patterns. Put complex logic in hooks, not inside JSX. **UI text uses sentence case** (only the first word capitalized: "Flush all buffers", not "Flush All Buffers") — proper nouns and acronyms (Corti, RTFx, WebSocket, REST, MIME, PDC) keep their casing. Existing Title Case is pre-existing debt; fix it in files you're already touching, but don't do an unprompted whole-app sweep.
+**UI conventions.** Tailwind utilities only, no inline styles or CSS modules. Combine classes with `cn()` from `client/lib/utils.ts`. Primitives in `client/components/ui/` follow shadcn/ui. UI text uses sentence case ("Flush all buffers"); proper nouns and acronyms keep their casing. Fix existing Title Case only in files you are already touching.
 
-**TypeScript posture.** `strict` is **off** in `tsconfig.json` (including `strictNullChecks` and `noImplicitAny`). Existing code reflects this — don't tighten it without a reason. Still, prefer explicit types over `any` and put new types in `client/types/`.
+**TypeScript posture.** `strict` is off in `tsconfig.json` (including `strictNullChecks` and `noImplicitAny`). Don't tighten it without a reason; still prefer explicit types over `any`.
 
-## Auxiliary tooling
+## Testing in the browser
 
-`scripts/malicious-npm-package-scanning/` is a standalone Python utility (uv + Python 3.10+) for scanning Corti repos' lockfiles against a malicious-package list. Unrelated to the app runtime.
+Most behavior can only be verified by driving the real UI against a live Corti cluster.
+
+- **Credentials and safety.** Credentials live on the server (`.env` or the home-page form). Live demos perform real writes (interactions, recordings, transcripts, documents, agents). Before testing, confirm the credentials target a non-prod cluster (e.g. `dev-weu`, `staging-eu`) and a disposable test tenant. Never print the client secret.
+- **Playwright isn't a dependency.** Install it in an isolated temp dir so it doesn't race the dev server's `node_modules` (a local `npm i` collides with Vite and fails with `ENOTEMPTY`):
+
+  ```bash
+  mkdir -p /tmp/pw && (cd /tmp/pw && npm init -y && npm i playwright)
+  npx playwright install chromium
+  # then require('/tmp/pw/node_modules/playwright') from a CommonJS (.cjs) script
+  ```
