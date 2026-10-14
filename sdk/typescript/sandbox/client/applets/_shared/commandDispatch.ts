@@ -8,7 +8,7 @@
  * values come from `command.variables`; whether a variable was defined as an
  * enum or a wildcard is irrelevant here — the handler just reads the value.
  *
- * Portable: depends only on editor-adapter.ts, offset-map.ts and the SDK type.
+ * Portable: depends only on editorAdapter.ts, offsetMap.ts and the SDK type.
  */
 import type { Corti } from "@corti/sdk";
 import type { EditorAdapter, FormatStyle } from "./editorAdapter";

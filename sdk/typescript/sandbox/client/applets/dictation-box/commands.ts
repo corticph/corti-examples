@@ -3,7 +3,7 @@
  *
  * These commands are app-specific (they drive the dictation box, the transfer,
  * and the mock form's fields) so the dispatch logic lives here rather than in
- * `_shared/command-dispatch.ts`. Each command maps to a callback the applet
+ * `_shared/commandDispatch.ts`. Each command maps to a callback the applet
  * supplies via `BoxActions`; `handleBoxCommand` runs the right one and returns a
  * `CommandOutcome` for the (optional) debug log.
  *

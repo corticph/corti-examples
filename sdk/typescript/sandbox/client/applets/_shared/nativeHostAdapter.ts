@@ -1,7 +1,7 @@
 /**
  * NativeHostAdapter — DESIGN SEAM (intentionally not implemented in this web sample).
  *
- * AppControlAdapter (app-control-adapter.ts) drives a web DOM. A desktop dictation
+ * AppControlAdapter (appControlAdapter.ts) drives a web DOM. A desktop dictation
  * integration must reach beyond the browser — into a desktop EHR, an OS
  * automation/accessibility layer, or a thick-client app. The command
  * dispatch and the control contract DON'T change for that: only the transport
