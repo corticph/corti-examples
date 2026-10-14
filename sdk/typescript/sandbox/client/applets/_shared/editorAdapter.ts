@@ -11,7 +11,7 @@
  * React-controlled value — which mirrors how a real "speech-enable any control"
  * integration must work against arbitrary application UI.
  *
- * Portable: depends only on text-insertion.ts.
+ * Portable: depends only on textInsertion.ts.
  */
 import { buildInsertion, type InsertionOptions } from "./textInsertion";
 

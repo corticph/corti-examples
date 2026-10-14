@@ -1,5 +1,5 @@
 /**
- * React views over the shared WebHID device store (`dictation-device.ts`).
+ * React views over the shared WebHID device store (`dictationDevice.ts`).
  *
  * - `useDictationDevice()` exposes store state + actions for the mapping UI.
  * - `useHidRecordingControl(ref)` registers a `<corti-dictation>` /

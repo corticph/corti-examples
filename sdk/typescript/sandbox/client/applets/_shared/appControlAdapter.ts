@@ -11,7 +11,7 @@
  *
  * This is the command-and-control half of a speech-enabled integration at the
  * application layer. It is DOM-agnostic on purpose: the same registry shape
- * is what a native host implements through a bridge (see native-host-adapter.ts).
+ * is what a native host implements through a bridge (see nativeHostAdapter.ts).
  *
  * Portable: no app or React dependencies.
  */
