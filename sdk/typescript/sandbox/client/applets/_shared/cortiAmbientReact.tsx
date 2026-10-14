@@ -38,19 +38,13 @@ const CortiAmbientElement = createComponent({
     onRecordingDevicesChanged: "recording-devices-changed" as EventName<
       CustomEvent<RecordingDevicesChangedEventDetail>
     >,
-    onLanguagesChanged: "languages-changed" as EventName<
-      CustomEvent<LanguagesChangedEventDetail>
-    >,
+    onLanguagesChanged: "languages-changed" as EventName<CustomEvent<LanguagesChangedEventDetail>>,
     onAudioLevelChanged: "audio-level-changed" as EventName<
       CustomEvent<AudioLevelChangedEventDetail>
     >,
-    onAudioEvent: "audio-event" as EventName<
-      CustomEvent<AudioEventEventDetail>
-    >,
+    onAudioEvent: "audio-event" as EventName<CustomEvent<AudioEventEventDetail>>,
     onUsage: "usage" as EventName<CustomEvent<UsageEventDetail>>,
-    onDeltaUsage: "delta-usage" as EventName<
-      CustomEvent<DeltaUsageEventDetail>
-    >,
+    onDeltaUsage: "delta-usage" as EventName<CustomEvent<DeltaUsageEventDetail>>,
     onVirtualModeChanged: "virtual-mode-changed" as EventName<
       CustomEvent<VirtualModeChangedEventDetail>
     >,
@@ -62,10 +56,7 @@ const CortiAmbientElement = createComponent({
   },
 });
 
-type CortiAmbientProps = Omit<
-  React.ComponentProps<typeof CortiAmbientElement>,
-  "ambientConfig"
-> & {
+type CortiAmbientProps = Omit<React.ComponentProps<typeof CortiAmbientElement>, "ambientConfig"> & {
   /** Let the handheld-mic Record button drive this surface (default true). */
   hidRecordingControl?: boolean;
   /**

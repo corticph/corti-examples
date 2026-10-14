@@ -70,9 +70,7 @@ function buildLiveConfig(
   } = opts;
 
   const keyterms = terms.length > 0 ? { terms } : undefined;
-  const formattingOverrides = formatting
-    ? buildFormattingOverrides(formatting)
-    : undefined;
+  const formattingOverrides = formatting ? buildFormattingOverrides(formatting) : undefined;
 
   return {
     primaryLanguage,
@@ -110,9 +108,7 @@ export function LiveDictationPanel({
 
   const [tokenSeen, setTokenSeen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dictationEl, setDictationEl] = useState<ArchiveSourceElement | null>(
-    null,
-  );
+  const [dictationEl, setDictationEl] = useState<ArchiveSourceElement | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -285,9 +281,7 @@ export function LiveDictationPanel({
             onCommand={handleCommand}
             onRecordingStateChanged={handleRecordingStateChanged}
             onLanguagesChanged={onLanguagesChanged}
-            onError={(e: CustomEvent) =>
-              setError(e.detail?.message ?? "Unknown error")
-            }
+            onError={(e: CustomEvent) => setError(e.detail?.message ?? "Unknown error")}
           />
         ) : (
           <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
@@ -310,9 +304,7 @@ export function LiveDictationPanel({
           <span className="italic text-muted-foreground">{interim}</span>
         ) : (
           <span className="text-muted-foreground/50">
-            {isRecording
-              ? "Listening…"
-              : "Interim results appear here while recording."}
+            {isRecording ? "Listening…" : "Interim results appear here while recording."}
           </span>
         )}
       </div>
@@ -333,12 +325,7 @@ export function LiveDictationPanel({
                 ? "Recording…"
                 : `${wordLevel ? "Words" : "Phrases"}: ${segments.length}`}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReset}
-              className="gap-1.5"
-            >
+            <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
               <RotateCcw className="h-3.5 w-3.5" /> Clear all
             </Button>
           </div>

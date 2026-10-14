@@ -72,8 +72,7 @@ export async function concatAudioBlobsToWavUrl(blobs: Blob[]): Promise<string> {
 
   const AudioCtx =
     window.AudioContext ||
-    (window as unknown as { webkitAudioContext: typeof AudioContext })
-      .webkitAudioContext;
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
   const audioCtx = new AudioCtx();
 
   try {
@@ -85,16 +84,10 @@ export async function concatAudioBlobsToWavUrl(blobs: Blob[]): Promise<string> {
     );
 
     const totalLength = audioBuffers.reduce((sum, buf) => sum + buf.length, 0);
-    const numChannels = Math.max(
-      ...audioBuffers.map((b) => b.numberOfChannels),
-    );
+    const numChannels = Math.max(...audioBuffers.map((b) => b.numberOfChannels));
     const sampleRate = audioBuffers[0].sampleRate;
 
-    const combined = audioCtx.createBuffer(
-      numChannels,
-      totalLength,
-      sampleRate,
-    );
+    const combined = audioCtx.createBuffer(numChannels, totalLength, sampleRate);
 
     let offset = 0;
     for (const buf of audioBuffers) {

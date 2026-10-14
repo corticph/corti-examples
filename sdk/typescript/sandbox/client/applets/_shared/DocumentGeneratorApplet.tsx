@@ -54,18 +54,14 @@ export function DocumentGeneratorApplet({ config }: { config: DocGenConfig }) {
   );
   const uniqueTemplates = deduplicateTemplates(templates);
   const [note, setNote] = useState(config.sampleText);
-  const [document, setDocument] =
-    useState<Corti.GuidedEphemeralDocument | null>(null);
+  const [document, setDocument] = useState<Corti.GuidedEphemeralDocument | null>(null);
   const [usage, setUsage] = useState<Corti.CommonUsageInfo | null>(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!templateId && uniqueTemplates.length > 0) {
-      const match = findDefaultTemplate(
-        uniqueTemplates,
-        ...config.templateKeywords,
-      );
+      const match = findDefaultTemplate(uniqueTemplates, ...config.templateKeywords);
       if (match) {
         setTemplateId(match.id);
       }
@@ -87,12 +83,7 @@ export function DocumentGeneratorApplet({ config }: { config: DocGenConfig }) {
         environment: sdkEnvironment,
         auth: authConfig,
       });
-      const response = await generateFromText(
-        client,
-        effectiveTemplateId,
-        note,
-        language,
-      );
+      const response = await generateFromText(client, effectiveTemplateId, note, language);
       setDocument(response.document);
       setUsage(response.usageInfo);
     } catch (e) {
@@ -105,12 +96,8 @@ export function DocumentGeneratorApplet({ config }: { config: DocGenConfig }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          {config.heading}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {config.description}
-        </p>
+        <h2 className="text-lg font-semibold text-foreground">{config.heading}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{config.description}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -169,10 +156,7 @@ export function DocumentGeneratorApplet({ config }: { config: DocGenConfig }) {
       </div>
 
       <div>
-        <Button
-          onClick={generate}
-          disabled={generating || !note.trim() || !effectiveTemplateId}
-        >
+        <Button onClick={generate} disabled={generating || !note.trim() || !effectiveTemplateId}>
           {generating ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
@@ -182,9 +166,7 @@ export function DocumentGeneratorApplet({ config }: { config: DocGenConfig }) {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-sm text-variant-error-foreground">{error}</p>
-      )}
+      {error && <p className="text-sm text-variant-error-foreground">{error}</p>}
 
       {document && (
         <div className="space-y-3">
@@ -193,9 +175,7 @@ export function DocumentGeneratorApplet({ config }: { config: DocGenConfig }) {
               <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {name}
               </h3>
-              <p className="whitespace-pre-wrap text-sm text-foreground">
-                {text}
-              </p>
+              <p className="whitespace-pre-wrap text-sm text-foreground">{text}</p>
             </div>
           ))}
           {usage && (

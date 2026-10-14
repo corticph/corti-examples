@@ -9,9 +9,7 @@ import type { Corti, CortiClient } from "@corti/sdk";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { VisitItem } from "./workspaceState";
 
-function mapInteractionToVisit(
-  interaction: Corti.InteractionsGetResponse,
-): VisitItem {
+function mapInteractionToVisit(interaction: Corti.InteractionsGetResponse): VisitItem {
   return {
     interactionId: interaction.id,
     encounter: {
@@ -70,9 +68,7 @@ export interface UseInteractionsResult {
   autoSelectByEncounter: (encounterId: string) => void;
 }
 
-export function useInteractions(
-  client: CortiClient | null,
-): UseInteractionsResult {
+export function useInteractions(client: CortiClient | null): UseInteractionsResult {
   const [visits, setVisits] = useState<VisitItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

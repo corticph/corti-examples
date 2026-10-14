@@ -134,8 +134,7 @@ recorder.ondataavailable = (e) => socket.sendAudio(e.data);`,
         ],
         snippets: [
           {
-            caption:
-              "Create async, then poll getStatus until it's not processing",
+            caption: "Create async, then poll getStatus until it's not processing",
             lang: "typescript",
             code: `const created = await client.transcripts.create(interactionId, {
   recordingId,
@@ -561,8 +560,7 @@ const edited = task.status.message.parts.find((p) => p.text)?.text;`,
         ],
         snippets: [
           {
-            caption:
-              "Coding happens after the encounter, as its own multi-pass loop",
+            caption: "Coding happens after the encounter, as its own multi-pass loop",
             lang: "mermaid",
             code: `sequenceDiagram
     participant C as Client app
@@ -585,8 +583,7 @@ const edited = task.status.message.parts.find((p) => p.text)?.text;`,
         ],
       },
       {
-        heading:
-          "Finishing the encounter and assembling one block of note text",
+        heading: "Finishing the encounter and assembling one block of note text",
         text: [
           "Create the interaction and run the STT session exactly the way the ambient-diarized applet in this sandbox already does: client.interactions.create({ encounter, patient? }), then open a /streams or /transcribe socket against that interaction id and collect segments as they finalize. None of that changes for coding.",
           "What changes is the step after. Once the encounter is over, whether that means a clinician has reviewed and signed off on a note or your app has auto-assembled one from the finalized segments, you need a single string of text representing the whole encounter. Concatenate finalized segments in chronological order, or use whatever note text your review UI already produces. This string is what feeds every predict() call from here on, first pass and refined pass alike.",
@@ -611,8 +608,7 @@ const edited = task.status.message.parts.find((p) => p.text)?.text;`,
         ],
         snippets: [
           {
-            caption:
-              "A deliberately scoped system list, reused across both passes",
+            caption: "A deliberately scoped system list, reused across both passes",
             lang: "typescript",
             code: `const system: Corti.CommonCodingSystemEnum[] = ["icd10cm-outpatient", "cpt"];
 // not icd10pcs or icd10cm-inpatient, this client is outpatient only`,
@@ -751,8 +747,7 @@ if (evidence) {
         ],
         snippets: [
           {
-            caption:
-              "Build filter.exclude from rejected decisions, then re-predict",
+            caption: "Build filter.exclude from rejected decisions, then re-predict",
             lang: "typescript",
             code: `const rejectedCodes = firstPass.candidates
   .filter((c) => decisions[\`\${c.system}:\${c.code}\`] === "rejected")
@@ -869,8 +864,7 @@ function recordDecision(item: Corti.CodesGeneralReadResponse, decision: "accepte
         ],
       },
       {
-        heading:
-          "Representing each document as either text or a stored documentId",
+        heading: "Representing each document as either text or a stored documentId",
         text: [
           'A document in the batch can arrive two ways: as plain text you already have (pasted from an existing note, or read from a file) or as a documentId referencing something already stored on the Corti side. Both map onto the same CommonAiContext union used in the live coding guide elsewhere in this section, { type: "text", text } or { type: "documentId", documentId }, just one entry per document instead of one entry per encounter.',
         ],
@@ -923,8 +917,7 @@ function toContext(doc: BatchDoc): Corti.CommonAiContext {
         ],
         snippets: [
           {
-            caption:
-              "The first round, aggregated into one accepted list and one queue",
+            caption: "The first round, aggregated into one accepted list and one queue",
             lang: "typescript",
             code: `const accepted: Corti.CodesGeneralReadResponse[] = [];
 const queue: Array<{ docLabel: string; item: Corti.CodesGeneralReadResponse }> = [];
@@ -958,15 +951,13 @@ function decide(docLabel: string, item: Corti.CodesGeneralReadResponse, decision
         ],
       },
       {
-        heading:
-          "Turning rejections across the whole batch into a learned filter",
+        heading: "Turning rejections across the whole batch into a learned filter",
         text: [
           "Once reviewers have cleared some of the queue, walk every recorded decision and pull out the code from every rejection, regardless of which document it came from. A code a reviewer rejects on one document is very likely to get rejected again if it shows up as a candidate on a different document in the same backlog, since it reflects the same audit team's judgment about what does not belong in this batch. Deduplicate that list into a learned exclude array.",
         ],
         snippets: [
           {
-            caption:
-              "Deriving a learned exclude list from every rejection so far",
+            caption: "Deriving a learned exclude list from every rejection so far",
             lang: "typescript",
             code: `function learnedExclude(decisions: Record<string, Decision>): string[] {
   return Array.from(
@@ -1062,8 +1053,7 @@ for (const doc of documents) {
     ],
     how: [
       {
-        heading:
-          "Seeing how several sources become one confirmed, persisted result",
+        heading: "Seeing how several sources become one confirmed, persisted result",
         text: [
           "The full shape has four stages, not one: several source documents go into a stateless preview, a reviewer curates what comes out of that preview, curated facts get written to a real interaction, and a final read confirms they actually landed.",
         ],
@@ -1086,8 +1076,7 @@ for (const doc of documents) {
         ],
       },
       {
-        heading:
-          "Combining source documents into extract()'s one context entry",
+        heading: "Combining source documents into extract()'s one context entry",
         text: [
           'extract() takes a context array of CommonTextContext entries, each { type: "text", text } — but the API only accepts a single entry per call, so multiple source documents cannot be passed as separate array entries the way a primary note plus an addendum can for some other endpoints. To extract across several documents at once, merge their text into that one entry, labeling each block so the source stays identifiable inside the merged text even though the array itself holds just one item.',
         ],
@@ -1109,8 +1098,7 @@ for (const doc of documents) {
         ],
       },
       {
-        heading:
-          "Choosing combined extraction when cross-document connections matter",
+        heading: "Choosing combined extraction when cross-document connections matter",
         text: [
           'Call client.facts.extract({ context, outputLanguage: "en" }) with all documents merged into that one context entry, and the model sees every document at once. That means it can connect a detail mentioned only in one source (a family history noted in the referral letter) with a detail mentioned only in another (a prior procedure noted in the history note), and return a fact that reflects that connection. An intake workflow assembling a single patient summary usually wants this: the cross-document connections are exactly the value being extracted.',
         ],
@@ -1129,8 +1117,7 @@ const response = await client.facts.extract({
         ],
       },
       {
-        heading:
-          "Choosing per-document extraction when attribution matters more",
+        heading: "Choosing per-document extraction when attribution matters more",
         text: [
           "The alternative is one extract() call per document, in a loop, with the resulting fact arrays concatenated afterward. This keeps attribution unambiguous, since you know exactly which call, and therefore which single source document, produced which fact. The tradeoff is that the model never sees the other documents while extracting from any one of them, so it cannot connect details that live in separate sources. An audit or an EDC population workflow that needs to trace every extracted value back to its exact source document usually wants this loop, even though it costs one call per document instead of one call total.",
         ],
@@ -1190,8 +1177,7 @@ for (const fact of response.facts) {
         ],
       },
       {
-        heading:
-          "Letting a reviewer curate before anything is treated as final",
+        heading: "Letting a reviewer curate before anything is treated as final",
         text: [
           "Not every extracted fact deserves to become part of the patient record. The model can extract a detail that is present in the source text but not actually clinically relevant, or misjudge which fact group something belongs to. Render every extracted fact with a simple keep or discard choice, defaulting to kept, so a reviewer only has to act on the ones they disagree with rather than re-entering everything by hand.",
         ],
@@ -1362,8 +1348,7 @@ function toFormValues(byGroup: Record<string, Corti.FactsExtractResponseFactsIte
         ],
       },
       {
-        heading:
-          "Reading the orchestrator's output as a proposal, not as final content",
+        heading: "Reading the orchestrator's output as a proposal, not as final content",
         text: [
           "The orchestrator's output is text from client.agents.messageSend, the same extractAgentText pattern already used by the on-demand-agent applet elsewhere in this sandbox. The difference here is what you do with that text: instead of inserting it somewhere as finished content, parse it as a structured proposal describing an action your application has not taken yet.",
         ],
@@ -1420,15 +1405,13 @@ const proposal: Proposal = {
         ],
       },
       {
-        heading:
-          "Guarding the approve transition and only then mutating real data",
+        heading: "Guarding the approve transition and only then mutating real data",
         text: [
           "Only on approval does your application make the real downstream call: client.facts.create to persist a fact for real (as opposed to the stateless client.facts.extract used to build the proposal), a write to an EHR integration, or a coded value attached to a claim. Guard the transition so a proposal can only move out of pending once; approving an already-approved proposal, or approving a rejected one, should throw rather than silently succeed.",
         ],
         snippets: [
           {
-            caption:
-              "A guarded approval that only then triggers the real mutation",
+            caption: "A guarded approval that only then triggers the real mutation",
             lang: "typescript",
             code: `async function approve(proposal: Proposal, reviewer: string) {
   if (proposal.status !== "pending") throw new Error("not pending");
@@ -1484,8 +1467,7 @@ const proposal: Proposal = {
         ],
       },
       {
-        heading:
-          "Appending every version and every transition to one audit log",
+        heading: "Appending every version and every transition to one audit log",
         text: [
           "Every transition, proposed, approved, rejected, revision requested, and re-proposed, gets appended to an audit log entry with a timestamp and an actor: the agent or task id involved, and the human identity that decided it where a human was involved. Keep this log append-only and independent of the proposal records it describes, so that even if a proposal version is later deleted or overwritten, the audit entries referencing its taskId still prove the whole chain happened, feedback and all. This is the artifact a CFR Part 11 style review actually asks for, and it is deliberately simple: the value of an audit trail comes from its completeness and immutability, not from its sophistication.",
         ],
@@ -1531,8 +1513,7 @@ function record(actor: string, event: string) {
     ],
     how: [
       {
-        heading:
-          "Seeing the two disjoint tool surfaces you are building toward",
+        heading: "Seeing the two disjoint tool surfaces you are building toward",
         text: [
           "The end state is one orchestrator with two experts, and critically, two separate mcpServers arrays, one per expert, with no overlap between them.",
         ],
@@ -1595,8 +1576,7 @@ function record(actor: string, event: string) {
         ],
         snippets: [
           {
-            caption:
-              "Front desk mcpServers, scheduling and patient lookup only",
+            caption: "Front desk mcpServers, scheduling and patient lookup only",
             lang: "typescript",
             code: `frontDeskExpert.mcpServers = [
   { name: "scheduling-mcp", transportType: "http", authorizationType: "bearer", url: "https://tools.example.com/scheduling" },
@@ -1606,8 +1586,7 @@ function record(actor: string, event: string) {
         ],
       },
       {
-        heading:
-          "Defining the clinical notes expert with its own, separate list",
+        heading: "Defining the clinical notes expert with its own, separate list",
         text: [
           "Define the clinical notes expert the same way, with its own systemPrompt focused on facts and coding, and its own mcpServers array containing only the servers that expose facts and coding tools. This array must be a genuinely different array from the front desk expert's, not the same reference reused, or the scoping does nothing.",
         ],
@@ -1681,8 +1660,7 @@ function record(actor: string, event: string) {
         ],
       },
       {
-        heading:
-          "Combining both experts' answers for a request that spans both roles",
+        heading: "Combining both experts' answers for a request that spans both roles",
         text: [
           "If a request genuinely needs both roles at once, for example a patient asking to reschedule while also asking about a lab result mentioned in their chart, that is the orchestrator's problem to solve by calling both experts and combining their output, not a reason to give one expert both tool sets. The combined answer should make clear which part came from which expert, since a reviewer troubleshooting a bad answer needs to know which expert, and therefore which tool, was responsible for which part of the response.",
         ],
@@ -1776,8 +1754,7 @@ function record(actor: string, event: string) {
         ],
       },
       {
-        heading:
-          "Listing available registry experts before building a third from scratch",
+        heading: "Listing available registry experts before building a third from scratch",
         text: [
           "Before writing a third specialist inline, check whether one already exists. client.agents.getRegistryExperts() returns an AgentsRegistryExpertsResponse containing a list of AgentsRegistryExpert entries, each with name, description, an optional displayName and displayDescription for presenting it in a UI, an optional mcpServers list already configured for that expert, and an optional configSchema describing what a reference to it may override.",
         ],
@@ -2029,8 +2006,7 @@ const request = await run(requestFormatter, justification);`,
     ],
     snippets: [
       {
-        caption:
-          "The reviewer only ever sees the draft, never the original input",
+        caption: "The reviewer only ever sees the draft, never the original input",
         lang: "typescript",
         code: `const draft = await run(noteDrafter, rawInput);
 const issues = await run(noteReviewer, draft);

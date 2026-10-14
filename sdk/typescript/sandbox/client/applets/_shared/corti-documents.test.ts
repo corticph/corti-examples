@@ -23,9 +23,7 @@ function makeDoc(
   } as Corti.GuidedEphemeralDocument;
 }
 
-function makeTemplate(
-  overrides: Partial<Corti.GuidedTemplate>,
-): Corti.GuidedTemplate {
+function makeTemplate(overrides: Partial<Corti.GuidedTemplate>): Corti.GuidedTemplate {
   return {
     id: "t-1",
     inheritedFromId: null,
@@ -140,13 +138,10 @@ describe("deduplicateTemplates", () => {
 
 describe("documentSections", () => {
   it("maps sectionId to heading using the sections array", () => {
-    const doc = makeDoc(
-      { "s-1": "Patient presents with…", "s-2": "Assessment…" },
-      [
-        { sectionId: "s-1", heading: "Subjective" },
-        { sectionId: "s-2", heading: "Assessment" },
-      ],
-    );
+    const doc = makeDoc({ "s-1": "Patient presents with…", "s-2": "Assessment…" }, [
+      { sectionId: "s-1", heading: "Subjective" },
+      { sectionId: "s-2", heading: "Assessment" },
+    ]);
     expect(documentSections(doc)).toEqual([
       ["Subjective", "Patient presents with…"],
       ["Assessment", "Assessment…"],
@@ -223,9 +218,7 @@ describe("describeDocumentsError", () => {
   });
 
   it("passes through non-403 error messages", () => {
-    expect(describeDocumentsError(new Error("Something else"))).toBe(
-      "Something else",
-    );
+    expect(describeDocumentsError(new Error("Something else"))).toBe("Something else");
   });
 
   it("handles non-Error values", () => {

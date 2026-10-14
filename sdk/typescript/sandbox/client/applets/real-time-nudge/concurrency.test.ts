@@ -1,7 +1,7 @@
 import type { CortiClient } from "@corti/sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CATALOG } from "./nudgeRules";
 import { codeCriteria } from "./evaluation";
+import { CATALOG } from "./nudgeRules";
 import { invalidateCache, predictCodes } from "./predictCodes";
 import { evaluateCodesWithAgent, evaluatePromptWithAgent } from "./snomedAgent";
 
@@ -55,55 +55,51 @@ afterEach(() => {
 });
 
 describe("overlapping nudge requests", () => {
-  it.each(["code", "prompt"] as const)(
-    "shares identical in-flight %s evaluations even with caching disabled",
-    async (kind) => {
-      const pending = deferred<ReturnType<typeof response>>();
-      const send = vi.fn().mockReturnValue(pending.promise);
-      const client = clientWith(send);
-      const run = () =>
-        kind === "code"
-          ? evaluateCodesWithAgent(
-              client,
-              {
-                text: "CHF",
-                codes,
-                criteria: codeCriteria([CATALOG[1]]),
-                nudgeState: { triggered: [], resolved: [], dismissed: [] },
-              },
-              false,
-            )
-          : evaluatePromptWithAgent(
-              client,
-              {
-                text: "CHF",
-                criteria: [{ id: "test:trigger", prompt: "CHF is documented" }],
-              },
-              false,
-            );
-      const first = run();
-      const second = run();
-      expect(first).toBe(second);
-      await vi.waitFor(() => expect(send).toHaveBeenCalledTimes(1));
-      pending.resolve(response('{"decisions":[]}'));
-      await Promise.all([first, second]);
-      await run();
-      expect(send).toHaveBeenCalledTimes(2);
-    },
-  );
+  it.each([
+    "code",
+    "prompt",
+  ] as const)("shares identical in-flight %s evaluations even with caching disabled", async (kind) => {
+    const pending = deferred<ReturnType<typeof response>>();
+    const send = vi.fn().mockReturnValue(pending.promise);
+    const client = clientWith(send);
+    const run = () =>
+      kind === "code"
+        ? evaluateCodesWithAgent(
+            client,
+            {
+              text: "CHF",
+              codes,
+              criteria: codeCriteria([CATALOG[1]]),
+              nudgeState: { triggered: [], resolved: [], dismissed: [] },
+            },
+            false,
+          )
+        : evaluatePromptWithAgent(
+            client,
+            {
+              text: "CHF",
+              criteria: [{ id: "test:trigger", prompt: "CHF is documented" }],
+            },
+            false,
+          );
+    const first = run();
+    const second = run();
+    expect(first).toBe(second);
+    await vi.waitFor(() => expect(send).toHaveBeenCalledTimes(1));
+    pending.resolve(response('{"decisions":[]}'));
+    await Promise.all([first, second]);
+    await run();
+    expect(send).toHaveBeenCalledTimes(2);
+  });
 
   it("releases failed requests so they can be retried", async () => {
     const send = vi
       .fn()
       .mockRejectedValueOnce(new Error("offline"))
-      .mockResolvedValue(
-        response('{"decisions":[{"id":"test","outcome":"not-matched"}]}'),
-      );
+      .mockResolvedValue(response('{"decisions":[{"id":"test","outcome":"not-matched"}]}'));
     const client = clientWith(send);
     const req = { text: "retry", criteria: [{ id: "test", prompt: "test" }] };
-    await expect(evaluatePromptWithAgent(client, req, false)).rejects.toThrow(
-      "offline",
-    );
+    await expect(evaluatePromptWithAgent(client, req, false)).rejects.toThrow("offline");
     await expect(evaluatePromptWithAgent(client, req, false)).resolves.toEqual({
       decisions: [{ id: "test", outcome: "not-matched" }],
     });

@@ -27,7 +27,7 @@ const PASTED_ID = "pasted";
  *   group 1 — kind ("speaker" | "channel"), group 2 — the 1-indexed number.
  * Trailing separator (`:` or ` - `) is consumed but not captured.
  */
-const LABEL_RE = /^(?:speaker|channel)\s+(\d+)\s*[:\-]\s*(.*)$/i;
+const LABEL_RE = /^(?:speaker|channel)\s+(\d+)\s*[:-]\s*(.*)$/i;
 
 interface ParsedLine {
   speakerId: number;
@@ -71,9 +71,7 @@ export function parsePastedTranscript(text: string): DiarizedSegment[] {
 
   const segments: DiarizedSegment[] = [];
   parsed.forEach((line, i) => {
-    const speakerId = Number.isNaN(line.speakerId)
-      ? defaultSpeakerId
-      : line.speakerId;
+    const speakerId = Number.isNaN(line.speakerId) ? defaultSpeakerId : line.speakerId;
     segments.push({
       id: PASTED_ID,
       transcript: line.text,

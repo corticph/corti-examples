@@ -20,10 +20,10 @@
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  type EditorAdapter,
   hasContent,
   isStructuralTrailingBr,
   offsetToPoint,
-  type EditorAdapter,
 } from "../_shared/editorAdapter";
 
 export interface CaretOverlayPos {
@@ -126,11 +126,7 @@ function resolveCaretPos(
     !!docSel &&
     docSel.rangeCount > 0 &&
     editorEl.contains(docSel.getRangeAt(0).commonAncestorContainer);
-  const trailingBreaks = countTrailingBreaksAfter(
-    editorEl,
-    point,
-    selectionInEditor,
-  );
+  const trailingBreaks = countTrailingBreaksAfter(editorEl, point, selectionInEditor);
 
   if (trailingBreaks > 0) {
     return {
@@ -270,11 +266,7 @@ export function useCaretOverlay(
       const el = editorRef.current;
       if (!el) return;
       const sel = window.getSelection();
-      if (
-        sel &&
-        sel.rangeCount > 0 &&
-        !el.contains(sel.getRangeAt(0).commonAncestorContainer)
-      ) {
+      if (sel && sel.rangeCount > 0 && !el.contains(sel.getRangeAt(0).commonAncestorContainer)) {
         return;
       }
       cancelAnimationFrame(raf);

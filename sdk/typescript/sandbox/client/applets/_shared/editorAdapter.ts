@@ -94,9 +94,7 @@ export interface EditorAdapter {
 /* textarea / input                                                    */
 /* ------------------------------------------------------------------ */
 
-export function createTextareaAdapter(
-  el: HTMLTextAreaElement | HTMLInputElement,
-): EditorAdapter {
+export function createTextareaAdapter(el: HTMLTextAreaElement | HTMLInputElement): EditorAdapter {
   const getSelection = (): EditorSelection => ({
     start: el.selectionStart ?? el.value.length,
     end: el.selectionEnd ?? el.value.length,
@@ -167,11 +165,7 @@ export function createTextareaAdapter(
  * Exported for the undo history, which snapshots and restores selections
  * against the same textContent-based offset space this adapter uses.
  */
-export function pointToOffset(
-  root: HTMLElement,
-  node: Node,
-  nodeOffset: number,
-): number {
+export function pointToOffset(root: HTMLElement, node: Node, nodeOffset: number): number {
   const range = document.createRange();
   range.selectNodeContents(root);
   range.setEnd(node, nodeOffset);
@@ -179,10 +173,7 @@ export function pointToOffset(
 }
 
 /** Resolve an absolute text offset to a DOM (node, offset) point within `root`. */
-export function offsetToPoint(
-  root: HTMLElement,
-  offset: number,
-): { node: Node; offset: number } {
+export function offsetToPoint(root: HTMLElement, offset: number): { node: Node; offset: number } {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let remaining = offset;
   let lastText: Text | null = null;
@@ -227,10 +218,7 @@ export function hasContent(node: Node): boolean {
  * considered — a `<br>` followed by a text node is NOT structural.
  * Uses `hasContent` so a `​` caret anchor doesn't count as content.
  */
-export function isStructuralTrailingBr(
-  br: Element,
-  root: HTMLElement,
-): boolean {
+export function isStructuralTrailingBr(br: Element, root: HTMLElement): boolean {
   if (!root.contains(br)) return false;
   // The <br> must have no following siblings with content (text or element) in
   // its parent — or only empty/ZWSP-only text nodes.
@@ -323,10 +311,7 @@ export function endOfContentPoint(el: HTMLElement): {
       if (!isAnchor) {
         sawBrBeforeLastText = false;
       }
-    } else if (
-      current.nodeType === Node.ELEMENT_NODE &&
-      current.nodeName === "BR"
-    ) {
+    } else if (current.nodeType === Node.ELEMENT_NODE && current.nodeName === "BR") {
       sawBrBeforeLastText = true;
       lastNode = current;
       lastOffset = 0; // anchors after the <br> via its parent's offset
@@ -353,15 +338,12 @@ export function endOfContentPoint(el: HTMLElement): {
       // No text node at all (e.g. empty editor <div><br></div>) — anchor
       // before the structural <br>.
       const parent = (lastNode.parentNode as ParentNode) ?? el;
-      const offsetInParent = Array.from(parent.childNodes).indexOf(
-        lastNode as ChildNode,
-      );
+      const offsetInParent = Array.from(parent.childNodes).indexOf(lastNode as ChildNode);
       return { node: parent as Node, offset: offsetInParent, afterBr: false };
     }
     // Command <br> — anchor after it.
     const parent = (lastNode.parentNode as ParentNode) ?? el;
-    const offsetInParent =
-      Array.from(parent.childNodes).indexOf(lastNode as ChildNode) + 1;
+    const offsetInParent = Array.from(parent.childNodes).indexOf(lastNode as ChildNode) + 1;
     return { node: parent as Node, offset: offsetInParent, afterBr: true };
   }
   if (lastText) {
@@ -494,9 +476,7 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
   const insertTextAtSelection = (text: string): InsertResult => {
     const sel = window.getSelection();
     const selectionInEditor =
-      !!sel &&
-      sel.rangeCount > 0 &&
-      el.contains(sel.getRangeAt(0).commonAncestorContainer);
+      !!sel && sel.rangeCount > 0 && el.contains(sel.getRangeAt(0).commonAncestorContainer);
 
     // Remove any zero-width-space caret anchors left by a previous trailing-
     // <br> insert (see the anchor logic below). A ​ anchor is what makes
@@ -599,9 +579,7 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
     if (startContainer.nodeType !== Node.ELEMENT_NODE || startOffset === 0) {
       return false;
     }
-    return (
-      (startContainer as Element).childNodes[startOffset - 1]?.nodeName === "BR"
-    );
+    return (startContainer as Element).childNodes[startOffset - 1]?.nodeName === "BR";
   };
 
   return {
@@ -616,9 +594,7 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
       stripZwspAnchors(el);
       const sel = window.getSelection();
       const selectionInEditor =
-        !!sel &&
-        sel.rangeCount > 0 &&
-        el.contains(sel.getRangeAt(0).commonAncestorContainer);
+        !!sel && sel.rangeCount > 0 && el.contains(sel.getRangeAt(0).commonAncestorContainer);
       const { start } = getSelection();
       // el.textContent has no \n for <br> nodes; if the caret is right after a
       // <br>, append a synthetic \n so getLeadingSeparator suppresses the
@@ -626,9 +602,7 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
       // isn't in the editor, so isAfterBr() can't see it — use endOfContentPoint
       // instead, which resolves the true end-of-content anchor and reports
       // whether a <br> precedes it.
-      const afterBr = selectionInEditor
-        ? isAfterBr()
-        : endOfContentPointFn().afterBr;
+      const afterBr = selectionInEditor ? isAfterBr() : endOfContentPointFn().afterBr;
       const raw = (el.textContent ?? "").slice(0, start);
       const before = afterBr ? `${raw}\n` : raw;
       const insertion = buildInsertion(before, before.length, segment, options);
@@ -685,9 +659,7 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
       const sel = window.getSelection();
       const hadCaret =
         el.contains(document.activeElement) ||
-        (!!sel &&
-          sel.rangeCount > 0 &&
-          el.contains(sel.getRangeAt(0).commonAncestorContainer));
+        (!!sel && sel.rangeCount > 0 && el.contains(sel.getRangeAt(0).commonAncestorContainer));
 
       const fragment = document.createDocumentFragment();
       const parts = text.split("\n");
@@ -716,9 +688,7 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
       if (!sel || typeof sel.modify !== "function") {
         return false;
       }
-      const inEditor =
-        sel.rangeCount > 0 &&
-        el.contains(sel.getRangeAt(0).commonAncestorContainer);
+      const inEditor = sel.rangeCount > 0 && el.contains(sel.getRangeAt(0).commonAncestorContainer);
       if (!inEditor) {
         // Same re-anchoring rule as insertion: the caret is very often outside
         // the editor when a voice command lands (the mic button took focus), and
@@ -727,11 +697,7 @@ export function createContentEditableAdapter(el: HTMLElement): EditorAdapter {
         setSelection(length, length);
       }
       const before = getSelection();
-      sel.modify(
-        "extend",
-        direction === "back" ? "backward" : "forward",
-        "lineboundary",
-      );
+      sel.modify("extend", direction === "back" ? "backward" : "forward", "lineboundary");
       const after = getSelection();
       return after.start !== before.start || after.end !== before.end;
     },

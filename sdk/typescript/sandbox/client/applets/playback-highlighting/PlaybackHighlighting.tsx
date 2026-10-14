@@ -13,6 +13,7 @@
  * (uploaded file vs parallel MediaRecorder capture).
  */
 
+import { CortiClient } from "@corti/sdk";
 import {
   CheckCircle2,
   CircleDashed,
@@ -24,7 +25,6 @@ import {
   Upload,
   XCircle,
 } from "lucide-react";
-import { CortiClient } from "@corti/sdk";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
@@ -38,10 +38,11 @@ import {
 import { Switch } from "../../components/ui/switch";
 import { cn } from "../../lib/utils";
 import { DEFAULT_FORMATTING } from "../_shared/formatting";
-import type { FormattingConfig } from "../_shared/types";
 import { useSessionState } from "../_shared/sessionState";
+import type { FormattingConfig } from "../_shared/types";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { FormattingFields } from "../formatting/FormattingDialog";
+import { LiveDictationPanel } from "./LiveDictationPanel";
 import {
   describeTranscriptError,
   type PipelineProgress,
@@ -51,7 +52,6 @@ import {
   runPlaybackHighlightingPipeline,
 } from "./pipeline";
 import { SyncedTranscriptPlayer } from "./SyncedTranscriptPlayer";
-import { LiveDictationPanel } from "./LiveDictationPanel";
 
 type AppletMode = "file" | "live";
 
@@ -99,33 +99,21 @@ export function PlaybackHighlighting() {
     return new CortiClient({ environment: sdkEnvironment, auth: authConfig });
   }, [sdkEnvironment, authConfig, isReady]);
   const [file, setFile] = useSessionState<File | null>("file", null);
-  const [primaryLanguage, setPrimaryLanguage] = useSessionState(
-    "primaryLanguage",
-    "en",
-  );
+  const [primaryLanguage, setPrimaryLanguage] = useSessionState("primaryLanguage", "en");
   const [diarize, setDiarize] = useSessionState("diarize", false);
   const [wordLevel, setWordLevel] = useSessionState("wordLevel", true);
   const [automaticPunctuation, setAutomaticPunctuation] = useSessionState(
     "automaticPunctuation",
     false,
   );
-  const [spokenPunctuation, setSpokenPunctuation] = useSessionState(
-    "spokenPunctuation",
-    true,
-  );
+  const [spokenPunctuation, setSpokenPunctuation] = useSessionState("spokenPunctuation", true);
   const [formatting, setFormatting] = useSessionState<FormattingConfig>(
     "formatting",
     DEFAULT_FORMATTING,
   );
   const [showFormatting, setShowFormatting] = useState(false);
-  const [progress, setProgress] = useSessionState<PipelineProgress | null>(
-    "progress",
-    null,
-  );
-  const [result, setResult] = useSessionState<PipelineResult | null>(
-    "result",
-    null,
-  );
+  const [progress, setProgress] = useSessionState<PipelineProgress | null>("progress", null);
+  const [result, setResult] = useSessionState<PipelineResult | null>("result", null);
   const [error, setError] = useSessionState<string | null>("error", null);
   const [running, setRunning] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -213,11 +201,7 @@ export function PlaybackHighlighting() {
 
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2.5">
-          <Switch
-            checked={wordLevel}
-            onCheckedChange={setWordLevel}
-            id="wordLevel"
-          />
+          <Switch checked={wordLevel} onCheckedChange={setWordLevel} id="wordLevel" />
           <Label htmlFor="wordLevel" className="text-sm">
             wordLevel
           </Label>
@@ -293,9 +277,7 @@ export function PlaybackHighlighting() {
                 )}
               >
                 <Upload className="h-4 w-4 shrink-0" />
-                <span className="truncate">
-                  {file ? file.name : "Choose an audio file…"}
-                </span>
+                <span className="truncate">{file ? file.name : "Choose an audio file…"}</span>
                 <input
                   type="file"
                   accept="audio/*"
@@ -306,10 +288,7 @@ export function PlaybackHighlighting() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Primary language</Label>
-              <Select
-                value={primaryLanguage}
-                onValueChange={setPrimaryLanguage}
-              >
+              <Select value={primaryLanguage} onValueChange={setPrimaryLanguage}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -340,10 +319,7 @@ export function PlaybackHighlighting() {
               {STEPS.map((step) => {
                 const state = stepState(step.id, progress, !!result, !!error);
                 return (
-                  <div
-                    key={step.id}
-                    className="flex items-center gap-2 text-sm"
-                  >
+                  <div key={step.id} className="flex items-center gap-2 text-sm">
                     {state === "done" && (
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-lime-600 dark:text-corti-lime" />
                     )}
@@ -358,9 +334,7 @@ export function PlaybackHighlighting() {
                     )}
                     <span
                       className={cn(
-                        state === "pending"
-                          ? "text-muted-foreground"
-                          : "text-foreground",
+                        state === "pending" ? "text-muted-foreground" : "text-foreground",
                       )}
                     >
                       {step.label}
@@ -375,9 +349,7 @@ export function PlaybackHighlighting() {
             </div>
           )}
 
-          {error && (
-            <p className="text-sm text-variant-error-foreground">{error}</p>
-          )}
+          {error && <p className="text-sm text-variant-error-foreground">{error}</p>}
 
           {result && audioUrl && (
             <div className="space-y-3">
@@ -392,8 +364,7 @@ export function PlaybackHighlighting() {
                   Done
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {result.transcripts.length}{" "}
-                  {result.wordLevel ? "words" : "segments"} ·{" "}
+                  {result.transcripts.length} {result.wordLevel ? "words" : "segments"} ·{" "}
                   {result.wallClockMs >= 1000
                     ? `${(result.wallClockMs / 1000).toFixed(1)}s`
                     : `${result.wallClockMs}ms`}{" "}

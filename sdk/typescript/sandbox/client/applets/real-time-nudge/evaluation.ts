@@ -69,9 +69,7 @@ export function preEvaluateExact(
         (code) => code.code === criterion.code && systemMatches(code.system, criterion.system),
       );
       const evidenceIndexes =
-        matchIndex !== -1
-          ? (all[matchIndex].evidences ?? []).map((_, i) => i)
-          : [];
+        matchIndex !== -1 ? (all[matchIndex].evidences ?? []).map((_, i) => i) : [];
       if (criterion.condition === "present") {
         if (matchIndex !== -1) {
           return {
@@ -220,7 +218,11 @@ export function validateResponse(
           if (criterion.op === "=" && code.code !== criterion.code) {
             return unknown("Exact-code evidence does not match");
           }
-          if (criterion.op === "descendent-of" && code.code === criterion.code && criterion.condition === "present") {
+          if (
+            criterion.op === "descendent-of" &&
+            code.code === criterion.code &&
+            criterion.condition === "present"
+          ) {
             return unknown("A proper descendant cannot be the concept itself");
           }
           evidence.push({ codeIndex: ref.codeIndex, evidenceIndexes: ref.evidenceIndexes });

@@ -28,28 +28,17 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../../components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover";
 import { dispatchCommand } from "../_shared/commandDispatch";
 import { CortiDictationComponent } from "../_shared/cortiDictationReact";
 import type { EditorAdapter } from "../_shared/editorAdapter";
 import type { Range } from "../_shared/offsetMap";
 import { useActiveControl } from "../_shared/useActiveControl";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { useHidCommandCatalog, useHidCommandHandler } from "../_shared/useDictationDevice";
 import { useDictationLanguage } from "../_shared/useDictationLanguage";
-import {
-  useHidCommandCatalog,
-  useHidCommandHandler,
-} from "../_shared/useDictationDevice";
 import { cn } from "../_shared/utils";
-import {
-  buildRegistry,
-  TEMPLATES,
-  toTranscribeCommands,
-} from "../dictation-commands/commandModel";
+import { buildRegistry, TEMPLATES, toTranscribeCommands } from "../dictation-commands/commandModel";
 import {
   clearLog,
   logCommand,
@@ -118,8 +107,7 @@ function DebugLogRow({ entry }: { entry: NudgeDebugEntry }) {
           <span
             className={cn(
               "shrink-0 rounded px-1 text-[10px] font-semibold",
-              entry.type === "predict-request" &&
-                "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+              entry.type === "predict-request" && "bg-blue-500/10 text-blue-600 dark:text-blue-400",
               entry.type === "predict-response" &&
                 "bg-blue-500/10 text-blue-600 dark:text-blue-400",
               entry.type === "agent-request" &&
@@ -146,8 +134,7 @@ function DebugLogRow({ entry }: { entry: NudgeDebugEntry }) {
           <span
             className={cn(
               "shrink-0 rounded px-1 text-[10px] font-semibold",
-              entry.type === "predict-request" &&
-                "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+              entry.type === "predict-request" && "bg-blue-500/10 text-blue-600 dark:text-blue-400",
               entry.type === "predict-response" &&
                 "bg-blue-500/10 text-blue-600 dark:text-blue-400",
               entry.type === "agent-request" &&
@@ -169,9 +156,7 @@ function DebugLogRow({ entry }: { entry: NudgeDebugEntry }) {
       )}
       {expanded && hasDetail && (
         <pre className="ml-10 mt-0.5 max-h-48 overflow-auto rounded bg-muted/50 p-2 text-[11px] text-muted-foreground">
-          {entry.data !== undefined
-            ? JSON.stringify(entry.data, null, 2)
-            : entry.text}
+          {entry.data !== undefined ? JSON.stringify(entry.data, null, 2) : entry.text}
         </pre>
       )}
     </div>
@@ -209,26 +194,15 @@ function AgentPromptTextarea({
         className="w-full rounded-md border border-border bg-background p-2 font-mono text-xs text-foreground outline-none focus:border-corti-lime"
       />
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <Button
-          size="sm"
-          onClick={() => onSave(draft)}
-          disabled={!dirty || status === "preparing"}
-        >
+        <Button size="sm" onClick={() => onSave(draft)} disabled={!dirty || status === "preparing"}>
           Save
         </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onReset}
-          disabled={status === "preparing"}
-        >
+        <Button size="sm" variant="ghost" onClick={onReset} disabled={status === "preparing"}>
           Reset to default
         </Button>
       </div>
       {draft !== defaultPrompt && (
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          Differs from the built-in default.
-        </p>
+        <p className="mt-1 text-[11px] text-muted-foreground">Differs from the built-in default.</p>
       )}
     </div>
   );
@@ -240,12 +214,8 @@ function buildPredictParams(
   snomedEnabled: boolean,
   icd10Enabled: boolean,
 ): { systems: string[] } | null {
-  const hasSnomedRules = rules.some(
-    (r) => r.enabled && (r.trigger.snomed || r.resolve.snomed),
-  );
-  const hasIcd10Rules = rules.some(
-    (r) => r.enabled && (r.trigger.icd10 || r.resolve.icd10),
-  );
+  const hasSnomedRules = rules.some((r) => r.enabled && (r.trigger.snomed || r.resolve.snomed));
+  const hasIcd10Rules = rules.some((r) => r.enabled && (r.trigger.icd10 || r.resolve.icd10));
 
   const wantSnomed = snomedEnabled && hasSnomedRules;
   const wantIcd10 = icd10Enabled && hasIcd10Rules;
@@ -265,24 +235,17 @@ function buildPredictParams(
 }
 
 export function RealTimeNudge() {
-  const {
-    authConfig,
-    clientId,
-    environment,
-    sdkEnvironment,
-    tenantName,
-    isReady,
-  } = useCortiAccessToken();
+  const { authConfig, clientId, environment, sdkEnvironment, tenantName, isReady } =
+    useCortiAccessToken();
   // isReady is temporarily false while an existing token refreshes. That is
   // not a logout and must not reset caches, agent revisions, or cadence.
-  const { available: hasAccessToken, scope: connectionScope } =
-    nudgeConnectionState({
-      authConfig,
-      environment,
-      tenantName,
-      clientId,
-      isReady,
-    });
+  const { available: hasAccessToken, scope: connectionScope } = nudgeConnectionState({
+    authConfig,
+    environment,
+    tenantName,
+    clientId,
+    isReady,
+  });
   const { language, onLanguagesChanged } = useDictationLanguage();
 
   const editorColumnRef = useRef<HTMLDivElement>(null);
@@ -322,10 +285,7 @@ export function RealTimeNudge() {
   }, [hasAccessToken, authConfig, sdkEnvironment]);
 
   const codePredict = useCallback(
-    async (
-      text: string,
-      evaluationId?: string,
-    ): Promise<Corti.CodesGeneralResponse | null> => {
+    async (text: string, evaluationId?: string): Promise<Corti.CodesGeneralResponse | null> => {
       if (!authConfig.accessToken || !text.trim()) {
         return null;
       }
@@ -333,11 +293,7 @@ export function RealTimeNudge() {
       if (!client) {
         return null;
       }
-      const params = buildPredictParams(
-        rules,
-        settings.snomedEnabled,
-        settings.icd10Enabled,
-      );
+      const params = buildPredictParams(rules, settings.snomedEnabled, settings.icd10Enabled);
       if (!params) {
         return null;
       }
@@ -393,10 +349,7 @@ export function RealTimeNudge() {
       ],
       evaluationScope: connectionScope,
       codeEnabled: settings.snomedEnabled || settings.icd10Enabled,
-      onPredict:
-        settings.snomedEnabled || settings.icd10Enabled
-          ? codePredict
-          : undefined,
+      onPredict: settings.snomedEnabled || settings.icd10Enabled ? codePredict : undefined,
       agentEnabled: settings.agentEnabled,
       onAgentEvaluate: settings.agentEnabled ? agentEvaluate : undefined,
       agentCached: settings.agentCached,
@@ -450,13 +403,7 @@ export function RealTimeNudge() {
   const lastConfigSig = useRef("");
   useEffect(() => {
     if (hasAccessToken && authConfig && sdkEnvironment) {
-      configureNudgeAgent(
-        authConfig,
-        sdkEnvironment,
-        clientId,
-        tenantName,
-        environment,
-      );
+      configureNudgeAgent(authConfig, sdkEnvironment, clientId, tenantName, environment);
       const sig = JSON.stringify([clientId, tenantName, environment, rules]);
       if (sig !== lastConfigSig.current) {
         lastConfigSig.current = sig;
@@ -467,15 +414,7 @@ export function RealTimeNudge() {
       resetNudgeAgentSession();
       invalidateCache();
     }
-  }, [
-    hasAccessToken,
-    authConfig,
-    sdkEnvironment,
-    clientId,
-    tenantName,
-    environment,
-    rules,
-  ]);
+  }, [hasAccessToken, authConfig, sdkEnvironment, clientId, tenantName, environment, rules]);
 
   // Seed sample text on first mount.
   useEffect(() => {
@@ -600,15 +539,12 @@ export function RealTimeNudge() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Real-time documentation nudges
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Real-time documentation nudges</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Type or dictate a clinical note. The nudge engine responds to your
-          documentation cadence and surfaces subtle "chirps" when a
-          documentation gap is detected. Configure text matching or SNOMED
-          reasoning rules to customize the feedback. No hard-stop alerts, just
-          gentle real-time support.
+          Type or dictate a clinical note. The nudge engine responds to your documentation cadence
+          and surfaces subtle "chirps" when a documentation gap is detected. Configure text matching
+          or SNOMED reasoning rules to customize the feedback. No hard-stop alerts, just gentle
+          real-time support.
         </p>
       </div>
 
@@ -638,9 +574,7 @@ export function RealTimeNudge() {
               onTranscript={handleTranscript}
               onCommand={handleCommand}
               onLanguagesChanged={onLanguagesChanged}
-              onError={(e: CustomEvent) =>
-                setError(e.detail?.message ?? "Unknown error")
-              }
+              onError={(e: CustomEvent) => setError(e.detail?.message ?? "Unknown error")}
             />
           ) : (
             <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
@@ -687,9 +621,7 @@ export function RealTimeNudge() {
               "[&:empty]:before:text-muted-foreground [&:empty]:before:content-['Start_typing_or_dictating…']",
             )}
           />
-          {interim && (
-            <p className="text-sm italic text-muted-foreground">{interim}</p>
-          )}
+          {interim && <p className="text-sm italic text-muted-foreground">{interim}</p>}
 
           {/* Command monitor: detected commands + executed action */}
           {log.length > 0 && (
@@ -712,18 +644,13 @@ export function RealTimeNudge() {
                     key={`${entry.at}-${entry.id}`}
                     className="flex items-baseline gap-2 px-3 py-1.5 text-xs"
                   >
-                    <code className="shrink-0 font-semibold text-foreground">
-                      {entry.id}
-                    </code>
-                    {entry.variables &&
-                      Object.keys(entry.variables).length > 0 && (
-                        <code className="shrink-0 text-muted-foreground">
-                          {JSON.stringify(entry.variables)}
-                        </code>
-                      )}
-                    <span className="truncate text-foreground">
-                      {entry.description}
-                    </span>
+                    <code className="shrink-0 font-semibold text-foreground">{entry.id}</code>
+                    {entry.variables && Object.keys(entry.variables).length > 0 && (
+                      <code className="shrink-0 text-muted-foreground">
+                        {JSON.stringify(entry.variables)}
+                      </code>
+                    )}
+                    <span className="truncate text-foreground">{entry.description}</span>
                   </li>
                 ))}
               </ul>
@@ -755,9 +682,7 @@ export function RealTimeNudge() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">
-                      {rule.title}
-                    </p>
+                    <p className="text-sm font-semibold text-foreground">{rule.title}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {rule.message || nudge.dynamicMessage}
                     </p>
@@ -794,9 +719,7 @@ export function RealTimeNudge() {
                                   {matched.code}
                                   <ExternalLink className="mt-0.5 h-3 w-3" />
                                 </a>
-                                <span className="text-muted-foreground">
-                                  {matched.display}
-                                </span>
+                                <span className="text-muted-foreground">{matched.display}</span>
                               </div>
                             </div>
                             {matched.evidences?.length && (
@@ -816,37 +739,33 @@ export function RealTimeNudge() {
                                 </div>
                               </div>
                             )}
-                            {matched.alternatives?.length &&
-                              matched.alternatives.length > 0 && (
-                                <div>
-                                  <p className="text-xs font-semibold text-foreground">
-                                    Alternative codes
-                                  </p>
-                                  <div className="mt-0.5 max-h-40 overflow-auto space-y-0.5 text-xs text-muted-foreground">
-                                    {matched.alternatives.map((alt) => (
-                                      <div
-                                        key={alt.code}
-                                        className="flex items-start gap-1"
+                            {matched.alternatives?.length && matched.alternatives.length > 0 && (
+                              <div>
+                                <p className="text-xs font-semibold text-foreground">
+                                  Alternative codes
+                                </p>
+                                <div className="mt-0.5 max-h-40 overflow-auto space-y-0.5 text-xs text-muted-foreground">
+                                  {matched.alternatives.map((alt) => (
+                                    <div key={alt.code} className="flex items-start gap-1">
+                                      <a
+                                        href={
+                                          isIcd10
+                                            ? `https://icd10coded.com/cm/${alt.code}`
+                                            : `https://lookup.snomedbrowser.org/${alt.code}`
+                                        }
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-0.5 font-medium text-foreground hover:underline"
                                       >
-                                        <a
-                                          href={
-                                            isIcd10
-                                              ? `https://icd10coded.com/cm/${alt.code}`
-                                              : `https://lookup.snomedbrowser.org/${alt.code}`
-                                          }
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-0.5 font-medium text-foreground hover:underline"
-                                        >
-                                          {alt.code}
-                                          <ExternalLink className="mt-0.5 h-3 w-3" />
-                                        </a>
-                                        <span>{alt.display}</span>
-                                      </div>
-                                    ))}
-                                  </div>
+                                        {alt.code}
+                                        <ExternalLink className="mt-0.5 h-3 w-3" />
+                                      </a>
+                                      <span>{alt.display}</span>
+                                    </div>
+                                  ))}
                                 </div>
-                              )}
+                              </div>
+                            )}
                           </div>
                         </PopoverContent>
                       </Popover>
@@ -903,23 +822,18 @@ export function RealTimeNudge() {
       <div className="rounded-md border border-border p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-foreground">Nudge rules</h3>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setShowRuleEditor(!showRuleEditor)}
-          >
+          <Button size="sm" variant="outline" onClick={() => setShowRuleEditor(!showRuleEditor)}>
             {showRuleEditor ? "Hide rules" : "Show rules"}
           </Button>
         </div>
         {showRuleEditor && (
           <div className="mt-3">
             <p className="mb-3 text-xs text-muted-foreground">
-              Each rule has trigger criteria (when to fire) and resolve criteria
-              (when to auto-resolve). Text conditions support grammar syntax:{" "}
-              <code>[word]</code> optional, <code>(a|b|c)</code> alternation,{" "}
-              <code>(textMatch.conditions)</code> self-reference,
-              space-separated groups are AND-ed. SNOMED conditions use
-              agent-assisted evaluation (enable in config → SNOMED → Agent).
+              Each rule has trigger criteria (when to fire) and resolve criteria (when to
+              auto-resolve). Text conditions support grammar syntax: <code>[word]</code> optional,{" "}
+              <code>(a|b|c)</code> alternation, <code>(textMatch.conditions)</code> self-reference,
+              space-separated groups are AND-ed. SNOMED conditions use agent-assisted evaluation
+              (enable in config → SNOMED → Agent).
             </p>
             <NudgeRuleEditor
               items={rules}
@@ -934,9 +848,7 @@ export function RealTimeNudge() {
       {/* Agent system prompt editor */}
       <div className="rounded-md border border-border p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground">
-            Agent system prompt
-          </h3>
+          <h3 className="text-sm font-semibold text-foreground">Agent system prompt</h3>
           <Button
             size="sm"
             variant="outline"
@@ -1009,9 +921,7 @@ export function RealTimeNudge() {
           {debugLog.length === 0 ? (
             <p className="text-xs text-muted-foreground">No entries yet.</p>
           ) : (
-            debugLog.map((entry) => (
-              <DebugLogRow key={entry.id} entry={entry} />
-            ))
+            debugLog.map((entry) => <DebugLogRow key={entry.id} entry={entry} />)
           )}
         </div>
       </div>

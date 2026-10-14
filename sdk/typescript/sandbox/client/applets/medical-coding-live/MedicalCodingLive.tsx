@@ -55,9 +55,7 @@ function CodeCard({
   return (
     <div className="rounded-md border border-border p-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-sm font-semibold text-foreground">
-          {item.code}
-        </span>
+        <span className="font-mono text-sm font-semibold text-foreground">{item.code}</span>
         <Badge variant="outline">{item.system}</Badge>
       </div>
       <p className="mt-1 text-sm text-muted-foreground">{item.display}</p>
@@ -74,26 +72,14 @@ function CodeCard({
       {onDecide &&
         (decision ? (
           <div className="mt-2 border-t border-border pt-2">
-            <Badge
-              variant={decision === "accepted" ? "default" : "destructive"}
-            >
-              {decision}
-            </Badge>
+            <Badge variant={decision === "accepted" ? "default" : "destructive"}>{decision}</Badge>
           </div>
         ) : (
           <div className="mt-2 flex gap-2 border-t border-border pt-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onDecide("accepted")}
-            >
+            <Button size="sm" variant="outline" onClick={() => onDecide("accepted")}>
               Accept
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onDecide("rejected")}
-            >
+            <Button size="sm" variant="outline" onClick={() => onDecide("rejected")}>
               Reject
             </Button>
           </div>
@@ -105,17 +91,13 @@ function CodeCard({
 export function MedicalCodingLive() {
   const { authConfig, sdkEnvironment } = useCortiAccessToken();
   const [note, setNote] = useSessionState("note", SAMPLE_NOTE);
-  const [systems, setSystems] = useSessionState<
-    Set<Corti.CommonCodingSystemEnum>
-  >("systems", new Set(["icd10cm-outpatient", "cpt"]));
-  const [result, setResult] =
-    useSessionState<Corti.CodesGeneralResponse | null>("result", null);
-  const [refined, setRefined] =
-    useSessionState<Corti.CodesGeneralResponse | null>("refined", null);
-  const [decisions, setDecisions] = useSessionState<Record<string, Decision>>(
-    "decisions",
-    {},
+  const [systems, setSystems] = useSessionState<Set<Corti.CommonCodingSystemEnum>>(
+    "systems",
+    new Set(["icd10cm-outpatient", "cpt"]),
   );
+  const [result, setResult] = useSessionState<Corti.CodesGeneralResponse | null>("result", null);
+  const [refined, setRefined] = useSessionState<Corti.CodesGeneralResponse | null>("refined", null);
+  const [decisions, setDecisions] = useSessionState<Record<string, Decision>>("decisions", {});
   const [auditLog, setAuditLog] = useSessionState<AuditEntry[]>("auditLog", []);
   const [loading, setLoading] = useState(false);
   const [refining, setRefining] = useState(false);
@@ -213,10 +195,7 @@ export function MedicalCodingLive() {
   };
 
   const reviewedCount = Object.keys(decisions).length;
-  const uniqCodes = dedupeByKey([
-    ...(result?.codes ?? []),
-    ...(refined?.codes ?? []),
-  ]);
+  const uniqCodes = dedupeByKey([...(result?.codes ?? []), ...(refined?.codes ?? [])]);
   const uniqCandidates = dedupeByKey([
     ...(result?.candidates ?? []),
     ...(refined?.candidates ?? []),
@@ -233,9 +212,8 @@ export function MedicalCodingLive() {
           Live encounter to coded output, with reviewer refinement
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Predict codes from a finalized note, accept or reject each candidate,
-          then refine with a second <code>client.codes.predict</code> call that
-          excludes what the reviewer rejected.
+          Predict codes from a finalized note, accept or reject each candidate, then refine with a
+          second <code>client.codes.predict</code> call that excludes what the reviewer rejected.
         </p>
       </div>
 
@@ -266,18 +244,13 @@ export function MedicalCodingLive() {
       </div>
 
       <div>
-        <Button
-          onClick={runPredict}
-          disabled={loading || !note.trim() || systems.size === 0}
-        >
+        <Button onClick={runPredict} disabled={loading || !note.trim() || systems.size === 0}>
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           Predict codes
         </Button>
       </div>
 
-      {error && (
-        <p className="text-sm text-variant-error-foreground">{error}</p>
-      )}
+      {error && <p className="text-sm text-variant-error-foreground">{error}</p>}
 
       {result && (
         <div className="space-y-4">
@@ -327,8 +300,7 @@ export function MedicalCodingLive() {
                 disabled={refining || reviewedCount === 0 || !!refined}
               >
                 {refining && <Loader2 className="h-4 w-4 animate-spin" />}
-                Refine with reviewer feedback ({reviewedCount}/
-                {result.candidates.length} reviewed)
+                Refine with reviewer feedback ({reviewedCount}/{result.candidates.length} reviewed)
               </Button>
             </div>
           )}
@@ -373,8 +345,7 @@ export function MedicalCodingLive() {
       {lockedSet.length > 0 && (
         <div className="rounded-md border border-corti-lime/50 bg-corti-lime/5 p-3">
           <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            <Lock className="h-3.5 w-3.5" /> Locked code set ({lockedSet.length}
-            )
+            <Lock className="h-3.5 w-3.5" /> Locked code set ({lockedSet.length})
           </h3>
           <div className="flex flex-wrap gap-2">
             {lockedSet.map((item) => (

@@ -51,11 +51,7 @@ function normalize(code: string): string {
   return code.trim().toUpperCase().replace(/\./g, "").replace(/\s+/g, "");
 }
 
-export async function runCodeValidation(
-  client: CortiClient,
-  text: string,
-  rawProposed: string,
-) {
+export async function runCodeValidation(client: CortiClient, text: string, rawProposed: string) {
   if (!text.trim()) {
     return;
   }
@@ -95,9 +91,7 @@ export async function runCodeValidation(
     }
 
     const apiNormalized = new Set(allApiCodes.map((c) => normalize(c.code)));
-    const unsupported = proposed.filter(
-      (p) => !apiNormalized.has(normalize(p)),
-    );
+    const unsupported = proposed.filter((p) => !apiNormalized.has(normalize(p)));
 
     set({ status: "done", result: { confirmed, missed, unsupported } });
   } catch (e) {

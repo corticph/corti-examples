@@ -310,9 +310,15 @@ export function useNudges(
                   if (codeRules.length > 0) {
                     const currentNudges = nudgesRef.current;
                     const nudgeState = {
-                      triggered: currentNudges.filter((n) => n.status === "active").map((n) => n.ruleId),
-                      resolved: currentNudges.filter((n) => n.status === "resolved").map((n) => n.ruleId),
-                      dismissed: currentNudges.filter((n) => n.status === "dismissed").map((n) => n.ruleId),
+                      triggered: currentNudges
+                        .filter((n) => n.status === "active")
+                        .map((n) => n.ruleId),
+                      resolved: currentNudges
+                        .filter((n) => n.status === "resolved")
+                        .map((n) => n.ruleId),
+                      dismissed: currentNudges
+                        .filter((n) => n.status === "dismissed")
+                        .map((n) => n.ruleId),
                     };
                     setEvaluatingCount((count) => count + 1);
                     try {

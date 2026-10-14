@@ -21,11 +21,7 @@ import {
 import { RuleManager } from "../_shared/RuleManager";
 import { cn } from "../_shared/utils";
 import { CommandManager } from "../dictation-commands/CommandManager";
-import {
-  type Term,
-  termStore,
-  toExport as termsToExport,
-} from "../dictionary-terms/terms";
+import { type Term, termStore, toExport as termsToExport } from "../dictionary-terms/terms";
 import {
   type Replacement,
   replacementStore,
@@ -45,8 +41,8 @@ function ReplacementsPanel() {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-muted-foreground">
-        Rewrites spoken phrases in the final transcript, server-side (e.g.
-        &ldquo;BID&rdquo; &rarr; &ldquo;twice daily&rdquo;).
+        Rewrites spoken phrases in the final transcript, server-side (e.g. &ldquo;BID&rdquo; &rarr;
+        &ldquo;twice daily&rdquo;).
       </p>
       <RuleManager<Replacement>
         items={items}
@@ -75,8 +71,8 @@ function TermsPanel() {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-muted-foreground">
-        Biases recognition toward custom vocabulary, so domain words come back
-        right instead of needing a replacement afterwards.
+        Biases recognition toward custom vocabulary, so domain words come back right instead of
+        needing a replacement afterwards.
       </p>
       <RuleManager<Term>
         items={items}

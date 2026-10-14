@@ -1,11 +1,5 @@
-import {
-  AlertCircle,
-  ChevronDown,
-  ChevronRight,
-  LayoutGrid,
-  Loader2,
-} from "lucide-react";
 import { CortiClient } from "@corti/sdk";
+import { AlertCircle, ChevronDown, ChevronRight, LayoutGrid, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,13 +16,9 @@ import {
   OUTPUT_LANGUAGES,
   useGuidedTemplates,
 } from "../_shared/corti-documents";
-import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useSessionState } from "../_shared/sessionState";
-import {
-  type TemplateResult,
-  runTemplateShowdown,
-  useTemplateShowdownStore,
-} from "./api";
+import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
+import { runTemplateShowdown, type TemplateResult, useTemplateShowdownStore } from "./api";
 
 function TemplateCard({ result }: { result: TemplateResult }) {
   const [open, setOpen] = useSessionState("cardOpen", true);
@@ -59,9 +49,7 @@ function TemplateCard({ result }: { result: TemplateResult }) {
         )}
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">
-            {result.name}
-          </p>
+          <p className="truncate text-sm font-medium text-foreground">{result.name}</p>
           <p className="font-mono text-xs text-muted-foreground">{result.id}</p>
         </div>
 
@@ -81,9 +69,7 @@ function TemplateCard({ result }: { result: TemplateResult }) {
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {name}
                 </p>
-                <p className="whitespace-pre-wrap text-sm text-foreground">
-                  {text}
-                </p>
+                <p className="whitespace-pre-wrap text-sm text-foreground">{text}</p>
               </div>
             ))}
           </div>
@@ -101,8 +87,7 @@ function TemplateCard({ result }: { result: TemplateResult }) {
 
 export function TemplateShowdown() {
   const { authConfig, sdkEnvironment } = useCortiAccessToken();
-  const { status, results, doneCount, totalCount, error } =
-    useTemplateShowdownStore();
+  const { status, results, doneCount, totalCount, error } = useTemplateShowdownStore();
   const [input, setInput] = useSessionState("input", "");
   const [language, setLanguage] = useSessionState("language", "en");
   const busy = status === "running";
@@ -112,10 +97,7 @@ export function TemplateShowdown() {
     sdkEnvironment,
     language,
   );
-  const uniqueTemplates = useMemo(
-    () => deduplicateTemplates(templates),
-    [templates],
-  );
+  const uniqueTemplates = useMemo(() => deduplicateTemplates(templates), [templates]);
 
   const client = useMemo(() => {
     if (!authConfig.accessToken) {
@@ -134,14 +116,11 @@ export function TemplateShowdown() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Template showdown
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Template showdown</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Fire one clinical note through every template on your tenant
-          simultaneously. See how each template interprets the same input,
-          useful for discovering what templates produce and picking the right
-          one for a workflow.
+          Fire one clinical note through every template on your tenant simultaneously. See how each
+          template interprets the same input, useful for discovering what templates produce and
+          picking the right one for a workflow.
         </p>
       </div>
 
@@ -181,27 +160,17 @@ export function TemplateShowdown() {
           onClick={handleRun}
           disabled={busy || !input.trim() || !client || templatesLoading}
         >
-          {busy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <LayoutGrid className="h-4 w-4" />
-          )}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <LayoutGrid className="h-4 w-4" />}
           Run all templates
         </Button>
         {busy && (
           <span className="text-xs text-muted-foreground">
-            {totalCount > 0
-              ? `${doneCount} / ${totalCount} complete…`
-              : "Fetching templates…"}
+            {totalCount > 0 ? `${doneCount} / ${totalCount} complete…` : "Fetching templates…"}
           </span>
         )}
       </div>
 
-      {error && (
-        <p className="text-sm text-destructive">
-          {describeDocumentsError(error)}
-        </p>
-      )}
+      {error && <p className="text-sm text-destructive">{describeDocumentsError(error)}</p>}
 
       {results.length > 0 && (
         <div className="flex flex-col gap-3">

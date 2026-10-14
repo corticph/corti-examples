@@ -32,10 +32,10 @@ export interface TextMatchCriteria {
   /** NONE may match (NOT — exclusion list). */
   none?: TextCondition[];
   /**
-    * Named criterion groups — each is evaluated independently as its own
-    * TextMatchCriteria. `minGroups` sets how many must match (default:
-    * all). Used for count-based criteria like "2+ SIRS criteria present."
-    */
+   * Named criterion groups — each is evaluated independently as its own
+   * TextMatchCriteria. `minGroups` sets how many must match (default:
+   * all). Used for count-based criteria like "2+ SIRS criteria present."
+   */
   groups?: { name: string; criteria: TextMatchCriteria }[];
   minGroups?: number;
 }

@@ -255,8 +255,7 @@ describe("getFullScopeToken", () => {
     vi.resetModules();
     vi.doMock("axios", () => ({
       default: { post: mockPost },
-      isAxiosError: (e: unknown) =>
-        e && typeof e === "object" && "isAxiosError" in e,
+      isAxiosError: (e: unknown) => e && typeof e === "object" && "isAxiosError" in e,
     }));
   });
 
@@ -277,15 +276,11 @@ describe("getFullScopeToken", () => {
     expect(token).toBe("token-1");
 
     const [url, body, config] = mockPost.mock.calls[0];
-    expect(url).toBe(
-      "https://auth.dev-weu.corti.app/realms/base/protocol/openid-connect/token",
-    );
+    expect(url).toBe("https://auth.dev-weu.corti.app/realms/base/protocol/openid-connect/token");
     expect(body.get("client_id")).toBe(CREDS.CORTI_CLIENT_ID);
     expect(body.get("client_secret")).toBe(CREDS.CORTI_CLIENT_SECRET);
     expect(body.get("scope")).toBe("openid");
-    expect(config.headers["Content-Type"]).toBe(
-      "application/x-www-form-urlencoded",
-    );
+    expect(config.headers["Content-Type"]).toBe("application/x-www-form-urlencoded");
 
     // Second call should hit the cache — no new axios post
     const token2 = await mod.getFullScopeToken();
@@ -324,8 +319,7 @@ describe("getScopedToken", () => {
     vi.resetModules();
     vi.doMock("axios", () => ({
       default: { post: mockPost },
-      isAxiosError: (e: unknown) =>
-        e && typeof e === "object" && "isAxiosError" in e,
+      isAxiosError: (e: unknown) => e && typeof e === "object" && "isAxiosError" in e,
     }));
   });
 

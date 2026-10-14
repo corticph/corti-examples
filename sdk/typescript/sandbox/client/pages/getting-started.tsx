@@ -27,10 +27,7 @@ import {
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  findDefaultTemplate,
-  useGuidedTemplates,
-} from "../applets/_shared/corti-documents";
+import { findDefaultTemplate, useGuidedTemplates } from "../applets/_shared/corti-documents";
 import { useCortiAccessToken } from "../applets/_shared/useCortiAccessToken";
 import { Highlighted } from "../components/docs/CodeBlock";
 import { Button } from "../components/ui/button";
@@ -194,9 +191,7 @@ function TerminalPanel({
         <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
         <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
         <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-        <span className="ml-2 font-mono text-xs text-muted-foreground">
-          getting-started.ts
-        </span>
+        <span className="ml-2 font-mono text-xs text-muted-foreground">getting-started.ts</span>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
@@ -205,22 +200,13 @@ function TerminalPanel({
         </div>
 
         <div className="flex min-h-0 flex-[2] flex-col border-t border-border bg-zinc-950">
-          {extra && (
-            <div className="shrink-0 border-b border-white/10 px-3 py-2.5">
-              {extra}
-            </div>
-          )}
+          {extra && <div className="shrink-0 border-b border-white/10 px-3 py-2.5">{extra}</div>}
           <div className="flex shrink-0 items-center justify-between gap-2 px-3 py-2">
             <div className="flex items-center gap-1.5 font-mono text-xs text-white/40">
               <TerminalIcon className="h-3.5 w-3.5" />
               Output
             </div>
-            <Button
-              size="sm"
-              onClick={onRun}
-              disabled={disabled}
-              className="gap-1.5"
-            >
+            <Button size="sm" onClick={onRun} disabled={disabled} className="gap-1.5">
               {runtime.status === "running" ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : runtime.status === "error" ? (
@@ -235,9 +221,7 @@ function TerminalPanel({
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-3 pb-3 font-mono text-sm leading-relaxed">
             {runtime.lines.length === 0 ? (
-              <p className="text-white/30">
-                {hint ?? "Not run yet. Click Run to call this live."}
-              </p>
+              <p className="text-white/30">{hint ?? "Not run yet. Click Run to call this live."}</p>
             ) : (
               runtime.lines.map((line, i) => (
                 <div
@@ -343,15 +327,9 @@ export default function GettingStarted() {
           const res = await client.languages.list();
           const codes = Object.keys(res.languages ?? {});
           appendLine(i, `${codes.length} language(s) available on this tenant`);
-          appendLine(
-            i,
-            codes.slice(0, 12).join(", ") + (codes.length > 12 ? ", ..." : ""),
-          );
+          appendLine(i, codes.slice(0, 12).join(", ") + (codes.length > 12 ? ", ..." : ""));
           appendLine(i, "→ response (first 3 entries):");
-          appendJson(
-            i,
-            Object.fromEntries(Object.entries(res.languages ?? {}).slice(0, 3)),
-          );
+          appendJson(i, Object.fromEntries(Object.entries(res.languages ?? {}).slice(0, 3)));
           break;
         }
         case 1: {
@@ -383,10 +361,7 @@ export default function GettingStarted() {
           if (!file) {
             throw new Error("Choose an audio file below first.");
           }
-          appendLine(
-            i,
-            `$ client.recordings.upload(${file.name}, ${interactionId})`,
-          );
+          appendLine(i, `$ client.recordings.upload(${file.name}, ${interactionId})`);
           appendLine(
             i,
             `→ uploading ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB, ${file.type || "unknown type"})`,
@@ -409,32 +384,20 @@ export default function GettingStarted() {
             primaryLanguage: "en",
             async: true,
           } as unknown as Corti.TranscriptsCreateRequest);
-          appendLine(
-            i,
-            `→ response: { id: "${created.id}", status: "${created.status}" }`,
-          );
+          appendLine(i, `→ response: { id: "${created.id}", status: "${created.status}" }`);
           let status = created.status;
           const transcriptId = created.id;
           while (status === "processing") {
             await sleep(1500);
-            const polled = await client.transcripts.getStatus(
-              interactionId,
-              transcriptId,
-            );
+            const polled = await client.transcripts.getStatus(interactionId, transcriptId);
             status = polled.status;
-            appendLine(
-              i,
-              `$ client.transcripts.getStatus(...) → status: ${status}`,
-            );
+            appendLine(i, `$ client.transcripts.getStatus(...) → status: ${status}`);
           }
           if (status === "failed") {
             throw new Error("Transcript processing failed.");
           }
           appendLine(i, "$ client.transcripts.get(...)");
-          const final = await client.transcripts.get(
-            interactionId,
-            transcriptId,
-          );
+          const final = await client.transcripts.get(interactionId, transcriptId);
           appendLine(i, "→ response:");
           appendJson(i, {
             id: final.id,
@@ -488,10 +451,7 @@ export default function GettingStarted() {
               sections: doc.document.stringDocument,
             });
           } else {
-            appendLine(
-              i,
-              "(no templates found on this tenant, skipping document generation)",
-            );
+            appendLine(i, "(no templates found on this tenant, skipping document generation)");
           }
           break;
         }
@@ -505,8 +465,7 @@ export default function GettingStarted() {
   };
 
   const hint = prerequisiteHint(index);
-  const disabled =
-    current.status === "running" || (hint !== null && index !== 4) || !authed;
+  const disabled = current.status === "running" || (hint !== null && index !== 4) || !authed;
 
   return (
     <div className="flex flex-col lg:h-[calc(100vh-52px-40px)] lg:overflow-hidden">
@@ -514,9 +473,7 @@ export default function GettingStarted() {
         <section className="flex w-full flex-col border-b border-border lg:min-h-0 lg:w-1/2 lg:border-b-0 lg:border-r">
           <div className="flex shrink-0 flex-col gap-1.5 border-b border-border px-5 py-2.5">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="font-semibold uppercase tracking-[0.08em]">
-                Getting started
-              </span>
+              <span className="font-semibold uppercase tracking-[0.08em]">Getting started</span>
               <span>
                 Step {index + 1} of {STEPS.length}
               </span>
@@ -525,9 +482,7 @@ export default function GettingStarted() {
           </div>
 
           <div className="flex-1 space-y-2.5 overflow-y-auto px-5 py-3">
-            <h1 className="text-lg font-bold tracking-tight text-foreground">
-              {step.title}
-            </h1>
+            <h1 className="text-lg font-bold tracking-tight text-foreground">{step.title}</h1>
 
             <div className="flex items-start justify-end gap-2">
               <p className="max-w-[85%] rounded-2xl rounded-tr-sm bg-muted px-3 py-1.5 text-[13px] leading-snug text-foreground">
@@ -557,12 +512,7 @@ export default function GettingStarted() {
           </div>
 
           <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-5 py-3">
-            <Button
-              variant="outline"
-              onClick={back}
-              disabled={index === 0}
-              className="gap-1.5"
-            >
+            <Button variant="outline" onClick={back} disabled={index === 0} className="gap-1.5">
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
@@ -580,11 +530,7 @@ export default function GettingStarted() {
             </div>
             <Button onClick={next} className="gap-1.5">
               {isLast ? "Explore examples" : "Next"}
-              {isLast ? (
-                <Compass className="h-4 w-4" />
-              ) : (
-                <ArrowRight className="h-4 w-4" />
-              )}
+              {isLast ? <Compass className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
             </Button>
           </div>
         </section>
@@ -606,9 +552,7 @@ export default function GettingStarted() {
                     )}
                   >
                     <Upload className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">
-                      {file ? file.name : "Choose an audio file..."}
-                    </span>
+                    <span className="truncate">{file ? file.name : "Choose an audio file..."}</span>
                     <input
                       type="file"
                       accept="audio/*"

@@ -46,11 +46,7 @@ import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useHidCommandCatalog, useHidCommandHandler } from "../_shared/useDictationDevice";
 import { useDictationLanguage } from "../_shared/useDictationLanguage";
 import { cn } from "../_shared/utils";
-import {
-  buildRegistry,
-  TEMPLATES,
-  toTranscribeCommands,
-} from "../dictation-commands/commandModel";
+import { buildRegistry, TEMPLATES, toTranscribeCommands } from "../dictation-commands/commandModel";
 import {
   logCommand,
   setIdentity as setCommandIdentity,
@@ -73,7 +69,6 @@ import {
   usePinnedPromptId,
 } from "../on-demand-agent/prompts";
 import { replacementStore } from "../text-replacements/replacements";
-import { useCaretOverlay } from "./useCaretOverlay";
 import { useDraftPersistence } from "./draftStore";
 import { useEditorHistory } from "./editorHistory";
 import { SuitePanels } from "./SuitePanels";
@@ -85,6 +80,7 @@ import {
   SUITE_FOCUS_EDITOR_COMMAND_ID,
   SUITE_SHOW_PANEL_COMMAND_ID,
 } from "./suiteControls";
+import { useCaretOverlay } from "./useCaretOverlay";
 import { useParallelArchive } from "./useParallelArchive";
 
 const CLEANUP_STATUS_LABEL: Record<string, string> = {
@@ -100,8 +96,7 @@ function formatSavedAt(savedAt: number | null): string {
 }
 
 export function DictationSuite() {
-  const { authConfig, clientId, tenantName, sdkEnvironment, isReady } =
-    useCortiAccessToken();
+  const { authConfig, clientId, tenantName, sdkEnvironment, isReady } = useCortiAccessToken();
   const { language, onLanguagesChanged } = useDictationLanguage();
   const namespace = identityNamespace(clientId, tenantName);
 
@@ -112,18 +107,12 @@ export function DictationSuite() {
   const editorRef = useRef<HTMLDivElement>(null);
   // State, not a ref: the dictation element only mounts once auth resolves, and
   // the archive hook has to re-subscribe when it appears.
-  const [dictationEl, setDictationEl] = useState<InstanceType<
-    typeof CortiDictation
-  > | null>(null);
+  const [dictationEl, setDictationEl] = useState<InstanceType<typeof CortiDictation> | null>(null);
   const { adapter } = useActiveControl(editorColumnRef);
   const adapterRef = useRef<EditorAdapter | null>(null);
   adapterRef.current = adapter;
 
-  const { savedAt, clear: clearDraft } = useDraftPersistence(
-    editorRef,
-    clientId,
-    tenantName,
-  );
+  const { savedAt, clear: clearDraft } = useDraftPersistence(editorRef, clientId, tenantName);
   // Declared after useDraftPersistence on purpose: effect order is declaration
   // order, so the stored draft is restored before the history observer attaches
   // and the restore isn't recorded as an undoable edit.
@@ -150,9 +139,7 @@ export function DictationSuite() {
   // Tracks the time span of the most recently detected command so a late
   // interim transcript for the same span (the command phrase) can't
   // re-populate the interim preview after the command handler cleared it.
-  const lastCommandSpanRef = useRef<{ start: number; end: number } | null>(
-    null,
-  );
+  const lastCommandSpanRef = useRef<{ start: number; end: number } | null>(null);
 
   // Tracks the end time of the most recently committed final transcript so a
   // late interim whose span predates it can't re-populate the preview after
@@ -172,11 +159,7 @@ export function DictationSuite() {
    * so the user's eyes stay where the dictated text will land. See
    * useCaretOverlay for why this is an overlay and not DOM injection.
    */
-  const { pos: caretPos, remeasure: remeasureCaret } = useCaretOverlay(
-    editorRef,
-    adapter,
-    interim,
-  );
+  const { pos: caretPos, remeasure: remeasureCaret } = useCaretOverlay(editorRef, adapter, interim);
 
   /**
    * A latch, deliberately not `isReady` itself: `useCortiAuth.getStreamToken`
@@ -257,11 +240,7 @@ export function DictationSuite() {
         // is the command phrase itself arriving as transcript — the command
         // handler already cleared the interim. Don't let it reappear.
         const cmdSpan = lastCommandSpanRef.current;
-        if (
-          cmdSpan &&
-          data.start <= cmdSpan.end &&
-          data.end >= cmdSpan.start
-        ) {
+        if (cmdSpan && data.start <= cmdSpan.end && data.end >= cmdSpan.start) {
           return;
         }
         // A late interim that predates the most recent final transcript is
@@ -357,9 +336,7 @@ export function DictationSuite() {
         logCommand({
           id: data.id,
           variables: data.variables,
-          description: panel
-            ? `Opened ${panel} panel`
-            : `Unknown panel: ${spoken}`,
+          description: panel ? `Opened ${panel} panel` : `Unknown panel: ${spoken}`,
         });
         return;
       }
@@ -460,16 +437,14 @@ export function DictationSuite() {
     adapterRef.current?.applyFormat?.(style);
   };
 
-  const cleanupBusy =
-    cleanup.status === "running" || cleanup.status === "preparing";
+  const cleanupBusy = cleanup.status === "running" || cleanup.status === "preparing";
 
   return (
     <div className="flex flex-col gap-4">
       {/* No title here — the applet page renders it above this component. */}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {replacements.length} replacements · {terms.length} terms ·{" "}
-          {commands.length} commands
+          {replacements.length} replacements · {terms.length} terms · {commands.length} commands
         </p>
         {/*
           Mounted only once a token exists: <corti-dictation> validates
@@ -496,9 +471,7 @@ export function DictationSuite() {
               }
             }}
             onLanguagesChanged={onLanguagesChanged}
-            onError={(e: CustomEvent) =>
-              setError(e.detail?.message ?? "Unknown error")
-            }
+            onError={(e: CustomEvent) => setError(e.detail?.message ?? "Unknown error")}
           />
         ) : (
           <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
@@ -618,11 +591,7 @@ export function DictationSuite() {
               onClick={copyDraft}
               className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              {copied ? (
-                <Check className="h-3.5 w-3.5" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? "Copied" : "Copy text"}
             </button>
 
@@ -635,9 +604,7 @@ export function DictationSuite() {
               Clear text
             </button>
 
-            <span className="ml-auto text-xs text-muted-foreground">
-              {formatSavedAt(savedAt)}
-            </span>
+            <span className="ml-auto text-xs text-muted-foreground">{formatSavedAt(savedAt)}</span>
           </div>
 
           {/*
@@ -674,16 +641,12 @@ export function DictationSuite() {
                  is no preceding text to separate from, and when the interim
                  already leads with whitespace so a streamed space isn't
                  doubled. */}
-                {caretPos.atLineStart || /^\s/.test(interim)
-                  ? interim
-                  : ` ${interim}`}
+                {caretPos.atLineStart || /^\s/.test(interim) ? interim : ` ${interim}`}
               </span>
             )}
           </div>
           {cleanup.noChange && (
-            <p className="text-xs text-muted-foreground">
-              Cleanup found nothing to change.
-            </p>
+            <p className="text-xs text-muted-foreground">Cleanup found nothing to change.</p>
           )}
         </div>
 

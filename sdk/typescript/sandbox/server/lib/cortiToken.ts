@@ -156,9 +156,7 @@ let envFullScope: { token: string; expMs: number } | null = null;
 /** Full-scope token for the REST proxy. Never returned to the browser. */
 export async function getFullScopeToken(sessionId?: string): Promise<string> {
   const usingSessionCreds = !!sessionId && sessionCreds.has(sessionId);
-  const cached = usingSessionCreds
-    ? sessionFullScope.get(sessionId!)
-    : envFullScope;
+  const cached = usingSessionCreds ? sessionFullScope.get(sessionId!) : envFullScope;
   if (cached && Date.now() < cached.expMs - 30_000) {
     return cached.token;
   }

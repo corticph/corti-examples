@@ -67,18 +67,14 @@ export function useGuidedTemplates(
   sdkEnvironment: CortiSdkEnvironment,
   language?: string,
 ) {
-  const [templates, setTemplates] = useState<Corti.GuidedTemplate[]>(
-    cachedTemplates ?? [],
-  );
+  const [templates, setTemplates] = useState<Corti.GuidedTemplate[]>(cachedTemplates ?? []);
   const [loading, setLoading] = useState(!cachedTemplates);
 
   useEffect(() => {
     let active = true;
     const apply = (all: Corti.GuidedTemplate[]) => {
       if (!active) return;
-      const filtered = language
-        ? all.filter((t) => t.languages.includes(language))
-        : all;
+      const filtered = language ? all.filter((t) => t.languages.includes(language)) : all;
       setTemplates(filtered);
       setLoading(false);
     };
@@ -102,11 +98,7 @@ export function findDefaultTemplate(
   ...keywords: string[]
 ): Corti.GuidedTemplate | undefined {
   const lower = keywords.map((k) => k.toLowerCase());
-  return (
-    templates.find((t) =>
-      lower.some((k) => t.name.toLowerCase().includes(k)),
-    ) ?? templates[0]
-  );
+  return templates.find((t) => lower.some((k) => t.name.toLowerCase().includes(k))) ?? templates[0];
 }
 
 /**
@@ -123,9 +115,7 @@ export function findDefaultTemplate(
  * specialty, region, or language, both are kept — the non-primary variant
  * gets a distinguishing suffix in parentheses (e.g. "Emergency Note (en-US)").
  */
-export function deduplicateTemplates(
-  templates: Corti.GuidedTemplate[],
-): Corti.GuidedTemplate[] {
+export function deduplicateTemplates(templates: Corti.GuidedTemplate[]): Corti.GuidedTemplate[] {
   const byName = new Map<string, Corti.GuidedTemplate[]>();
   for (const t of templates) {
     const key = t.name.toLowerCase();
@@ -164,8 +154,7 @@ export function deduplicateTemplates(
         a.specialties.length === b.specialties.length &&
         a.specialties.every((s) => b.specialties.includes(s));
       const sameRegions =
-        a.regions.length === b.regions.length &&
-        a.regions.every((r) => b.regions.includes(r));
+        a.regions.length === b.regions.length && a.regions.every((r) => b.regions.includes(r));
       const sameLanguages =
         a.languages.length === b.languages.length &&
         a.languages.every((l) => b.languages.includes(l));
@@ -173,10 +162,7 @@ export function deduplicateTemplates(
         // Keep both, distinguish by any metadata that differs
         for (const t of group) {
           let suffix = "";
-          if (
-            t.specialties.length > 0 &&
-            t.specialties[0] !== best.specialties[0]
-          ) {
+          if (t.specialties.length > 0 && t.specialties[0] !== best.specialties[0]) {
             suffix = t.specialties[0];
           } else if (
             t.regions.length > 0 &&
@@ -184,10 +170,7 @@ export function deduplicateTemplates(
             t.regions[0] !== best.regions[0]
           ) {
             suffix = t.regions[0];
-          } else if (
-            t.languages.length > 1 &&
-            t.languages[1] !== best.languages[1]
-          ) {
+          } else if (t.languages.length > 1 && t.languages[1] !== best.languages[1]) {
             suffix = t.languages[1];
           }
           result.push(suffix ? { ...t, name: `${t.name} (${suffix})` } : t);
@@ -219,18 +202,10 @@ export async function generateFromText(
 /** Ordered [sectionName, sectionText] pairs from a generated document's string form.
  * Uses the document's `sections` array to map section IDs to headings;
  * falls back to raw keys when `sections` is absent. */
-export function documentSections(
-  doc: Corti.GuidedEphemeralDocument,
-): [string, string][] {
+export function documentSections(doc: Corti.GuidedEphemeralDocument): [string, string][] {
   if (doc.sections && doc.sections.length > 0) {
     return doc.sections
-      .map(
-        (s) =>
-          [s.heading, doc.stringDocument[s.sectionId] ?? ""] as [
-            string,
-            string,
-          ],
-      )
+      .map((s) => [s.heading, doc.stringDocument[s.sectionId] ?? ""] as [string, string])
       .filter(([, text]) => text.length > 0);
   }
   return Object.entries(doc.stringDocument);

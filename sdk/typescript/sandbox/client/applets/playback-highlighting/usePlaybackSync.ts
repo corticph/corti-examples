@@ -22,10 +22,7 @@ export interface TimedSegment {
   end: number;
 }
 
-function findActiveIndex(
-  segments: TimedSegment[],
-  currentTimeMs: number,
-): number | null {
+function findActiveIndex(segments: TimedSegment[], currentTimeMs: number): number | null {
   if (segments.length === 0 || currentTimeMs < segments[0].start) {
     return null;
   }

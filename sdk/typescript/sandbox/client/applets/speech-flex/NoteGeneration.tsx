@@ -36,15 +36,7 @@
  */
 
 import type { Corti, CortiAuth, CortiClient } from "@corti/sdk";
-import {
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Copy,
-  FileText,
-  Loader2,
-  Trash2,
-} from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Copy, FileText, Loader2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -109,10 +101,7 @@ function primarySubtag(tag: string): string {
  * tweaks (empty `languages`), or if any of its language tags share the same
  * primary subtag as the spoken language.
  */
-function templateMatchesLanguage(
-  t: Corti.GuidedTemplate,
-  spoken: string,
-): boolean {
+function templateMatchesLanguage(t: Corti.GuidedTemplate, spoken: string): boolean {
   if (t.languages.length === 0) {
     return true;
   }
@@ -126,18 +115,10 @@ function templateMatchesLanguage(
 function extractOrderedSections(doc: GeneratedDocument): [string, string][] {
   if (doc.sections && doc.sections.length > 0) {
     return doc.sections
-      .map(
-        (s) =>
-          [s.heading, doc.stringDocument[s.sectionId] ?? ""] as [
-            string,
-            string,
-          ],
-      )
+      .map((s) => [s.heading, doc.stringDocument[s.sectionId] ?? ""] as [string, string])
       .filter(([, content]) => content.length > 0);
   }
-  return Object.entries(doc.stringDocument).filter(
-    ([, content]) => content.length > 0,
-  );
+  return Object.entries(doc.stringDocument).filter(([, content]) => content.length > 0);
 }
 
 export function NoteGeneration({
@@ -185,9 +166,7 @@ export function NoteGeneration({
     sdkEnvironment,
     language,
   );
-  const [sourceOverride, setSourceOverride] = useState<DocumentSource | null>(
-    null,
-  );
+  const [sourceOverride, setSourceOverride] = useState<DocumentSource | null>(null);
   const [generatedNotes, setGeneratedNotes] = useState<GeneratedNote[]>([]);
   const [generating, setGenerating] = useState(false);
   const [preserveDictatedText, setPreserveDictatedText] = useState(false);
@@ -228,10 +207,7 @@ export function NoteGeneration({
       return;
     }
     if (filteredTemplates.length > 0) {
-      const match = findDefaultTemplate(
-        filteredTemplates,
-        ...defaultTemplateKeywords,
-      );
+      const match = findDefaultTemplate(filteredTemplates, ...defaultTemplateKeywords);
       if (match) {
         setTemplateId(match.id);
       }
@@ -337,10 +313,7 @@ export function NoteGeneration({
                   text: s.transcript,
                   speakerId: s.speakerId,
                   channel: s.participant?.channel,
-                  start:
-                    s.time?.start != null
-                      ? Math.round(s.time.start)
-                      : undefined,
+                  start: s.time?.start != null ? Math.round(s.time.start) : undefined,
                   end: s.time?.end != null ? Math.round(s.time.end) : undefined,
                 })),
               },
@@ -384,26 +357,21 @@ export function NoteGeneration({
 
       const doc = result.document as GeneratedDocument;
       const templateName =
-        filteredTemplates.find((t) => t.id === effectiveTemplateId)?.name ??
-        "Custom template";
+        filteredTemplates.find((t) => t.id === effectiveTemplateId)?.name ?? "Custom template";
 
       const orderedSections = extractOrderedSections(doc);
 
       if (preserve) {
         const selectedTemplateName =
-          filteredTemplates.find((t) => t.id === effectiveTemplateId)?.name ??
-          "Clinical Note";
+          filteredTemplates.find((t) => t.id === effectiveTemplateId)?.name ?? "Clinical Note";
         const dictationHeading =
-          selectedTemplateName.replace(/\s*\([^)]*\)\s*/g, "").trim() ||
-          "Clinical Note";
+          selectedTemplateName.replace(/\s*\([^)]*\)\s*/g, "").trim() || "Clinical Note";
         orderedSections.unshift([dictationHeading, text]);
       }
 
       const note: GeneratedNote = {
         id: doc.id ?? crypto.randomUUID(),
-        templateName: preserve
-          ? `${templateName} (verbatim dictation)`
-          : templateName,
+        templateName: preserve ? `${templateName} (verbatim dictation)` : templateName,
         createdAt: Date.now(),
         orderedSections,
         creditsConsumed: result.usageInfo?.creditsConsumed ?? 0,
@@ -436,11 +404,7 @@ export function NoteGeneration({
     setGeneratedNotes((prev) => prev.filter((n) => n.id !== id));
   };
 
-  const copySection = async (
-    noteId: string,
-    heading: string,
-    content: string,
-  ) => {
+  const copySection = async (noteId: string, heading: string, content: string) => {
     try {
       await navigator.clipboard.writeText(content);
       setCopiedSection(`${noteId}:${heading}`);
@@ -450,11 +414,7 @@ export function NoteGeneration({
     }
   };
 
-  const copySectionWithHeading = async (
-    noteId: string,
-    heading: string,
-    content: string,
-  ) => {
+  const copySectionWithHeading = async (noteId: string, heading: string, content: string) => {
     try {
       await navigator.clipboard.writeText(`${heading}\n${content}`);
       setCopiedSection(`${noteId}:${heading}`);
@@ -518,9 +478,7 @@ export function NoteGeneration({
         <div className="space-y-1.5">
           <Label className="text-xs">
             Source
-            {sourceOverride && (
-              <span className="text-muted-foreground/60"> (override)</span>
-            )}
+            {sourceOverride && <span className="text-muted-foreground/60"> (override)</span>}
           </Label>
           <Select
             value={activeSource}
@@ -530,15 +488,9 @@ export function NoteGeneration({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="combined">
-                Combined (dictation + ambient + facts)
-              </SelectItem>
-              <SelectItem value="combined-no-facts">
-                Combined (dictation + ambient)
-              </SelectItem>
-              <SelectItem value="interaction">
-                Interaction (server-side)
-              </SelectItem>
+              <SelectItem value="combined">Combined (dictation + ambient + facts)</SelectItem>
+              <SelectItem value="combined-no-facts">Combined (dictation + ambient)</SelectItem>
+              <SelectItem value="interaction">Interaction (server-side)</SelectItem>
               <SelectItem value="text">Editor text only</SelectItem>
               <SelectItem value="transcript">Ambient only</SelectItem>
               <SelectItem value="facts" disabled={!getFacts}>
@@ -573,9 +525,7 @@ export function NoteGeneration({
         <label
           className={cn(
             "flex items-center gap-2 text-xs",
-            dictationInContext
-              ? "text-muted-foreground"
-              : "text-muted-foreground/50",
+            dictationInContext ? "text-muted-foreground" : "text-muted-foreground/50",
           )}
           title={
             dictationInContext
@@ -592,9 +542,7 @@ export function NoteGeneration({
         </label>
       </div>
 
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {/* Notes (existing + generated) */}
       {allNotes.length > 0 && (
@@ -617,9 +565,7 @@ export function NoteGeneration({
                     ) : (
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                     )}
-                    <span className="text-xs font-medium text-foreground">
-                      {note.templateName}
-                    </span>
+                    <span className="text-xs font-medium text-foreground">{note.templateName}</span>
                     {note.isExisting && (
                       <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                         Saved
@@ -667,20 +613,11 @@ export function NoteGeneration({
                     {note.orderedSections.map(([heading, content]) => {
                       const sectionCopyKey = `${note.id}:${heading}`;
                       return (
-                        <div
-                          key={heading}
-                          className="relative rounded-md border border-border p-3"
-                        >
+                        <div key={heading} className="relative rounded-md border border-border p-3">
                           <div className="flex items-start justify-between gap-2">
                             <button
                               type="button"
-                              onClick={() =>
-                                void copySectionWithHeading(
-                                  note.id,
-                                  heading,
-                                  content,
-                                )
-                              }
+                              onClick={() => void copySectionWithHeading(note.id, heading, content)}
                               title={`Copy "${heading}" with content`}
                               className="text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
                             >
@@ -688,9 +625,7 @@ export function NoteGeneration({
                             </button>
                             <button
                               type="button"
-                              onClick={() =>
-                                void copySection(note.id, heading, content)
-                              }
+                              onClick={() => void copySection(note.id, heading, content)}
                               title={`Copy "${heading}" content only`}
                               className="shrink-0 rounded border border-border p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                             >

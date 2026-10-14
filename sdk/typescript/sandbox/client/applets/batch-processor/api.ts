@@ -68,12 +68,7 @@ export async function runBatch(
       jobs[i] = { ...jobs[i], status: "running" };
       set({ jobs: [...jobs] });
       try {
-        const response = await generateFromText(
-          client,
-          templateId,
-          text,
-          language,
-        );
+        const response = await generateFromText(client, templateId, text, language);
         jobs[i] = {
           ...jobs[i],
           status: "done",

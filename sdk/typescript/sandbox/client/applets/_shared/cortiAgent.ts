@@ -26,9 +26,7 @@ export interface AgentSendResult {
 }
 
 /** Pull the first text part out of a message:send response. */
-export function extractAgentText(
-  resp: Corti.AgentsMessageSendResponse,
-): string {
+export function extractAgentText(resp: Corti.AgentsMessageSendResponse): string {
   const messages = [resp.task?.status?.message, resp.message];
   for (const msg of messages) {
     for (const part of msg?.parts ?? []) {
@@ -54,12 +52,8 @@ export async function ensureAgentWithMeta(
   spec: AgentSpec,
 ): Promise<{ id: string; created: boolean }> {
   const agents = await client.agents.list();
-  const items = Array.isArray(agents)
-    ? agents
-    : ((agents as { items?: unknown[] }).items ?? []);
-  const existing = items.find(
-    (a) => (a as { name?: string }).name === spec.name,
-  );
+  const items = Array.isArray(agents) ? agents : ((agents as { items?: unknown[] }).items ?? []);
+  const existing = items.find((a) => (a as { name?: string }).name === spec.name);
   if (existing) {
     return { id: (existing as { id: string }).id, created: false };
   }
@@ -73,10 +67,7 @@ export async function ensureAgentWithMeta(
 }
 
 /** Return the id of the agent named `spec.name`, creating it if it doesn't exist. */
-export async function ensureAgent(
-  client: CortiClient,
-  spec: AgentSpec,
-): Promise<string> {
+export async function ensureAgent(client: CortiClient, spec: AgentSpec): Promise<string> {
   const { id } = await ensureAgentWithMeta(client, spec);
   return id;
 }
