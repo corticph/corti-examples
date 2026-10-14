@@ -219,7 +219,9 @@ export function hasContent(node: Node): boolean {
  * Uses `hasContent` so a `​` caret anchor doesn't count as content.
  */
 export function isStructuralTrailingBr(br: Element, root: HTMLElement): boolean {
-  if (!root.contains(br)) return false;
+  if (!root.contains(br)) {
+    return false;
+  }
   // The <br> must have no following siblings with content (text or element) in
   // its parent — or only empty/ZWSP-only text nodes.
   let sibling = br.nextSibling;
@@ -235,7 +237,9 @@ export function isStructuralTrailingBr(br: Element, root: HTMLElement): boolean 
   // The <br>'s parent must be the root, or the last child of the root
   // (again checking with text nodes for content).
   const parent = br.parentNode;
-  if (parent === root) return true;
+  if (parent === root) {
+    return true;
+  }
   // Check that parent is the last child of root (no content siblings
   // after parent).
   let pSibling = parent?.nextSibling;

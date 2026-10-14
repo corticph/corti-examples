@@ -264,7 +264,9 @@ export function useCaretOverlay(
     let raf = 0;
     const onSelectionChange = () => {
       const el = editorRef.current;
-      if (!el) return;
+      if (!el) {
+        return;
+      }
       const sel = window.getSelection();
       if (sel && sel.rangeCount > 0 && !el.contains(sel.getRangeAt(0).commonAncestorContainer)) {
         return;
@@ -289,9 +291,13 @@ export function useCaretOverlay(
   // Routed through the same RAF coalescing as selectionchange so bursts of
   // interim updates don't double the work.
   useEffect(() => {
-    if (!interim) return;
+    if (!interim) {
+      return;
+    }
     const el = editorRef.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     let raf = requestAnimationFrame(() => {
       raf = 0;
       measure();

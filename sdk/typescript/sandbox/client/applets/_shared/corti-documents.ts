@@ -73,7 +73,9 @@ export function useGuidedTemplates(
   useEffect(() => {
     let active = true;
     const apply = (all: Corti.GuidedTemplate[]) => {
-      if (!active) return;
+      if (!active) {
+        return;
+      }
       const filtered = language ? all.filter((t) => t.languages.includes(language)) : all;
       setTemplates(filtered);
       setLoading(false);
