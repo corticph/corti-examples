@@ -3,8 +3,7 @@
  *
  * @lit/react's createComponent maps the custom element's DOM CustomEvents onto
  * React-style onX props with typed event details, and lets React manage the
- * element's properties (e.g. dictationConfig, authConfig). Mirrors the pattern
- * used by corti-api-console.
+ * element's properties (e.g. dictationConfig, authConfig).
  */
 
 import type {
