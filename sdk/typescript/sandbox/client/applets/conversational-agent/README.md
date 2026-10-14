@@ -49,7 +49,7 @@ contextual response which has the full final text and full thread history.
 
 ## Response debounce
 
-`VoiceAgent.tsx` buffers consecutive `isFinal: true` segments in
+`ConversationalAgent.tsx` buffers consecutive `isFinal: true` segments in
 `finalBufferRef` and restarts a `responseDebounceMs` timer on every new event
 (interim or final). When recording stops, `flushFinal` fires immediately so
 there is no artificial delay at end-of-session. The timeout is user-configurable
@@ -73,7 +73,7 @@ Eight presets are defined in `model.ts`:
 When `orchestrator` is active, the system prompt instructs the LLM to prefix
 every response with `[MODE:key]` on its own line. `extractMode()` in `agent.ts`
 strips this tag before displaying the message and stores `detectedMode` in
-state. `VoiceAgent.tsx` shows the resolved label in a pill at the top of the
+state. `ConversationalAgent.tsx` shows the resolved label in a pill at the top of the
 chat window — updating live as the conversation evolves.
 
 `applyPreset` persists the chosen key and calls `client.agents.update` to push
@@ -92,9 +92,9 @@ start a clean context.
 - `agent.ts` — module-level singleton state; `useVoiceAgentStore`,
   `configureVoiceAgent`, `handleInterim`, `handleFinal`, `resetConversation`,
   speculative scheduling, `extractMode`, preset management.
-- `VoiceAgent.tsx` — chat UI, ghost bubble, thinking spinner, response-debounce
+- `ConversationalAgent.tsx` — chat UI, ghost bubble, thinking spinner, response-debounce
   buffering, `CortiDictationComponent` wiring.
-- `VoiceAgentDetails.tsx` — mode toggle, response-delay slider, provisional
+- `ConversationalAgentDetails.tsx` — mode toggle, response-delay slider, provisional
   details toggle, system-prompt editor.
 - `config.ts` — `buildVoiceConfig` (sets `interimResults: true`,
   `automaticPunctuation: false`, `audioEvents: { enabled: true }`).
