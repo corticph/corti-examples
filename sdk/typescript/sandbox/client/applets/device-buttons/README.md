@@ -113,4 +113,4 @@ overrides under `buttonMappings:overrides:${appletId}`.
   these more visible without the device panel open — a future improvement.
 - The standalone Device Buttons applet shows only the `commandStore` catalog
   (from dictation-commands). A "show all catalogs" view that lists every
-  applet's commands is a planned enhancement (Phase 7 in the PRD).
+  applet's commands is a planned enhancement.
