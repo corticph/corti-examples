@@ -35,6 +35,7 @@ import {
   identityNamespace,
 } from "../_shared/configStore";
 import { describeAgentError, ensureAgent, sendAgentMessage } from "../_shared/cortiAgent";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 import type { StyleProfile, StyleSectionOverride } from "./personaStore";
 
@@ -289,7 +290,7 @@ export function configureScribeAgents(
 ) {
   if (authConfig !== lastAuth) {
     lastAuth = authConfig;
-    client = new CortiClient({ environment, auth: authConfig });
+    client = new CortiClient({ environment, auth: authConfig, analytics: EXAMPLES_ANALYTICS });
   }
   const nextNamespace = identityNamespace(clientId, tenant);
   if (nextNamespace !== namespace) {

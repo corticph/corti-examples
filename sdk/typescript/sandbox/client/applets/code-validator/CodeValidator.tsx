@@ -1,6 +1,7 @@
 import { CortiClient } from "@corti/sdk";
 import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { type CodingCode, runCodeValidation, useCodeValidatorStore } from "./api";
@@ -96,6 +97,7 @@ export function CodeValidator() {
             const client = new CortiClient({
               environment: sdkEnvironment,
               auth: authConfig,
+              analytics: EXAMPLES_ANALYTICS,
             });
             void runCodeValidation(client, text, proposed);
           }}

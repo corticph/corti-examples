@@ -16,6 +16,7 @@ import {
   OUTPUT_LANGUAGES,
   useGuidedTemplates,
 } from "../_shared/corti-documents";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { runTemplateShowdown, type TemplateResult, useTemplateShowdownStore } from "./api";
@@ -103,7 +104,11 @@ export function TemplateShowdown() {
     if (!authConfig.accessToken) {
       return null;
     }
-    return new CortiClient({ environment: sdkEnvironment, auth: authConfig });
+    return new CortiClient({
+      environment: sdkEnvironment,
+      auth: authConfig,
+      analytics: EXAMPLES_ANALYTICS,
+    });
   }, [sdkEnvironment, authConfig]);
 
   const handleRun = () => {

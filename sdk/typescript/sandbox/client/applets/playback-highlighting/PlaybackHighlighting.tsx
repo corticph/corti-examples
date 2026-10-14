@@ -37,6 +37,7 @@ import {
 } from "../../components/ui/select";
 import { Switch } from "../../components/ui/switch";
 import { cn } from "../../lib/utils";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { DEFAULT_FORMATTING } from "../_shared/formatting";
 import { useSessionState } from "../_shared/sessionState";
 import type { FormattingConfig } from "../_shared/types";
@@ -96,7 +97,11 @@ export function PlaybackHighlighting() {
     if (!isReady || !authConfig.accessToken) {
       return null;
     }
-    return new CortiClient({ environment: sdkEnvironment, auth: authConfig });
+    return new CortiClient({
+      environment: sdkEnvironment,
+      auth: authConfig,
+      analytics: EXAMPLES_ANALYTICS,
+    });
   }, [sdkEnvironment, authConfig, isReady]);
   const [file, setFile] = useSessionState<File | null>("file", null);
   const [primaryLanguage, setPrimaryLanguage] = useSessionState("primaryLanguage", "en");

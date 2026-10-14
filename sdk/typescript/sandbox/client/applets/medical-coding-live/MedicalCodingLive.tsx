@@ -18,6 +18,7 @@ import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { cn } from "../../lib/utils";
 import { CODING_SYSTEMS, describeCodesError } from "../_shared/corti-codes";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 
@@ -129,6 +130,7 @@ export function MedicalCodingLive() {
       const client = new CortiClient({
         environment: sdkEnvironment,
         auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
       });
       const response = await client.codes.predict({
         system: Array.from(systems),
@@ -165,6 +167,7 @@ export function MedicalCodingLive() {
       const client = new CortiClient({
         environment: sdkEnvironment,
         auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
       });
       const rejectedCodes = result.candidates
         .filter((c) => decisions[candidateKey(c)] === "rejected")

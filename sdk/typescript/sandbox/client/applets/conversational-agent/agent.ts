@@ -13,6 +13,7 @@ import {
   sendAgentMessage,
   sendAgentMessageWithContext,
 } from "../_shared/cortiAgent";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 import { DEFAULT_PRESET_KEY, VOICE_PRESETS, type VoiceMessage, type VoiceStatus } from "./model";
 
@@ -306,7 +307,7 @@ export function configureConversationalAgent(
   ) {
     lastRefresh = authConfig.refreshAccessToken;
     lastEnv = environment;
-    client = new CortiClient({ environment, auth: authConfig });
+    client = new CortiClient({ environment, auth: authConfig, analytics: EXAMPLES_ANALYTICS });
   }
 
   const nextNamespace = identityNamespace(clientId, tenant);

@@ -7,6 +7,7 @@ import { type Corti, type CortiAuth, CortiClient } from "@corti/sdk";
 import { useSyncExternalStore } from "react";
 import { createLocalConfigStore, identityNamespace } from "../_shared/configStore";
 import { describeAgentError, ensureAgentWithMeta, sendAgentMessage } from "../_shared/cortiAgent";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 import {
   type CodeCriterion,
@@ -224,7 +225,7 @@ export function configureNudgeAgent(
   }
   if (managementAuth !== auth) {
     managementAuth = auth;
-    managementClient = new CortiClient({ environment, auth });
+    managementClient = new CortiClient({ environment, auth, analytics: EXAMPLES_ANALYTICS });
   }
   if (scopeChanged && managementClient) {
     const state = current;

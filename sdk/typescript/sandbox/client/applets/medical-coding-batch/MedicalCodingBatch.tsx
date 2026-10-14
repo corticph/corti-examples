@@ -19,6 +19,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { describeCodesError } from "../_shared/corti-codes";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 
@@ -129,6 +130,7 @@ export function MedicalCodingBatch() {
       const client = new CortiClient({
         environment: sdkEnvironment,
         auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
       });
       const manualInclude = include.trim() ? include.split(",").map((s) => s.trim()) : [];
       const manualExclude = exclude.trim() ? exclude.split(",").map((s) => s.trim()) : [];

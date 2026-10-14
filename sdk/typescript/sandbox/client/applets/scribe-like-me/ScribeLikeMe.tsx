@@ -52,6 +52,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "../../context/AuthContext";
 import { OUTPUT_LANGUAGES } from "../_shared/corti-documents";
 import { CortiAmbientComponent } from "../_shared/cortiAmbientReact";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useDictationLanguage } from "../_shared/useDictationLanguage";
@@ -106,6 +107,7 @@ export function ScribeLikeMe() {
       new CortiClient({
         environment: sdkEnvironment,
         auth: { refreshAccessToken },
+        analytics: EXAMPLES_ANALYTICS,
       }),
     [sdkEnvironment, refreshAccessToken],
   );

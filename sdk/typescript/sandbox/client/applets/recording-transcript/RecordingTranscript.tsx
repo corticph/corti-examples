@@ -28,6 +28,7 @@ import {
 } from "../../components/ui/select";
 import { Switch } from "../../components/ui/switch";
 import { cn } from "../../lib/utils";
+import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import { useSessionState } from "../_shared/sessionState";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import {
@@ -99,7 +100,11 @@ export function RecordingTranscript() {
     setResult(null);
     setProgress(null);
     try {
-      const client = new CortiClient({ environment: sdkEnvironment, auth: authConfig });
+      const client = new CortiClient({
+        environment: sdkEnvironment,
+        auth: authConfig,
+        analytics: EXAMPLES_ANALYTICS,
+      });
       const pipelineResult = await runRecordingTranscriptPipeline(client, {
         file,
         primaryLanguage,
