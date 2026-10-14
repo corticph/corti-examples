@@ -32,7 +32,7 @@
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "lint": "biome check client/ server/",
-    "format.fix": "prettier --write .",
+    "format.fix": "biome check --write client/ server/",
     "typecheck": "tsc",
     "prepublishOnly": "npm run build"
   },

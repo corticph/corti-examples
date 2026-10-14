@@ -163,8 +163,9 @@ rm -rf node_modules/.vite && npm run dev
 # or: npm install && npx vite --force
 ```
 
-Biome (`biome.json`) is the formatter and linter. To fix formatting and import
-order for files you touched, run `npx biome check --write <files>`.
+Biome (`biome.json`) is the formatter and linter. `npm run format.fix` fixes
+formatting and import order across `client/` and `server/`; for specific files,
+run `npx biome check --write <files>`.
 
 ## Project structure
 
