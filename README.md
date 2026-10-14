@@ -62,6 +62,7 @@ the SDK and as a validation tool when upgrading to a new SDK version.
 | [sdk/typescript/express-web-api/](sdk/typescript/express-web-api/)       | TypeScript, Express     | REST API covering all SDK features                                                            |
 | [sdk/typescript/next-auth-examples/](sdk/typescript/next-auth-examples/) | TypeScript, Next.js     | Standalone demos of all four Corti OAuth flows (client credentials, ROPC, auth code, PKCE)    |
 | [sdk/typescript/applets/](sdk/typescript/applets/)                       | TypeScript, React, Vite | Speech to Text components to bootstrap dictation, ambient documentation, and voice agent apps |
+| [sdk/typescript/sandbox/](sdk/typescript/sandbox/)                       | TypeScript, React, Vite, Express | Browsable sandbox of runnable applets for speech to text, text generation, coding, and agents, each shown next to its source |
 | [sdk/dotnet/web-api/](sdk/dotnet/web-api/)                               | C#, ASP.NET Core        | Same scope as the Express example, in .NET                                                    |
 
 
