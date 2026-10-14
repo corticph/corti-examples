@@ -18,6 +18,8 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import { getCreds, getFullScopeToken, hasCreds } from "../lib/cortiToken";
 import { getSessionId } from "../lib/session";
 
+const EXAMPLES_ANALYTICS = { examples_repo: "sdk/typescript/sandbox" };
+
 const TOKEN_KEY = "__cortiToken" as const;
 const TENANT_KEY = "__cortiTenant" as const;
 
@@ -50,6 +52,11 @@ export function cortiProxy(): RequestHandler {
               proxyReq.setHeader("Authorization", `Bearer ${token}`);
             }
             proxyReq.setHeader("Tenant-Name", (innerReq as CortiRequest)[TENANT_KEY] || "");
+            // SDK calls already carry x-corti-analytics (with sdk_type/sdk_version);
+            // only tag requests that arrive without it.
+            if (!proxyReq.getHeader("x-corti-analytics")) {
+              proxyReq.setHeader("x-corti-analytics", JSON.stringify(EXAMPLES_ANALYTICS));
+            }
           },
         },
       });
