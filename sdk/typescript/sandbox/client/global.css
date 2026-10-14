@@ -40,7 +40,7 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Primitives — aligned to corti-stt-compare theme.ts */
+    /* Primitives */
     --border: 0 0% 90%; /* #e6e6e6 */
     --input: 0 0% 90%;
     --ring: 215 16% 47%;
