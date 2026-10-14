@@ -1,6 +1,6 @@
 import { CortiClient } from "@corti/sdk";
 import { AlertCircle, ChevronDown, ChevronRight, LayoutGrid, Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
