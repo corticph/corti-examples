@@ -125,8 +125,8 @@ const LINKS = [
     label: "corti-examples",
   },
   {
-    href: "https://github.com/corticph/corti-sdk-sandbox",
-    label: "corti-sdk-sandbox",
+    href: "https://github.com/corticph/corti-examples/tree/main/sdk/typescript/sandbox",
+    label: "Sandbox source",
   },
 ];
 
