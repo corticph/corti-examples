@@ -1,4 +1,4 @@
-# Format check and build for SDK examples (runs only on PRs)
+# Format check, lint and build for SDK examples, plus typecheck and test where enabled (runs only on PRs)
 # Each job runs only when files in its path were changed.
 name: SDK Examples CI
 
@@ -79,7 +79,7 @@ jobs:
         run: dotnet build --no-restore -c Release
 
   typescript:
-    name: TypeScript ${{ matrix.project }} lint & build
+    name: TypeScript ${{ matrix.project }} checks
     needs: changes
     if: needs.changes.outputs.ts_projects != '[]'
     runs-on: ubuntu-latest
