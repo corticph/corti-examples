@@ -41,6 +41,9 @@ jobs:
             applets:
               - 'sdk/typescript/applets/**'
               - '.github/workflows/sdk-examples-ci.yml'
+            sandbox:
+              - 'sdk/typescript/sandbox/**'
+              - '.github/workflows/sdk-examples-ci.yml'
             search-documents-ui:
               - 'agents/react/search-documents-ui/**'
               - '.github/workflows/sdk-examples-ci.yml'
@@ -93,6 +96,11 @@ jobs:
             path: agents/react/next-agent-chat
           - project: applets
             path: sdk/typescript/applets
+          - project: sandbox
+            path: sdk/typescript/sandbox
+            node-version-file: sdk/typescript/sandbox/.nvmrc
+            typecheck: true
+            test: true
           - project: search-documents-ui
             path: agents/react/search-documents-ui
           - project: search-documents-mcp
@@ -109,12 +117,22 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Projects with an .nvmrc set node-version-file; everything else uses Node 20.
+          node-version: ${{ !matrix.node-version-file && '20' || '' }}
+          node-version-file: ${{ matrix.node-version-file }}
           cache: "npm"
           cache-dependency-path: ${{ matrix.path }}/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Typecheck
+        if: matrix.typecheck
+        run: npm run typecheck
+
+      - name: Test
+        if: matrix.test
+        run: npm test
 
       - name: Lint (Biome)
         run: npm run lint
