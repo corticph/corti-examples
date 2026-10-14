@@ -17,6 +17,7 @@ npm start            # production server: dist/server/node-build.mjs on :3000 or
 npm test             # vitest --run
 npm run typecheck    # tsc (noEmit is set in tsconfig.json)
 npm run lint         # biome check client/ server/
+npm run format.fix   # biome check --write client/ server/ (format, import order, safe fixes)
 node bin/cli.mjs     # launcher: needs a build first; prompts for missing creds, can write ./.env
 ```
 
@@ -24,7 +25,7 @@ Run a single test: `npx vitest run client/applets/_shared/offsetMap.test.ts` (or
 
 **CI.** `.github/workflows/sdk-examples-ci.yml` at the repo root runs `npm ci`, typecheck, test, lint, and build for this folder on every PR that touches it, using Node from `.nvmrc` (22). Lint must be clean.
 
-**Formatting.** Biome (`biome.json`, 100-column lines) is the formatter and linter. Use `npx biome check --write <files>` on files you touch. Do not run `npm run format.fix`: it runs Prettier at 80 columns over the whole folder, rewrites everything, and breaks `npm run lint`.
+**Formatting.** Biome (`biome.json`, 100-column lines) is the formatter and linter. `npm run format.fix` applies formatting, import order, and safe fixes to `client/` and `server/`; use `npx biome check --write <files>` to touch only specific files.
 
 **Dependencies.** `@corti/sdk` is pinned to an exact version in both `devDependencies` and `overrides`, and bumped with the rest of the repo. Keep `.npmrc` (`legacy-peer-deps=true`): `npm ci` needs it to resolve the committed lockfile.
 
