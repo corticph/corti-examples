@@ -34,6 +34,36 @@ export function WakeCommandAgentDetails() {
   return (
     <div className="flex flex-col gap-4 text-sm">
       <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          How it works
+        </p>
+        <ul className="ml-4 mt-1 list-disc text-muted-foreground">
+          <li>
+            Agent conversations are gated behind a wake phrase so the microphone isn't always
+            streaming to the agent. Keep the mic live and speak a single-utterance wake command like
+            "hey Corti summarize the plan" — STT results not preceded by the wake phrase are
+            ignored.
+          </li>
+          <li>
+            When the wake phrase is recognized, the spoken intent is extracted from the command
+            variable and sent to a Corti Agentic Framework agent. The response appears in the chat
+            panel. Threaded memory persists across turns until you reset the conversation.
+          </li>
+          <li>
+            You can also type directly into the composer. An auto-send toggle controls whether
+            wake-command intents go straight to the agent or land in the composer for review before
+            sending.
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agent</p>
+        <p className="mt-1 text-foreground">{WAKE_COMMAND_AGENT.name}</p>
+        <p className="text-xs text-muted-foreground">{WAKE_COMMAND_AGENT.description}</p>
+      </div>
+
+      <div>
         <div className="mb-2 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -73,12 +103,6 @@ export function WakeCommandAgentDetails() {
             )}
           </div>
         </ScrollArea>
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agent</p>
-        <p className="mt-1 text-foreground">{WAKE_COMMAND_AGENT.name}</p>
-        <p className="text-xs text-muted-foreground">{WAKE_COMMAND_AGENT.description}</p>
       </div>
 
       <div>

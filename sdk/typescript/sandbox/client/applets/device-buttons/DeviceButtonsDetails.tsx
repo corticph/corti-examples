@@ -28,6 +28,11 @@ const STEPS: { label: string; detail: string }[] = [
 export function DeviceButtonsDetails() {
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Handheld dictation microphones — Philips SpeechMike, PowerMic, foot controls — have physical
+        buttons that can drive recording and commands without reaching for a keyboard or mouse.
+        WebHID provides browser-native access to these devices without a custom driver.
+      </p>
       <ol className="flex flex-col gap-2">
         {STEPS.map((step) => (
           <li key={step.label} className="flex flex-col gap-0.5">

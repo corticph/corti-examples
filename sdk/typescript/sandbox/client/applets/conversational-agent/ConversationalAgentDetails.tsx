@@ -44,6 +44,35 @@ export function ConversationalAgentDetails() {
   return (
     <div className="flex flex-col gap-4 text-sm">
       <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          How it works
+        </p>
+        <ul className="ml-4 mt-1 list-disc text-muted-foreground">
+          <li>
+            Always-on voice chat — hold the mic button and speak freely, no wake phrase needed.
+            Everything spoken is transcribed and sent to the agent, which responds in the chat panel
+            when you finish talking.
+          </li>
+          <li>
+            Turn modes control how aggressively the agent responds: instant fires on the first
+            pause, standard waits a bit longer, deliberate waits for mic-off or a long silence.
+          </li>
+          <li>
+            Auto-detect mode lets the orchestrator identify the use case from your first message and
+            route to the right specialist. Pin a specialist to override auto-detection.
+          </li>
+          <li>
+            Speculative prefetch (alpha) pre-generates responses from interim transcripts to reduce
+            latency. When enabled, the response may be ready the moment you stop speaking.
+          </li>
+          <li>
+            Paste an external agent ID to use an agent created elsewhere instead of auto-creating
+            one. When set, the prompt and specialist presets are disabled.
+          </li>
+        </ul>
+      </div>
+
+      <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agent</p>
         <p className="mt-1 text-foreground">{CONVERSATIONAL_AGENT.name}</p>
         <p className="text-xs text-muted-foreground">{CONVERSATIONAL_AGENT.description}</p>

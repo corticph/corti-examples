@@ -75,6 +75,7 @@ import { SegmentComparisonCard } from "./dictation-richtext/SegmentComparisonCar
 import { DictationSdk } from "./dictation-sdk/DictationSdk";
 import { SdkDetails } from "./dictation-sdk/SdkDetails";
 import { DictationSuite } from "./dictation-suite/DictationSuite";
+import { SuiteDetails } from "./dictation-suite/SuiteDetails";
 import { DictionaryTerms } from "./dictionary-terms/DictionaryTerms";
 import { TermsDetails } from "./dictionary-terms/TermsDetails";
 import { DischargeSummary } from "./discharge-summary/DischargeSummary";
@@ -120,6 +121,7 @@ import { ReferralLetter } from "./referral-letter/ReferralLetter";
 import { ScribeLikeMe } from "./scribe-like-me/ScribeLikeMe";
 import { ScribeLikeMeDetails } from "./scribe-like-me/ScribeLikeMeDetails";
 import { SecondPassAgent } from "./second-pass-agent/SecondPassAgent";
+import { SecondPassAgentDetails } from "./second-pass-agent/SecondPassAgentDetails";
 import { SoapNoteGenerator } from "./soap-note-generator/SoapNoteGenerator";
 import { SpeechFlex } from "./speech-flex/SpeechFlex";
 import { SpeechFlexDetails } from "./speech-flex/SpeechFlexDetails";
@@ -176,10 +178,13 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "dictation-suite",
     title: "Dictation suite",
-    description: "Every dictation feature on one editor, one microphone, one config",
+    description: "Comprehensive web browser embedded dictation integration",
     workflow: "dictation",
     icon: LayoutGrid,
     Component: DictationSuite,
+    detailsTitle: "How it works",
+    Details: SuiteDetails,
+    detailsBelowDemo: true,
     wide: true,
   },
   {
@@ -484,6 +489,8 @@ export const APPLETS: AppletDefinition[] = [
     workflow: "agentic",
     icon: HardDrive,
     Component: SecondPassAgent,
+    detailsTitle: "Details",
+    Details: SecondPassAgentDetails,
   },
   {
     id: "wake-command-agent",

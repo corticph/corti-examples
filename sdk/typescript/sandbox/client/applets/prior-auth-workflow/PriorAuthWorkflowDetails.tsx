@@ -21,31 +21,11 @@ export function PriorAuthWorkflowDetails() {
           </li>
         </ol>
       </div>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          How it works
-        </p>
-        <ul className="ml-4 mt-1 list-disc text-muted-foreground">
-          <li>
-            Stage 1 extracts and organizes clinical context (diagnosis, findings, prior treatments,
-            urgency) from unstructured notes.
-          </li>
-          <li>
-            Stage 2 uses the organized context to draft a payer-facing medical necessity statement
-            in 2–4 professional sentences.
-          </li>
-          <li>
-            Stage 3 receives both the organized context and the justification, then formats a
-            complete, structured PA request ready for submission.
-          </li>
-          <li>
-            This decomposition mirrors real PA workflows: context gathering, clinical reasoning
-            documentation, and output formatting are handled by separate, focused agents.
-          </li>
-        </ul>
-      </div>
+
       <p className="rounded-md bg-muted/60 px-2 py-1.5 text-xs text-muted-foreground">
-        Uses the Corti <strong>Agentic Framework</strong>. See{" "}
+        Each agent's output feeds the next as plain text — context gathering, clinical reasoning
+        documentation, and output formatting are handled by separate, focused agents. Uses the Corti{" "}
+        <strong>Agentic Framework</strong>. See{" "}
         <a
           className="underline"
           href="https://docs.corti.ai/authentication/quickstart"
