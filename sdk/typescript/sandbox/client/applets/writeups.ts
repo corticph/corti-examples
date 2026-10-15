@@ -23,6 +23,8 @@ export interface WriteupStep {
 }
 
 export interface AppletWriteup {
+  /** 2-3 sentence TL;DR. Included in the LLM bundle as a "## Summary" section. */
+  summary: string;
   /** The problem this pattern solves and why it exists. One or more paragraphs. */
   premise: string[];
   /**
@@ -43,6 +45,8 @@ export function isStepGuide(how: AppletWriteup["how"]): how is WriteupStep[] {
 
 export const WRITEUPS: Record<string, AppletWriteup> = {
   "speech-flex": {
+    summary:
+      "A single workspace where clinicians flex between self-entry dictation (/transcribe) and conversational ambient capture (/streams) against the same patient interaction. A toggle switch changes the recording mode while keeping the visit context constant, and both modes share one interactionId so dictation text and ambient segments coexist.",
     premise: [
       "Clinicians need both self-entry dictation and conversational ambient capture. Speech Flex gives them a single workspace where they flex between the two modes against the same patient interaction, providing ability to seamlessly switch between functionality as needed: a toggle switch that switches the recording and recognition behavior while keeping the visit context constant.",
       "Dictation mode uses /transcribe for direct, controlled text entry with voice commands. Ambient mode uses /streams for hands-free conversational capture with diarization and facts extraction. Both anchor to the same Corti interaction, so a clinician can dictate corrections into the same encounter they recorded ambient audio for.",
@@ -57,6 +61,8 @@ export const WRITEUPS: Record<string, AppletWriteup> = {
     ],
   },
   languages: {
+    summary:
+      "An endpoint that returns which languages Corti speech-to-text supports and which endpoints (transcribe, streams, transcripts) each language is enabled for. Call client.languages.list() with an optional endpoint filter to scope the result.",
     premise: [
       "Before you build a language picker or validate a requested locale, you need to know which languages Corti speech to text supports and which endpoints (transcribe, streams, transcripts) each one is enabled for. This endpoint is the source of truth for language availability.",
     ],
@@ -81,6 +87,8 @@ Tenant-Name: <tenant>`,
   },
 
   "dictation-sdk": {
+    summary:
+      "Direct control over the /transcribe WebSocket using the raw @corti/sdk, without the dictation web component. The host owns the microphone and streams frames through the socket; the connect call resolves only after CONFIG_ACCEPTED so audio is never sent before the handshake.",
     premise: [
       "Reach for the raw @corti/sdk when your app owns the microphone and you want direct control over the /transcribe socket, without the dictation web component in the way. This is the lower level path for teams building custom capture or native hardware.",
     ],
@@ -103,6 +111,8 @@ recorder.ondataavailable = (e) => socket.sendAudio(e.data);`,
   },
 
   "recording-transcript": {
+    summary:
+      "Creating transcripts from pre-recorded audio files via the /transcripts REST endpoint. The pipeline is: create an interaction, upload a recording, create an async transcript, poll until completion, then fetch the finalized transcript. RTFx is measured as real audio duration over real wall-clock time.",
     premise: [
       "/transcribe and /streams are both live sockets: audio in, transcript out, while a conversation is happening. But a lot of real audio doesn't arrive live — a dictaphone recording, a call recording pulled from a PBX, a file a clinician uploads after the fact. For creating transcripts from pre-recorded audio files, use the /transcripts REST endpoint.",
       "The /transcripts endpoint is stateful, supporting transcription for audio files uploaded to the /recordings endpoint as part of an /interaction.",
@@ -183,6 +193,8 @@ const final = await client.transcripts.get(interactionId, created.id);`,
   },
 
   "playback-highlighting": {
+    summary:
+      "Word-level transcripts synced to audio playback with karaoke-style highlighting. The wordLevel.enabled parameter returns one transcript entry per word for precise timestamps, and a requestAnimationFrame loop binary-searches the sorted word array to track the currently-spoken word. Also supports live dictation with parallel audio capture and multi-recording sequencing.",
     premise: [
       "When you transcribe an audio file, each transcript segment comes with start and end timestamps. Play back the audio alongside the transcript and you can highlight the currently-spoken text — a karaoke-style synced view that makes it easy to verify transcription accuracy against the source audio. The same highlighting works for live dictation: capture speech via the `/transcribe` WebSocket, then replay the recorded audio with synced transcript after recording stops.",
       "The `wordLevel.enabled` configuration parameter makes the API return one transcript entry per word instead of per phrase, giving the most granular timestamps for precise word-level highlighting. Without it, highlighting operates at the phrase/utterance level — still useful, just coarser.",
@@ -331,6 +343,8 @@ function shouldCapitalize(prevText) {
   },
 
   "dictation-richtext": {
+    summary:
+      "Correct spacing and sentence casing at the caret insertion boundary when dictating into a contenteditable. Final segments are inserted through a shared adapter that applies buildInsertion rules; interim results are previewed below the editor.",
     premise: [
       "When you dictate into formatted content (a contenteditable), you cannot just append text. You need correct spacing and sentence casing at the caret insertion boundary.",
     ],
@@ -352,6 +366,8 @@ onFinalSegment((seg) => {
   },
 
   formatting: {
+    summary:
+      "Corti formats dates, times, numbers, measurements, and ordinals automatically, but the exact output style depends on your preferences. This applet lets you configure formatting in a reusable dialog and compare options side-by-side in real time by opening parallel WebSocket connections — one per formatting option in a category.",
     premise: [
       "Corti formats dates, times, numbers, measurements, and ordinals automatically, but the exact output style depends on your preferences. 'February third twenty twenty five' can be 'February 3, 2025' or '2025-02-03' — the formatting config controls which.",
       "This applet has two modes. Single dictation lets you configure formatting preferences in a reusable dialog and dictate into a rich text editor to see the impact. Comparison mode opens parallel WebSocket connections — one per formatting option in a category — so you can dictate the same phrase and see every option's output side-by-side in real time.",
@@ -408,6 +424,8 @@ recorder.ondataavailable = async (e) => {
   },
 
   "dictation-commands": {
+    summary:
+      "Corti emits command events when defined phrases are recognized, but commands by themselves do nothing — client applications must respond to them. This example turns command events into real editor actions and lets you manage the command set from the UI.",
     premise: [
       "Corti emits command events when defined command phrases are recognized. Commands by themselves, however, do nothing and client applications must respond to them. This example turns those events into real editor actions and lets you manage the command set from the UI.",
     ],
@@ -431,6 +449,8 @@ dispatchCommand(detected, registry, editorAdapter);`,
   },
 
   "text-replacements": {
+    summary:
+      "Configure find-and-replace rules that rewrite spoken phrases in the final transcript, server-side. A dictated 'BID' can read as 'twice daily' without any post-processing. Rules persist per API client and can be exported as JSON.",
     premise: [
       "Some spoken phrases should be rewritten in the final transcript. A dictated 'BID' should read 'twice daily', a shorthand should expand to its full form. Replacements let you configure those find and replace rules.",
     ],
@@ -448,6 +468,8 @@ dispatchCommand(detected, registry, editorAdapter);`,
   },
 
   "dictionary-terms": {
+    summary:
+      "Defined dictionary terms bias the speech recognition model toward the words you care about so they transcribe correctly. Terms are sent in the transcribe config as a normalized array plus the matching keyterms wrapper, and persist per API client.",
     premise: [
       "Speech recognition can make mistakes, especially when encountering new terminology it has not been exposed to or unique accents and dialects. Defined dictionary terms bias the model toward the words you care about so they transcribe correctly.",
     ],
@@ -465,6 +487,8 @@ dispatchCommand(detected, registry, editorAdapter);`,
   },
 
   "dictation-box": {
+    summary:
+      "A dictation box that can be targeted for speech-to-text capture and transferred to the target editor. A single mic drives a mock form and a scratch box; final dictation inserts at the caret of the focused control through a framework-agnostic EditorAdapter.",
     premise: [
       "Some desktop dictation applications provide a dictation box that can be targeted for speech to text capture and transfer to the target editor.",
     ],
@@ -486,6 +510,8 @@ handleBoxCommand(command, boxActions);`,
   },
 
   "app-control": {
+    summary:
+      "Control the application itself by voice — navigate, switch tabs, open panels, click buttons, confirm or cancel dialogs. Each actionable piece of UI registers as a named AppControl; the command handler resolves a spoken target through a shared registry and runs it, gated by isAvailable.",
     premise: [
       "Sometimes you want to control the application itself, not just insert text: navigate the application, switch tabs, open or close a panel, click buttons, confirm or cancel a dialog.",
     ],
@@ -509,6 +535,8 @@ handleAppCommand(command, registry);`,
   },
 
   "ambient-diarized": {
+    summary:
+      "A /streams diarized transcript may not arrive in order. Finalized segments come in arrays that can interleave across speakers, so appending in arrival order produces a scrambled conversation. This example renders the transcript in true chronological order, grouped by speaker.",
     premise: [
       "A /streams diarized transcript may not always arrive in order. Finalized segments come in arrays that can interleave across speakers, with no interim results. Therefore, if you append in arrival order, then you may get a scrambled conversation. This example renders the conversational transcript in true chronological order, grouped by speaker.",
     ],
@@ -528,6 +556,8 @@ const runs = groupBySpeakerRuns(ordered);           // never arrival order`,
   },
 
   "on-demand-agent": {
+    summary:
+      "Speech-to-text commands linked to calls to the Corti Agentic Framework. An on-demand agent can copy-edit text entered by typing or dictation to catch spelling, grammar, and punctuation issues without rewording or changing meaning. The agent is created once and reused.",
     premise: [
       "Speech to text commands can be linked to calls to the Corti Agentic Framework. For example, an on-demand agent can copy-edit text entered by typing or dictation to catch spelling, grammar, and punctuation issues without rewording or changing meaning.",
     ],
@@ -547,6 +577,8 @@ const edited = task.status.message.parts.find((p) => p.text)?.text;`,
   },
 
   "medical-coding-live": {
+    summary:
+      "A REST resource (client.codes.predict) that takes text or a document reference and returns structured medical codes with a confidence split. A single call is only the first half of a real workflow — the full loop includes a human reviewer accepting or rejecting candidates, a refined second pass with rejected codes excluded, and convergence into one locked code set with an audit trail.",
     premise: [
       "A team with a working live transcription pipeline eventually hits the same wall: the encounter ends, a finished note exists, and now someone needs ICD and CPT codes attached to it before the chart can close or a claim can go out. Most teams solve this by exporting the note and pasting it into a separate coding tool, or by having a human coder do it entirely by hand. Neither scales, and both break the promise of a single application that takes a patient encounter from speech to a billable, coded record without a handoff to another system.",
       "The piece that closes this gap is a REST resource, client.codes.predict. It takes text, or a reference to a stored document, and returns structured medical codes with a confidence split baked into the response shape itself. It is not a new speech model and it does not touch your STT pipeline at all. It is a separate call you make once the encounter is over.",
@@ -830,6 +862,8 @@ function recordDecision(item: Corti.CodesGeneralReadResponse, decision: "accepte
   },
 
   "medical-coding-batch": {
+    summary:
+      "Coding a backlog of existing notes using the same client.codes.predict endpoint — no batch variant exists, batching is a client-side loop. A batch that learns runs the loop more than once, with each re-run informed by what reviewers rejected on the previous run, so the review queue measurably shrinks across rounds.",
     premise: [
       "Not every coding problem starts with a live encounter. A backlog of existing notes, already written, sitting in an EMR or a document store, still needs codes attached for chart completion, form fill, or a claim to go out. A chart audit team faces the same shape of problem from the other direction: hundreds of already written notes, no live audio anywhere, and a need to run coding across all of them on a schedule instead of one at a time as a clinician finishes a visit.",
       "The endpoint is the same one used for a live encounter, client.codes.predict, and there is no separate batch or bulk variant anywhere in the SDK. What actually changes between a single live note and a backlog of a thousand documents is not the call itself, it is what gets layered around it.",
@@ -1046,6 +1080,8 @@ for (const doc of documents) {
   },
 
   "facts-multisource": {
+    summary:
+      "Multi-source document extraction using client.facts.extract — a stateless REST call that takes plain text and returns a flat array of facts grouped by category. The full pipeline adds curation, persistence against a real interaction via client.facts.create, and verification via client.facts.list.",
     premise: [
       "An intake workflow rarely gets one clean document to work from. A new patient shows up as a referral letter, a separate intake form, and a history note, arriving together, each with different details and none of them structured. Somebody, or something, has to read all three and pull out the facts that matter: symptoms, medications, relevant history, before any of it is useful to a clinician or a downstream system. Doing that by hand for every new patient does not scale, and doing it with a single generic text extraction call per document loses exactly the connections across documents that make multi-source intake worth automating in the first place.",
       "FactsR is not websocket only, which is worth stating plainly since most existing examples talk about facts arriving as StreamFactsMessage events during a live /streams session, generated as an ambient encounter progresses. That is one real way to get facts, but it requires a live audio session and only ever sees one source at a time, the transcript. client.facts is a separate, dedicated REST resource with its own client.facts.extract method. extract takes plain text, not audio, needs no interaction id at all, and can fold more than one document's worth of text into a single call. That reframes the whole problem: multi-source document extraction is a text-in, JSON-out call you can make on demand, not a byproduct of a live encounter.",
@@ -1268,6 +1304,8 @@ function toFormValues(byGroup: Record<string, Corti.FactsExtractResponseFactsIte
   },
 
   "hitl-checkpoint": {
+    summary:
+      "A human approval gate for agent-produced proposals. The Corti Agentic Framework has no built-in 'awaiting approval' task state, so the gate lives in application state: a Proposal object your app defines, guarded transitions, and an append-only audit log that captures every version across revisions.",
     premise: [
       "A common requirement in regulated and clinical settings is deceptively simple to state and genuinely hard to build correctly: an agent that gathers and structures data across sources is fine, but the agent cannot be the one that takes the action. A human has to look at what the agent produced and explicitly approve it before anything downstream happens, and that approval has to be logged well enough to survive an audit later. In a setting governed by a regulation like CFR Part 11, the FDA rule covering electronic records and signatures in clinical research, this turns from a nice-to-have review step into a hard blocker: without it, the system cannot ship at all, regardless of how good the agent's output is.",
       'This pattern does not exist anywhere as a single API call, and it is important to understand exactly why before building it. The Corti Agentic Framework (client.agents.*) gives you orchestrator and expert agents, and a way to send them messages and read back structured results through client.agents.messageSend. It does not give you a built-in "awaiting human approval" task state. There is no confirmed status value in the SDK for a task that pauses pending a person\'s decision. That gap is not a missing feature to work around. It is the actual design point: the approval gate and the audit trail belong to your application, not to the framework, which is exactly the property a regulated environment needs, since the trail is then something your team owns and controls end to end rather than something opaque inside a third-party system.',
@@ -1506,6 +1544,8 @@ function record(actor: string, event: string) {
   },
 
   "multi-agent-roles": {
+    summary:
+      "Structural tool-access scoping using per-expert mcpServers arrays. Each expert in an orchestrator's experts array can carry its own mcpServers list, so a front desk expert and a clinical notes expert have genuinely disjoint tool access inside one orchestrated system.",
     premise: [
       "A single agent built to handle two different jobs at once, say front desk work (scheduling, patient lookup) and clinical notes (facts, coding), tends to end up with access to every tool it uses for either job, all the time. Nothing stops the front desk half of that agent's reasoning from calling a clinical tool it should never touch, or the clinical half from reaching into a scheduling system it has no business modifying. This is a real production problem, not a hypothetical one, and the fix is not a smarter prompt telling the agent to behave itself. It is a structural fix: build two agents, or two experts under one orchestrator, and give each access to only the tools its own role actually needs.",
       "The Corti Agentic Framework supports this directly, and it is worth being precise about where the mechanism actually lives, since it is easy to assume tool access is a property of the top level agent when it is not. client.agents.create takes an optional experts array, and each entry in that array can carry its own mcpServers list, completely separate from any other expert's list and separate from whatever the orchestrator itself declares. Scoping happens at the expert level. An orchestrator with two experts, each with a distinct mcpServers array, gives you two agents with genuinely disjoint tool access inside one orchestrated system.",
@@ -1688,6 +1728,8 @@ function record(actor: string, event: string) {
   },
 
   "multi-agent-specialists": {
+    summary:
+      "A hub-and-spoke network where each specialist has access to exactly one tool, making the tool surface itself the guardrail. Supports both inline 'new' experts and 'reference' experts pulled from a shared registry, plus chained sequential delegation for compound questions.",
     premise: [
       "The role-scoped guide elsewhere in this section splits a system by department: front desk versus clinical notes. This guide splits it along a different axis entirely: by capability. Instead of two generalist experts each handling a whole area of work, a primary reasoning agent delegates to several narrow specialists, each of which does exactly one thing and has access to exactly the one tool it needs to do that thing. A literature lookup specialist can search, nothing else. A dosage calculator specialist can compute, nothing else. Neither can touch the other's tool, and neither needs to, because the orchestrator, not any individual specialist, is what holds the full picture of a request.",
       "This shape matters for a concrete reason beyond tidiness: a specialist with one narrow tool is much easier to reason about, test, and constrain than a generalist with a broad tool set. If a dosage calculator expert only has access to a calculator MCP server, there is no scenario where it accidentally calls a web search tool and returns an answer sourced from an unverified page instead of an actual computation. The tool surface itself is the guardrail, not a prompt asking the model to stay in its lane.",
@@ -1889,6 +1931,8 @@ const doseCalculation = await client.agents.messageSend(dosageCalculator.id, {
   },
 
   "soap-note-generator": {
+    summary:
+      "Turning a note or transcript into a structured document in a single call. client.documents.generate takes plain context and a template reference, returns a section-name to section-text map, and retains no data. This is the base pattern every other document-generation applet replicates.",
     premise: [
       "Once a note or transcript exists, turning it into a structured document is a single call, not a pipeline. client.documents.generate takes plain context (no interaction required) and a reference to a stored template, and returns a structured document with no data retention, this is the base pattern every other document-generation applet in this sandbox replicates with a different default template.",
     ],
@@ -1912,6 +1956,8 @@ Object.entries(document.stringDocument); // [ [sectionName, sectionText], ... ]`
   },
 
   "discharge-summary": {
+    summary:
+      "The same client.documents.generate call as the SOAP note generator, aimed at a discharge-summary template for turning inpatient notes, treatment records, or a full encounter transcript into a structured discharge summary.",
     premise: [
       "The same client.documents.generate call as soap-note-generator, aimed at a discharge-summary template instead, for turning inpatient notes, treatment records, or a full encounter transcript into a structured discharge summary.",
     ],
@@ -1928,6 +1974,8 @@ Object.entries(document.stringDocument); // [ [sectionName, sectionText], ... ]`
   },
 
   "referral-letter": {
+    summary:
+      "The same client.documents.generate call as the SOAP note generator, aimed at a referral-letter template for turning a clinical summary, consultation notes, or a visit transcript into a structured referral letter.",
     premise: [
       "The same client.documents.generate call as soap-note-generator, aimed at a referral-letter template, for turning a clinical summary, consultation notes, or a visit transcript into a structured referral letter.",
     ],
@@ -1944,6 +1992,8 @@ Object.entries(document.stringDocument); // [ [sectionName, sectionText], ... ]`
   },
 
   "procedure-note": {
+    summary:
+      "The same client.documents.generate call as the SOAP note generator, aimed at a procedure-note template for turning a procedure dictation, operative notes, or a free-text procedural description into a structured procedure note.",
     premise: [
       "The same client.documents.generate call as soap-note-generator, aimed at a procedure-note template, for turning a procedure dictation, operative notes, or a free-text procedural description into a structured procedure note.",
     ],
@@ -1960,6 +2010,8 @@ Object.entries(document.stringDocument); // [ [sectionName, sectionText], ... ]`
   },
 
   "chart-prep-workflow": {
+    summary:
+      "A three-agent sequential pipeline: a Fact Extractor extracts structured clinical facts from a raw transcript, a Note Drafter synthesizes them into a SOAP note, and a Code Suggester recommends ICD-10-CM codes. Each agent is isolated and stateless, so the pipeline can be re-run on different inputs without side effects.",
     premise: [
       "A raw transcript is not a chart. Getting from one to the other is naturally three distinct jobs, extracting facts, drafting a note, and suggesting codes, and each job does better with its own narrowly-scoped agent than one agent asked to do all three at once.",
     ],
@@ -1980,6 +2032,8 @@ for (const stage of [factExtractor, noteDrafter, codeSuggester]) {
   },
 
   "prior-auth-workflow": {
+    summary:
+      "A three-agent sequential pipeline that mirrors real prior-auth workflows: a Context Organizer extracts clinical context, a Justification Writer drafts a payer-facing medical necessity statement, and a Request Formatter combines both into a complete structured PA request.",
     premise: [
       "Drafting a prior authorization request is really three narrower jobs: organizing the clinical context, writing a payer-facing justification, and formatting the final request. Splitting them across three agents keeps each prompt focused instead of asking one agent to reason about structure and persuasive writing at the same time.",
     ],
@@ -1998,6 +2052,8 @@ const request = await run(requestFormatter, justification);`,
   },
 
   "qa-reviewer-workflow": {
+    summary:
+      "A draft-review-revise loop using three separately-prompted agents: a Note Drafter produces a SOAP note, a Note Reviewer inspects it for gaps and compliance issues, and a Note Reviser proposes corrections and follow-up questions. The reviewer only sees the draft, never the original input, so critique stays honest.",
     premise: [
       "A draft-review-revise loop only works if the reviewer isn't the same agent that wrote the draft, an agent asked to critique its own output tends to rationalize it instead. Splitting drafting, reviewing, and revising across three separately-prompted agents keeps the review honest.",
     ],
@@ -2016,6 +2072,8 @@ const revision = await run(noteReviser, issues);`,
   },
 
   "note-diff": {
+    summary:
+      "Generate the same template for two different notes and view the results side-by-side, so you can see how variation in how notes get written produces different structured output from the same template.",
     premise: [
       "The same note, phrased two different ways, can produce noticeably different structured output from the same template. Seeing that side by side, section by section, is more convincing than reading about it, and it is the fastest way to sanity check a template against real variation in how notes get written.",
     ],
@@ -2039,6 +2097,8 @@ const sections = new Set([
   },
 
   "batch-processor": {
+    summary:
+      "Process multiple notes in parallel through one template using client.documents.generate, splitting input on --- separators. Each note renders independently with its own pending/done/error state, and one failure doesn't take down the batch.",
     premise: [
       "A single note through client.documents.generate is a demo. A backlog of notes through the same template is the actual workload most teams have, and the only thing that changes is fan-out: the same call, run many times, independently, without one slow note blocking the rest.",
     ],
@@ -2058,6 +2118,8 @@ const results = await Promise.allSettled(
   },
 
   "template-showdown": {
+    summary:
+      "Run one real note through every template on the tenant simultaneously and compare outputs side-by-side, turning a guess from template names and descriptions into a visible comparison.",
     premise: [
       "Choosing a template for a new workflow usually means guessing from its name and description. Running one real note through every template on the tenant at once, side by side, turns that guess into a comparison you can actually see.",
     ],
@@ -2078,6 +2140,8 @@ const results = await Promise.allSettled(
   },
 
   "note-to-code": {
+    summary:
+      "The simplest possible use of client.codes.predict: no interaction, no review loop, just a note, a target coding system list, and the two result buckets (codes and candidates) split into two tables.",
     premise: [
       "The simplest possible use of client.codes.predict: no interaction, no review loop, just a note, a target coding system list, and the two result buckets the API already gives you split into two tables.",
     ],
@@ -2097,6 +2161,8 @@ const results = await Promise.allSettled(
   },
 
   "code-crosswalk": {
+    summary:
+      "Request multiple coding systems in a single client.codes.predict call and group the results client-side by system. One call replaces N separate calls when a note supports both diagnosis and procedure codes.",
     premise: [
       "A note that supports a diagnosis code often supports a procedure code too, and requesting both in separate calls just doubles your latency for no reason, system accepts an array, so one call can target every coding system you care about at once.",
     ],
@@ -2117,6 +2183,8 @@ const bySystem = response.codes.reduce((acc, c) => {
   },
 
   "code-validator": {
+    summary:
+      "Compare a coder's proposed code list against the API's predictions for the same note. The diff produces three buckets: confirmed (in both), missed (API found but coder didn't), and unsupported (coder proposed but API didn't).",
     premise: [
       "A coder's proposed code list and the model's predicted code list are two independent opinions, and the gap between them is where review time should actually go. Rather than eyeballing two lists, predict against the same note and diff the two sets automatically.",
     ],
@@ -2137,6 +2205,8 @@ const unsupported = [...proposed].filter((k) => !apiKeys.has(k));`,
   },
 
   "evidence-coding": {
+    summary:
+      "Each predicted code carries evidences[] with character offset spans into the source text that justified it. This applet highlights those spans directly in the original note, so a reviewer can see exactly which passage produced a code.",
     premise: [
       "A predicted code is easy to distrust until you can see exactly which words in the note produced it. evidences[] already carries that pointer, character offsets back into the input, this applet spends it on the most direct possible use: click a code, see the passage.",
     ],
@@ -2154,6 +2224,8 @@ const segments = segmentNote(note, spans); // [{ text, highlighted: boolean }, .
   },
 
   "encounter-tracker": {
+    summary:
+      "Predict codes for each encounter independently and render a matrix showing which codes persist across visits. A code present in every encounter is a stronger signal than one that appears once; one that vanishes may have resolved or been miscoded.",
     premise: [
       "The same diagnosis code showing up in every visit is a much stronger signal than one that appears once, and the reverse is just as informative, a code that vanishes after one visit might have resolved or might have been miscoded. Seeing code persistence across several encounters at once needs a matrix, not a list.",
     ],
@@ -2173,6 +2245,8 @@ const allKeys = new Set(perEncounter.flatMap((r) => r.codes.map(key)));`,
   },
 
   "scribe-like-me": {
+    summary:
+      "Two agents in sequence tailor a Corti Standard template to a clinician's personal style from their historical notes. A Style Reviewer reads the notes and writes a prose style summary; a Template Tailor turns that into per-section prompt overrides applied at generation time without mutating the base template.",
     premise: [
       "A generic clinical-note template produces correct but generic prose. A clinician who has been documenting for years already has a personal style, terse fragments or full narrative, particular abbreviations, a habit of quoting the patient's own words, and template prompts that don't reflect any of that will keep producing notes that read like nobody's actual handwriting. The fix isn't a bigger prompt, it's letting the clinician's own historical notes drive the prompt.",
       "This applet utilizes two agents in sequence to address this challenge: a reviewer that reads a batch of historical notes and describes the style in prose, and a tailor that turns that description into concrete Guided Documents section overrides against a real Corti Standard template. Neither agent alone does the job — a single agent asked to both interpret style and emit valid override JSON tends to blend the two badly.",
@@ -2213,6 +2287,8 @@ const baseline = await client.documents.generate({
   },
 
   "real-time-nudge": {
+    summary:
+      "Subtle 'chirps' during documentation that surface missing specificity — CHF without type, diabetes without type, CKD without a stage. Nudges fire on cadence (not a timer), evaluate via text grammar, SNOMED-CT/ICD-10 code prediction, and prompt-based rules, and auto-resolve when the text changes to satisfy the rule. Never a hard-stop alert.",
     premise: [
       "CDI programs depend on physician queries to close documentation gaps, but those queries typically arrive after documentation when the clinician no longer has the encounter fresh in mind. Real-time nudges shift the feedback upstream to the point of documentation, surfacing subtle 'chirps' when specificity is missing: CHF without type or acuity, diabetes without type, CKD without a stage.",
       "The key design principle is that nudges are never hard-stop alerts. They don't block the clinician's flow — in this implementation they appear alongside the editor, can be dismissed, and auto-resolve when the text changes to satisfy the rule's resolve criteria.",
@@ -2220,11 +2296,11 @@ const baseline = await client.documents.generate({
     how: [
       "The editor is a contentEditable surface with the same dictation core as the dictation suite — push-to-talk, voice commands, interim transcripts. The nudge engine wraps the editor with a cadence detector that watches for sentence completions (period + space), line breaks, paragraph breaks, and edits.",
       "After a 3-second debounce from the last cadence event, the engine reads the editor's text and runs it through the active rule set. Each rule has trigger criteria and resolve criteria. When the trigger fires and the nudge isn't already active, a nudge card appears in the side panel. When the resolve criteria are met, the nudge auto-resolves with a checkmark.",
-      "Text rules use a `conditions` array with a `mode` of `any` (OR) or `all` (AND), plus a `none` exclusion list. Rule `contains` values support a grammar model: `[optional]` makes a word optional in a phrase, `(A|B|C)` is an alternation (one must match), `{textMatch.conditions}` self-references the rule's own trigger terms, and space-separated groups are AND-ed. For count-based criteria like SIRS, `groups` defines named criterion groups with a `minGroups` threshold (e.g., 2+ of 4 SIRS criteria).",
+      "Text rules use a `conditions` array with a `mode` of `any` (OR) or `all` (AND), plus a `none` exclusion list. Rule `contains` values support a grammar model with optional words, alternation, self-reference, AND-ed groups, and count-based criteria (see the Details card for the full grammar reference).",
       "SNOMED and ICD-10 rules use a Corti Agentic Framework agent for evaluation. The text is first sent to `client.codes.predict()` with the appropriate system(s) (`snomedctint` and/or `icd10cm-outpatient`), scoped by a `filter` built from the active code rules. When only one system is active, the filter scopes prediction to that system's codes; when both are active, the call batches both systems with no filter (the API applies the same filter to all systems, so system-specific codes would cause validation failure). The predicted codes and text are then sent to the agent, which evaluates each rule's code conditions using hierarchy-aware reasoning (`is-a` / `descendent-of` / `=` operators) and contextual awareness (negation, family history, ruled-out conditions). The agent returns which rules trigger and which resolve as JSON.",
       "Prompt rules use a separate prompt evaluator agent with a fixed system prompt. The user's custom prompt text (max 500 chars) is sent as message data, never as a system prompt. The agent returns matched criteria IDs and an optional dynamic message per match, shown in the nudge panel when the rule has no static message. Prompt and code agent calls run in parallel.",
-      "Text rules evaluate instantly via the grammar engine (no API call). Code and prompt rules show when their agents respond. If an agent call fails, text rules still display and the error appears in the config tab. Predict, agent, and prompt results are cached — predict by text + filter + systems hash, agent by text + codes + rule IDs, prompt by text + criteria + prompt hashes — with config toggles to disable caching for testing.",
-      "Rules persist per API client (clientId:tenant) via the same ConfigStore pattern as replacements and terms. Eight seed rules ship built-in: CHF specificity (text), CHF specificity (SNOMED), CHF specificity (ICD-10), diabetes type, anemia specification, sepsis clarification, CKD stage, and a prompt-only demo rule. A dedicated query builder (`NudgeRuleEditor`) lets users create custom rules with collapsible trigger/resolve sections, an add-component dropdown (text matching / SNOMED criteria / ICD-10 criteria / custom prompt), mode selectors, and operator dropdowns. Built-in rules can be viewed in read-only mode.",
+      "Text rules evaluate instantly via the grammar engine (no API call). Code and prompt rules show when their agents respond. If an agent call fails, text rules still display and the error appears in the config tab. Results are cached in memory with configurable toggles to disable caching for testing.",
+      "Rules persist per API client (clientId:tenant) via the same ConfigStore pattern as replacements and terms. Ten built-in seed rules cover CHF specificity, diabetes type, anemia specification, sepsis clarification, and CKD stage across text, SNOMED, and ICD-10 criteria, plus a prompt-only demo rule (see the Details card for the full list). A dedicated query builder (`NudgeRuleEditor`) lets users create custom rules with collapsible trigger/resolve sections, an add-component dropdown (text matching / SNOMED criteria / ICD-10 criteria / custom prompt), mode selectors, and operator dropdowns. Built-in rules can be viewed in read-only mode.",
     ],
     snippets: [
       {
@@ -2325,18 +2401,18 @@ const params = buildPredictParams(rules, snomedEnabled, icd10Enabled);
     ],
     considerations: [
       "Text rules use a grammar model — no API calls, no credits, fully deterministic. Code rules (SNOMED/ICD-10) require the predict API (credits per call) and optionally the agent (no extra credits beyond agent usage). Prompt rules use a separate agent but no predict call.",
-      "The grammar supports `[optional]`, `(A|B|C)` alternation, `{textMatch.conditions}` self-references, AND-ed space-separated groups, and `groups`/`minGroups` for count-based criteria. It is not a full regex engine — just enough for common CDI query patterns.",
       "SNOMED and ICD-10 predict use `client.codes.predict()` via the SDK. The system identifiers (`snomedctint`, `icd10cm-outpatient`) are cast to `Corti.CommonCodingSystemEnum[]` at the call boundary since the SDK's enum does not include SNOMED-CT variants.",
       "The same agent evaluates both SNOMED and ICD-10 criteria. If reasoning quality degrades when handling both code systems, a separate ICD-10 agent may be needed.",
       "When both SNOMED and ICD-10 rules are active, the predict call batches both systems with no filter — the API applies the same filter to all requested systems, so a filter with SNOMED codes would cause ICD-10 validation to fail.",
       "The agent provides hierarchy-aware reasoning (`is-a`/`descendent-of`) and contextual awareness (negation, family history, ruled-out conditions) without a client-side hierarchy cache. Agent results are parsed from JSON returned by `client.agents.messageSend`.",
       "Dismissed nudges stay dismissed for the session even if the trigger re-matches — they only re-fire if the text changes such that the trigger was removed and re-added.",
       "The cadence detector hooks into the same onTranscript handler as dictation: a final transcript insertion triggers an 'edit' cadence event, starting the debounce cycle.",
-      "SNOMED code details (predicted code, supporting evidence, alternative codes) are available via an info button on nudge cards that opens a popover. SNOMED browser and ICD-10 index links are in the rule editor toolbar.",
       "A debug log card shows timestamped entries for predict request/response (with full request body), agent request/response, prompt request/response, and nudge state changes. Export as JSON.",
     ],
   },
   "command-genie": {
+    summary:
+      "Describe a voice command or nudge rule in plain language and a Corti Agentic Framework agent generates the structured configuration. Two modes share one dictation surface: command mode produces a ManagedCommand, nudge mode produces a NudgeRule that runs through the full evaluation pipeline.",
     premise: [
       "Configuring voice commands and nudge rules requires understanding the data model — action kinds, criteria types, operators, grammar syntax. Command Genie removes that barrier: describe the intent in plain language and a Corti Agentic Framework agent generates the structured configuration for you.",
       "Two modes share one dictation surface. In command mode, the user enters trigger phrases and an action description — the agent produces a ManagedCommand that fires immediately when dictated. In nudge mode, the user describes a trigger condition and a nudge message — the agent produces a NudgeRule that runs through the full evaluation pipeline (text matching, SNOMED/ICD-10 code prediction, prompt-based evaluation).",
@@ -2393,6 +2469,85 @@ const result = parseGenieResponse(responseText, mode);
       "In nudge mode, the full evaluation pipeline (cadence detector, predict, agent, prompt) is reused from the real-time-nudge applet. Enable SNOMED/ICD-10 and agent evaluation in the config dialog (wrench button).",
       "The genie history is in-memory session state — it survives remount but not page refresh.",
       "Validation rejects invalid JSON, wrong type field, bad ID format, empty phrases, unknown action kinds, missing required fields, and malformed criteria — the error message is shown without saving.",
+    ],
+  },
+
+  "dictation-suite": {
+    summary:
+      "Every dictation feature — voice commands, text replacements, dictionary terms, formatting, cleanup agent, device buttons, audio archive — composed on one editor with one microphone and one server-side config. All features share a single /transcribe session, so replacements, vocabulary, and commands are applied together by the server. Draft text persists to local storage across navigation and reloads.",
+    premise: [
+      "Each dictation applet in this sandbox demonstrates one concept in isolation — replacements, voice commands, dictionary terms, formatting, the cleanup agent, handheld-mic buttons, audio archiving. A real clinical workflow needs all of them running at the same time on the same editor, not one at a time on separate pages. The Dictation Suite is what that looks like: one editor, one microphone, every feature live simultaneously.",
+      "The key property is that all features share a single speech-to-text session. Replacements, vocabulary terms, voice commands, and formatting preferences are all sent to the server in one configuration when the session opens, so the server applies them together.",
+    ],
+    how: [
+      "The editor is a rich-text surface with caret-based insertion. Dictation lands at the cursor; voice commands trigger actions like bold, new paragraph, or inserting a template. An on-demand cleanup agent can copy-edit the dictated text without leaving the page. An interim preview appears inline at the caret so the user's eyes stay where the text will land.",
+      "Configuration panels below the editor let you manage each feature without leaving the page — replacements, dictionary terms, voice commands, formatting, cleanup prompts, device-button mappings, and audio archive settings. Changes to text replacements, terms, and commands take effect on the next recording session. Dictated text persists across navigation and page reloads.",
+    ],
+  },
+
+  "device-buttons": {
+    summary:
+      "Handheld dictation microphones (Philips SpeechMike, PowerMic, foot controls) have physical buttons that can drive recording and commands without a keyboard. WebHID provides browser-native access to these devices. Buttons are mapped to recording start/stop, push-to-talk, or any voice command, and stay inert until the handheld device is selected as the microphone.",
+    premise: [
+      "Handheld dictation microphones have physical buttons that can drive recording and commands without reaching for a keyboard or mouse. WebHID provides browser-native access to these devices without a custom driver.",
+    ],
+    how: [
+      "Connect a device via the browser's WebHID picker. The dictation support library recognizes Philips SpeechMike, SpeechOne, PowerMic, and foot controls, and reports semantic button events. Add mappings by pressing a button to capture it, then assign it an action: toggle-to-talk, push-to-talk, or a command. Buttons stay inert until the handheld device is selected as the microphone in the surface's device dropdown.",
+    ],
+  },
+
+  "dictation-audio-archive": {
+    summary:
+      "The dictation web component owns its microphone internally and exposes no raw audio stream, so local archiving requires the raw SDK instead. The host owns the MediaRecorder directly, fanning out each audio chunk to both Corti via socket.sendAudio() and a local IndexedDB archive. Sessions persist across pause/resume and are finalized on explicit end or page navigation.",
+    premise: [
+      "The dictation web component owns its microphone internally and exposes no raw audio stream — so if you want a local copy of what the mic heard, you need a second capture path. This applet uses the raw SDK instead of the web component, giving the host direct access to microphone audio for local archiving alongside the live transcription session.",
+    ],
+    how: [
+      "Using @corti/sdk directly means the host owns the MediaRecorder, making each outgoing audio chunk available for local storage before it's sent to the server. Every chunk is fanned out: sent to Corti via socket.sendAudio() and appended to the local archive. Sessions persist across pause/resume and are finalized into IndexedDB on explicit end or page navigation.",
+    ],
+  },
+
+  "file-transcription": {
+    summary:
+      "Offline transcription from pre-recorded audio files via the /transcripts REST endpoint — no live socket. The pipeline is: create an interaction, upload a recording (or select an existing one), create an async transcript, poll until completion, then view the finalized transcript and raw JSON. Built on the shared transcript runner, so it's a thin composition with no second-pass step.",
+    premise: [
+      "Not all audio arrives live. A dictaphone recording, a call recording pulled from a PBX, or a file a clinician uploads after the fact all need the same thing: a transcript from pre-recorded audio. This applet uses the /transcripts REST endpoint for offline transcription — no live socket, no microphone.",
+    ],
+    how: [
+      "Create an interaction, upload an audio file from disk or select a recording already attached to an existing interaction, create an async transcript, then poll in the background until the job completes. The finalized transcript and raw JSON are rendered when done. Built on the shared transcript runner — a thin composition with no second-pass step.",
+    ],
+  },
+
+  "second-pass-agent": {
+    summary:
+      "A raw transcript from pre-recorded audio is a first draft — accurate but unstructured. This applet runs two phases in sequence: first the REST /transcripts endpoint transcribes the uploaded audio, then a Corti Agentic Framework agent processes the finalized transcript text to produce a concise, clinically useful output. The original transcript stays visible alongside the agent output, and the agent prompt is editable and persists per API client.",
+    premise: [
+      "A raw transcript from pre-recorded audio is a first draft — accurate but unstructured, with speaker labels, no formatting, and no clinical synthesis. The second-pass agent processes the finalized transcript text to produce a concise, clinically useful output.",
+    ],
+    how: [
+      "Two phases run in sequence: first the REST /transcripts endpoint transcribes the uploaded audio, then the agent receives the flattened transcript text and returns a cleaned-up version. The original transcript stays visible alongside the agent output, so neither the transcript nor the agent pass is lost if the other fails. The agent is created once and reused; its system prompt is editable and persists per API client.",
+    ],
+  },
+
+  "wake-command-agent": {
+    summary:
+      "Agent conversations are gated behind a wake phrase ('hey Corti summarize the plan') so the microphone isn't always streaming to the agent. STT recognizes the wake command, extracts the spoken intent, and sends it to a Corti Agentic Framework agent with threaded memory that persists across turns. Users can also type directly, and an auto-send toggle controls whether intents go straight to the agent or land in the composer for review.",
+    premise: [
+      "Gate agent conversations behind a wake phrase so the microphone isn't always streaming to an agent. Keep the mic live and speak a single-utterance wake command like 'hey Corti summarize the plan' — STT results not preceded by the wake phrase are ignored.",
+    ],
+    how: [
+      "When the wake phrase is recognized, the spoken intent is extracted from the command variable and sent to a Corti Agentic Framework agent. The response appears in a chat panel, and threaded memory persists across turns until the conversation is reset. Users can also type directly into the composer. An auto-send toggle controls whether wake-command intents go straight to the agent or land in the composer for review.",
+    ],
+  },
+
+  "conversational-agent": {
+    summary:
+      "Always-on voice chat with a Corti Agentic Framework agent — no wake phrase needed. Push-to-talk, everything spoken is transcribed and sent to the agent when the turn ends. Turn modes (instant, standard, deliberate) control how aggressively the agent responds. Auto-detect mode lets an orchestrator route to the right specialist from the first message; speculative prefetch (alpha) pre-generates responses from interim transcripts to reduce latency. An external agent ID can be pasted to bypass auto-creation.",
+    premise: [
+      "Always-on voice chat with an agent that responds as you finish speaking — no wake phrase, no single-utterance commands. Push-to-talk, and the agent orchestrates the request and responds based on the supported specialists.",
+    ],
+    how: [
+      "Hold the mic button and speak freely. Everything spoken is transcribed and sent to the agent when the turn ends. Turn modes (instant, standard, deliberate) control how aggressively the agent responds — instant fires on the first pause, standard waits longer, deliberate waits for mic-off or a long silence. Auto-detect mode lets the orchestrator identify the use case from the first message and route to the right specialist. Speculative prefetch (alpha) pre-generates responses from interim transcripts to reduce latency. An external agent ID can be pasted to bypass auto-creation.",
     ],
   },
 };

@@ -17,72 +17,6 @@ export function PlaybackHighlightingDetails() {
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Corti SDK
-        </p>
-        <p className="mt-1 text-muted-foreground">
-          The applet uses the <code>@corti/sdk</code> <code>CortiClient</code> for all REST calls —{" "}
-          <code>interactions.create</code>, <code>recordings.upload</code>,{" "}
-          <code>transcripts.create</code>, <code>transcripts.getStatus</code>, and{" "}
-          <code>transcripts.get</code>. The transcript create request accepts <code>wordLevel</code>
-          , <code>async</code>, <code>automaticPunctuation</code>, <code>spokenPunctuation</code>,
-          and <code>formatting</code> alongside the standard <code>recordingId</code>,{" "}
-          <code>primaryLanguage</code>, and <code>diarize</code> fields. The client is instantiated
-          with an environment and auth config from <code>useCortiAccessToken</code>.
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          requestAnimationFrame vs timeupdate
-        </p>
-        <p className="mt-1 text-muted-foreground">
-          The browser's <code>timeupdate</code> event fires roughly 4 times per second (~250ms gaps)
-          — too choppy for word-level highlighting where individual words can be shorter than 250ms.
-          A <code>requestAnimationFrame</code> loop checks <code>audio.currentTime</code> every
-          frame (~16ms) and binary-searches the sorted segment array for the last entry whose{" "}
-          <code>start</code> &lt;= current time — O(log n) per frame, smooth at 60fps even for long
-          transcripts with thousands of word entries.
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Text spacing, casing, and line breaks
-        </p>
-        <p className="mt-1 text-muted-foreground">
-          Follows the{" "}
-          <a
-            className="underline"
-            href="https://docs.corti.ai/stt/best-practices-transcribe"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            transcript handling best-practices guide
-          </a>
-          : no space before left-attaching punctuation (<code>, . : ; ! ? ) ] &#125; %</code>); no
-          space after opening brackets/quotes; French locale uses non-breaking space before{" "}
-          <code>: ; ! ?</code>. Capitalizes the first letter at sentence boundaries (after{" "}
-          <code>. ! ? …</code>) and at the start of a new line. Newlines in segment text (
-          <code>\n</code> → line break, <code>\n\n</code> → paragraph break) render as{" "}
-          <code>&lt;br&gt;</code> elements.
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Layout-shift prevention
-        </p>
-        <p className="mt-1 text-muted-foreground">
-          Each word span has constant <code>px-0.5</code> padding at all times. Bold text (
-          <code>font-semibold</code>) is wider than normal (<code>font-normal</code>), but the
-          padding absorbs the difference — the span's outer box width doesn't change when the active
-          class toggles, so neighboring words never shift. The highlight uses an outset box-shadow
-          instead of a border or inset ring.
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Timing units
         </p>
         <p className="mt-1 text-muted-foreground">
@@ -102,33 +36,6 @@ export function PlaybackHighlightingDetails() {
           When <code>diarize: true</code> is set, each word/segment carries a <code>speakerId</code>
           . The player inserts a speaker badge at each speaker boundary and color-codes the badge
           text. Consecutive same-speaker words flow together as a single run.
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Live streaming mode
-        </p>
-        <p className="mt-1 text-muted-foreground">
-          The applet can also capture live dictation via the <code>&lt;corti-dictation&gt;</code>{" "}
-          web component connected to the <code>/transcribe</code> WebSocket endpoint. The same{" "}
-          <code>wordLevel</code>, <code>diarize</code>, <code>automaticPunctuation</code>,{" "}
-          <code>spokenPunctuation</code>, and <code>formatting</code> parameters are passed in the{" "}
-          <code>TranscribeConfig</code>. A configuration wrench dialog provides commands,
-          replacements, and dictionary terms — the same shared stores used by other dictation
-          applets.
-        </p>
-        <p className="mt-1 text-muted-foreground">
-          Since the web component owns its microphone internally and exposes no raw audio stream, a
-          parallel <code>MediaRecorder</code> capture on the same device produces the audio blob for
-          post-recording playback. The component's <code>recording-state-changed</code> events gate
-          the capture, so it starts and stops in sync with the dictation session.
-        </p>
-        <p className="mt-1 text-muted-foreground">
-          Live <code>/transcribe</code> timestamps arrive in <strong>seconds</strong> (float). The{" "}
-          <code>useLiveTranscript</code> hook converts them to milliseconds on intake so the{" "}
-          <code>SyncedTranscriptPlayer</code> and <code>usePlaybackSync</code> hook work unchanged
-          across both modes.
         </p>
       </div>
 

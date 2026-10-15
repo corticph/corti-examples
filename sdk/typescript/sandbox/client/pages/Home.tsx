@@ -30,7 +30,7 @@ import {
 } from "../applets/registry";
 import { getAppletSources } from "../applets/sources";
 import { type AppletWriteup, getAppletWriteup, isStepGuide } from "../applets/writeups";
-import { CodeBlock, languageFor, type SourceFile } from "../components/docs/CodeBlock";
+import { languageFor, type SourceFile } from "../components/docs/CodeBlock";
 import { WriteupSection } from "../components/docs/WriteupSection";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -183,6 +183,10 @@ function buildLlmBundle(
   out.push(`# ${applet.title} (${AREA_LABEL[applet.workflow]})`, "");
   out.push(applet.description);
 
+  if (writeup?.summary) {
+    out.push("", "## Summary", "", writeup.summary);
+  }
+
   if (writeup) {
     out.push("", "## The problem");
     writeup.premise.forEach((p) => {
@@ -299,15 +303,6 @@ function DocsArticle({ applet }: { applet: AppletDefinition }) {
 
         {!detailsBelowDemo && detailsSection}
 
-        {sources.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Source
-            </h2>
-            <CodeBlock files={sources} />
-          </section>
-        )}
-
         <section className="space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Live demo
@@ -320,8 +315,8 @@ function DocsArticle({ applet }: { applet: AppletDefinition }) {
             <div className="flex flex-col items-center justify-center gap-4 rounded border border-border bg-card py-14 text-center">
               <BookOpen className="h-8 w-8 text-muted-foreground" />
               <p className="max-w-lg text-sm text-muted-foreground">
-                Authenticate with Corti to run this example live. The writeup and source above are
-                available without signing in.
+                Authenticate with Corti to run this example live. The writeup above is available
+                without signing in.
               </p>
               <Button asChild>
                 <Link to="/">Go to homepage to authenticate</Link>

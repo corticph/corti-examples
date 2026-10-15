@@ -1,8 +1,11 @@
+const INTRO =
+  "The dictation web component owns its microphone internally and exposes no raw audio stream — so if you want a local copy of what the mic heard, you need a second capture path. This applet uses the raw SDK instead of the web component, giving the host direct access to microphone audio for local archiving alongside the live transcription session.";
+
 const STEPS: { label: string; detail: string }[] = [
   {
-    label: "Why raw SDK",
+    label: "Why the raw SDK is needed",
     detail:
-      "This example uses raw @corti/sdk because the host owns MediaRecorder directly. That makes the outgoing microphone blobs available for local archiving without depending on web-component internals.",
+      "Using @corti/sdk directly means the host owns the MediaRecorder, making each outgoing audio chunk available for local storage before it's sent to the server — no dependency on web-component internals.",
   },
   {
     label: "1. Connect + handshake",
@@ -28,15 +31,18 @@ const STEPS: { label: string; detail: string }[] = [
 
 export function AudioArchiveDetails() {
   return (
-    <ol className="flex flex-col gap-2">
-      {STEPS.map((step) => (
-        <li key={step.label} className="flex flex-col gap-0.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {step.label}
-          </span>
-          <span className="text-sm text-foreground">{step.detail}</span>
-        </li>
-      ))}
-    </ol>
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted-foreground">{INTRO}</p>
+      <ol className="flex flex-col gap-2">
+        {STEPS.map((step) => (
+          <li key={step.label} className="flex flex-col gap-0.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {step.label}
+            </span>
+            <span className="text-sm text-foreground">{step.detail}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
