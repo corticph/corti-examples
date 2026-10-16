@@ -38,9 +38,6 @@ jobs:
             react-next-agent-chat:
               - 'agents/react/next-agent-chat/**'
               - '.github/workflows/sdk-examples-ci.yml'
-            applets:
-              - 'sdk/typescript/applets/**'
-              - '.github/workflows/sdk-examples-ci.yml'
             sandbox:
               - 'sdk/typescript/sandbox/**'
               - '.github/workflows/sdk-examples-ci.yml'
@@ -94,8 +91,6 @@ jobs:
             path: sdk/typescript/next-auth-examples
           - project: react-next-agent-chat
             path: agents/react/next-agent-chat
-          - project: applets
-            path: sdk/typescript/applets
           - project: sandbox
             path: sdk/typescript/sandbox
             node-version-file: sdk/typescript/sandbox/.nvmrc
