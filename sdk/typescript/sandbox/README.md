@@ -89,9 +89,6 @@ save it to `./.env` for the next run.
 -h, --help              Show help
 ```
 
-The same launcher is what `npx corti-sdk-sandbox` will run once the package is
-published; see [Distribution roadmap](#distribution-roadmap).
-
 ## Credentials
 
 The sandbox supports two local credential flows.
@@ -206,34 +203,3 @@ issuer, so the same examples work across clusters with the appropriate token.
 - [`@corti/sdk`](https://www.npmjs.com/package/@corti/sdk)
 - [`@corti/dictation-web`](https://www.npmjs.com/package/@corti/dictation-web)
 - [`@corti/ambient-web`](https://www.npmjs.com/package/@corti/ambient-web)
-
-## Distribution roadmap
-
-Today the sandbox runs from a clone of this repository (see
-[Quick start](#quick-start)). The package is already configured for npm
-publishing (`package.json` has `bin`, `files`, `engines`, and a `prepublishOnly`
-build hook) but has not been published yet. Once it is, the launcher will run
-without cloning or building:
-
-```bash
-npx corti-sdk-sandbox
-
-# Or install it globally
-npm install -g corti-sdk-sandbox
-corti-sdk-sandbox
-```
-
-Two distribution options are under consideration:
-
-- **npm (public or private scoped).** The `@corti/*` SDK packages are already
-  public on npm. Publishing `corti-sdk-sandbox` publicly would be consistent
-  with that and would let anyone run `npx corti-sdk-sandbox`. A private scoped
-  package (e.g. `@corti/sandbox`) requires a paid npm Teams plan, and each user
-  must authenticate with an npm token.
-- **GitHub Packages.** Publish as a scoped package (e.g.
-  `@corticph/corti-sdk-sandbox`) to the GitHub npm registry. Access is scoped to
-  the Corti GitHub org at no cost. Each user authenticates with a GitHub
-  personal access token via `.npmrc`.
-
-Before either path can proceed, the `license` field in `package.json`
-(currently `"UNLICENSED"`) must be changed to a valid SPDX identifier.
