@@ -43,7 +43,7 @@ Run a single test: `npx vitest run client/applets/_shared/offsetMap.test.ts` (or
 
 **Client (`client/`).**
 
-- `App.tsx` routes: `/` (Home), `/getting-started`, `/:workflow/:applet` (AppletPage), and `*` (NotFound).
+- `App.tsx` routes: `/` (Home), `/:workflow/:applet` (AppletPage), and `*` (NotFound).
 - `pages/Home.tsx` renders both the home page (stats, credential form) and `AppletPage`, which assembles writeup, details, sources, and live demo for one applet.
 - `applets/registry.ts` is the manifest: each `AppletDefinition` has `id`, `title`, `description`, `workflow` (sidebar area), `icon`, `Component`, and optional `Details`/`ExtraSection`/`wide`. **Adding an applet:** create `client/applets/<id>/`, add one registry entry, then optionally add sources in `sources.ts` and a writeup in `writeups.ts`.
 - `applets/sources.ts` imports source files with `?raw` and shows them verbatim. Those files are teaching code read by customers, so keep them readable and self-explanatory.
@@ -57,7 +57,7 @@ Run a single test: `npx vitest run client/applets/_shared/offsetMap.test.ts` (or
 
 **Runtime contract.** Users rely on these staying the same: ports 8080 (dev and launcher) and 3000 (`npm start`), the `CORTI_*` env var names, the `/api/*` routes, the UI routes, the `corti_sid` cookie, and every localStorage key (saved settings carry over between versions).
 
-**Analytics tagging.** Every `new CortiClient({...})` passes `analytics: EXAMPLES_ANALYTICS` from `client/applets/_shared/examplesAnalytics.ts`, inline at the call site. The web-component wrappers set `el.analytics` the same way. Code snippets inside strings (`writeups.ts`, `getting-started.tsx`) stay untagged.
+**Analytics tagging.** Every `new CortiClient({...})` passes `analytics: EXAMPLES_ANALYTICS` from `client/applets/_shared/examplesAnalytics.ts`, inline at the call site. The web-component wrappers set `el.analytics` the same way. Code snippets inside strings (`writeups.ts`) stay untagged.
 
 **Home page stats** count `applets/_shared/**/*.tsx` and `components/ui/**/*.tsx` files via `import.meta.glob`, so adding or removing `.tsx` files there changes numbers users see.
 

@@ -1,4 +1,4 @@
-import { ChevronRight, Compass, Home as HomeIcon } from "lucide-react";
+import { ChevronRight, Home as HomeIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useMatch } from "react-router-dom";
 import {
@@ -61,19 +61,6 @@ export function DocsSidebar() {
       >
         <HomeIcon className="h-4 w-4 shrink-0" />
         Home
-      </Link>
-
-      <Link
-        to="/getting-started"
-        className={cn(
-          "flex items-center gap-2.5 rounded-none border-l-2 px-3 py-2 no-underline transition-colors",
-          pathname === "/getting-started"
-            ? "border-corti-lime bg-accent font-medium text-foreground"
-            : "border-transparent text-muted-foreground hover:bg-accent/60 hover:text-foreground",
-        )}
-      >
-        <Compass className="h-4 w-4 shrink-0" />
-        Getting started
       </Link>
 
       {WORKFLOW_AREAS.map((area) => {

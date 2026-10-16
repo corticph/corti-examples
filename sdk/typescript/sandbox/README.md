@@ -31,16 +31,6 @@ The sidebar groups the applets into five areas:
 - **Extended workflows** — multi-source FactsR extraction, human approval
   checkpoints, role-scoped agents, and narrow-tool specialist networks.
 
-The **Getting started** page is a guided, runnable path through the core API
-workflow:
-
-1. Initialize `@corti/sdk` and verify access with language discovery.
-2. Create an interaction.
-3. Upload recorded audio.
-4. Create and poll an asynchronous transcript.
-5. Predict medical codes and, when a tenant template is available, generate a
-   clinical document.
-
 Most live demos call a real Corti tenant. They may create interactions, upload
 recordings, generate transcripts or documents, and invoke coding or agent APIs.
 Use a non-production cluster and a disposable test tenant.
@@ -178,8 +168,6 @@ client/
     writeups.ts     Per-applet explanations and guided implementation notes
   components/docs/  Sidebar, source viewer, writeup renderer, and docs UI
   pages/Home.tsx    Home page and individual applet documentation pages
-  pages/getting-started.tsx
-                    Guided end-to-end API walkthrough ("Getting started")
 server/
   index.ts          Express app: /api/config, /api/auth/*, /api/corti/*
   routes/auth.ts    Server-held and UI-provided credential flows
