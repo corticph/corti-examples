@@ -166,7 +166,7 @@ export function SpeechFlex() {
     setCommandIdentity(clientId, tenantName);
     replacementStore.setIdentity(clientId, tenantName);
     termStore.setIdentity(clientId, tenantName);
-    setPromptIdentity(clientId, tenantName);
+    setPromptIdentity(clientId, tenantName, "speech-flex");
   }, [clientId, tenantName]);
 
   // Ref bridge: the dictation web component lives in the header, the

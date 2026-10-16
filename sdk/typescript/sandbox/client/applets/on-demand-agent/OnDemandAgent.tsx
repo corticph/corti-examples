@@ -1,11 +1,12 @@
 /**
  * Applet — CONCEPT: on-demand agent (agentic copy-edit).
  *
- * Dictate into the editor, then say "copy edit" (or click Run copy-edit) to send
- * the text through a Corti Agentic Framework agent that applies a minimal
- * spelling/grammar/punctuation copy-edit and replaces the text. Wording and
- * content are preserved; the prompt comes from the language-tagged library in
- * the details card, and the rewrite can be reverted.
+ * Dictate into the editor, then say the active prompt's command phrase (or
+ * click Run agent) to send the text through a Corti Agentic Framework agent
+ * that applies a minimal spelling/grammar/punctuation copy-edit and replaces
+ * the text. Wording and content are preserved; the prompt comes from the
+ * language-tagged library in the details card, and the rewrite can be
+ * reverted. Each prompt defines its own command phrase.
  */
 
 import { Loader2, RotateCcw, Sparkles } from "lucide-react";
@@ -27,15 +28,16 @@ import {
 } from "./agent";
 import { buildCopyEditConfig } from "./config";
 import {
-  resolveActivePrompt,
+  resolveSelectedPrompt,
   setPromptIdentity,
+  setSelectedPromptId,
   useCleanupPrompts,
-  usePinnedPromptId,
+  useSelectedPromptId,
 } from "./prompts";
 
 const STATUS_LABEL: Record<string, string> = {
   preparing: "Preparing agent…",
-  running: "Copy-editing…",
+  running: "Running agent…",
   ready: "Agent ready",
 };
 
@@ -44,38 +46,36 @@ export function OnDemandAgent() {
   const { language, onLanguagesChanged } = useDictationLanguage();
   const { status, error, noChange, undo } = useCopyEditStore();
   const prompts = useCleanupPrompts();
-  const pinnedPromptId = usePinnedPromptId();
+  const selectedPromptId = useSelectedPromptId();
   const containerRef = useRef<HTMLDivElement>(null);
   const { adapter } = useActiveControl(containerRef);
   const adapterRef = useRef<EditorAdapter | null>(null);
   adapterRef.current = adapter;
   const [interim, setInterim] = useState("");
 
-  const config = useMemo(() => buildCopyEditConfig(language), [language]);
+  const activePrompt = useMemo(
+    () => resolveSelectedPrompt(prompts, selectedPromptId),
+    [prompts, selectedPromptId],
+  );
+
+  const activeCommandPhrase = activePrompt?.commandPhrase ?? "copy edit";
+
+  const config = useMemo(
+    () => buildCopyEditConfig(language, activeCommandPhrase),
+    [language, activeCommandPhrase],
+  );
 
   useEffect(() => {
     configureCopyEdit(authConfig, sdkEnvironment, clientId, tenantName);
   }, [authConfig, sdkEnvironment, clientId, tenantName]);
 
   useEffect(() => {
-    setPromptIdentity(clientId, tenantName);
+    setPromptIdentity(clientId, tenantName, "on-demand");
   }, [clientId, tenantName]);
 
-  /**
-   * Which library prompt to run: the one written for the language being
-   * dictated, unless the user pinned one. Installed as soon as the selection
-   * changes so switching language mid-session doesn't leave the previous
-   * language's prompt live, and so the round-trip is paid here rather than
-   * inside a copy-edit run.
-   */
-  const activePrompt = useMemo(
-    () => resolveActivePrompt(prompts, language, pinnedPromptId),
-    [prompts, language, pinnedPromptId],
-  );
-
   useEffect(() => {
-    if (activePrompt.prompt) {
-      setActivePrompt(activePrompt.prompt.prompt);
+    if (activePrompt) {
+      setActivePrompt(activePrompt.prompt);
     }
   }, [activePrompt]);
 
@@ -119,12 +119,12 @@ export function OnDemandAgent() {
   return (
     <div className="flex flex-col gap-4" ref={containerRef}>
       <div>
-        <h2 className="text-lg font-semibold text-foreground">On-demand agent (copy-edit)</h2>
+        <h2 className="text-lg font-semibold text-foreground">On-demand agent</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Link the “copy edit” speech-to-text command to an on-demand Corti agent, or click Run
-          copy-edit, to correct typed or dictated text for spelling, grammar, and punctuation.
-          Wording and clinical content are preserved — the prompt is picked to match the dictation
-          language from the library in the agent card below.
+          Link a voice command to an on-demand Corti agent, or click Run agent, to correct typed or
+          dictated text for spelling, grammar, and punctuation. Wording and clinical content are
+          preserved — the prompt is picked to match the dictation language from the library in the
+          agent card, and each prompt has its own command phrase.
         </p>
       </div>
 
@@ -132,12 +132,12 @@ export function OnDemandAgent() {
         <textarea
           rows={12}
           readOnly={busy}
-          placeholder="Dictate freely (errors and all), then copy-edit to clean it up…"
+          placeholder="Dictate freely (errors and all), then run the agent to clean it up…"
           className="w-full resize-y rounded-md border border-border bg-background p-3 font-mono text-sm text-foreground outline-none focus:border-corti-lime"
         />
         {busy && (
           <div className="absolute inset-0 flex items-center justify-center gap-2 rounded-md bg-background/60 text-sm text-foreground backdrop-blur-[1px]">
-            <Loader2 className="h-4 w-4 animate-spin" /> Copy-editing…
+            <Loader2 className="h-4 w-4 animate-spin" /> Running agent…
           </div>
         )}
         {interim && <p className="mt-1 text-sm italic text-muted-foreground">{interim}</p>}
@@ -151,7 +151,7 @@ export function OnDemandAgent() {
             disabled={busy || status === "preparing"}
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Run copy-edit
+            Run agent
           </Button>
           {/*
             Only while a rewrite is actually revertible — the snapshot is
@@ -171,7 +171,11 @@ export function OnDemandAgent() {
             </Button>
           )}
           <span className="text-xs text-muted-foreground">
-            {status === "ready" && noChange ? "No changes needed" : (STATUS_LABEL[status] ?? "")}
+            {status === "ready" && noChange
+              ? "No changes needed"
+              : status === "ready"
+                ? `or say "${activeCommandPhrase}"`
+                : (STATUS_LABEL[status] ?? "")}
           </span>
         </div>
         <CortiDictationComponent
@@ -183,6 +187,23 @@ export function OnDemandAgent() {
           onLanguagesChanged={onLanguagesChanged}
         />
       </div>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Active prompt
+        </span>
+        <select
+          value={selectedPromptId}
+          onChange={(e) => setSelectedPromptId(e.target.value)}
+          className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-corti-lime"
+        >
+          {prompts.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.title} ({item.language})
+            </option>
+          ))}
+        </select>
+      </label>
 
       {error && <p className="text-sm text-variant-error-foreground">{error}</p>}
     </div>

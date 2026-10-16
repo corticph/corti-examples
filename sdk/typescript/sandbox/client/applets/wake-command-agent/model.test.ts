@@ -38,7 +38,7 @@ describe("clearConversationState", () => {
       ],
       debugLog: [
         {
-          id: "d1",
+          id: 1,
           type: "command" as const,
           text: "okay Corti hello",
           at: 1,

@@ -27,11 +27,11 @@ import {
   promptStore,
   toExport as promptsToExport,
   removeCleanupPrompt,
-  resolveActivePrompt,
+  resolveSelectedPrompt,
   saveCleanupPrompt,
-  setPinnedPromptId,
+  setSelectedPromptId,
   useCleanupPrompts,
-  usePinnedPromptId,
+  useSelectedPromptId,
 } from "./prompts";
 
 /**
@@ -44,18 +44,28 @@ interface PromptDraft {
   title: string;
   language: string;
   prompt: string;
+  commandPhrase: string;
 }
 
-const EMPTY_DRAFT: PromptDraft = { title: "", language: "", prompt: "" };
+const EMPTY_DRAFT: PromptDraft = {
+  title: "",
+  language: "",
+  prompt: "",
+  commandPhrase: "",
+};
 
 const toDraft = (item: CleanupPrompt): PromptDraft => ({
   title: item.title,
   language: item.language,
   prompt: item.prompt,
+  commandPhrase: item.commandPhrase,
 });
 
 const draftEquals = (a: PromptDraft, b: PromptDraft) =>
-  a.title === b.title && a.language === b.language && a.prompt === b.prompt;
+  a.title === b.title &&
+  a.language === b.language &&
+  a.prompt === b.prompt &&
+  a.commandPhrase === b.commandPhrase;
 
 /**
  * Language suggestions for the prompt editor: what this cluster can dictate in,
@@ -74,21 +84,21 @@ function languageOptions(prompts: CleanupPrompt[], available: string[], current:
   return [...seen].sort();
 }
 
-export function CleanupPromptLibrary() {
+export function CleanupPromptLibrary({ showSelector = true }: { showSelector?: boolean }) {
   const { status, error } = useCopyEditStore();
   const { language } = useDictationLanguage();
   const available = useAvailableLanguages();
   const prompts = useCleanupPrompts();
-  const pinnedId = usePinnedPromptId();
+  const selectedId = useSelectedPromptId();
 
-  const active = resolveActivePrompt(prompts, language, pinnedId);
+  const active = resolveSelectedPrompt(prompts, selectedId);
 
   /**
    * Which entry the editor below is showing. Null follows the active prompt, so
    * the panel opens on the prompt that would actually run; clicking a row in the
    * library pins the editor to that one instead.
    */
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editorId, setEditorId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState<PromptDraft>(EMPTY_DRAFT);
   /** The entry `draft` was seeded from, to detect that the target changed. */
@@ -107,7 +117,7 @@ export function CleanupPromptLibrary() {
     }
   }, [creating]);
 
-  const selected = creating ? null : (prompts.find((p) => p.id === selectedId) ?? active.prompt);
+  const selected = creating ? null : (prompts.find((p) => p.id === editorId) ?? active);
 
   // Re-seed the editor when it starts showing a different entry — including on
   // first load, when the library arrives from storage after auth resolves.
@@ -116,7 +126,12 @@ export function CleanupPromptLibrary() {
     setDraftFor(target);
     setDraft(
       creating
-        ? { title: "", language, prompt: DEFAULT_PROMPT }
+        ? {
+            title: "",
+            language,
+            prompt: DEFAULT_PROMPT,
+            commandPhrase: "copy edit",
+          }
         : selected
           ? toDraft(selected)
           : EMPTY_DRAFT,
@@ -135,13 +150,11 @@ export function CleanupPromptLibrary() {
       title: draft.title.trim(),
       language: draft.language.trim(),
       prompt: draft.prompt.trim(),
+      commandPhrase: draft.commandPhrase.trim(),
     });
     if (creating) {
       setCreating(false);
-      // Stay on the entry just created. Falling back to the active prompt would
-      // snap the editor to whatever the dictation language resolves to, which
-      // for a prompt written for another language is never the one just saved.
-      setSelectedId(id);
+      setEditorId(id);
     }
   };
 
@@ -157,7 +170,7 @@ export function CleanupPromptLibrary() {
 
   const startNew = () => {
     setCreating(true);
-    setSelectedId(null);
+    setEditorId(null);
   };
 
   const duplicate = (item: CleanupPrompt) => {
@@ -166,18 +179,18 @@ export function CleanupPromptLibrary() {
       title: `${item.title} (copy)`,
       language: item.language,
       prompt: item.prompt,
+      commandPhrase: item.commandPhrase,
     });
   };
 
   const confirmRemove = () => {
     if (pendingRemoval) {
-      // Drop the pin with it, or cleanup would silently fall back to another
-      // language's prompt while the panel still showed a pinned selection.
-      if (pinnedId === pendingRemoval.id) {
-        setPinnedPromptId(null);
-      }
+      // Drop the selection with it, or cleanup would silently run a deleted prompt.
       if (selectedId === pendingRemoval.id) {
-        setSelectedId(null);
+        setSelectedPromptId("");
+      }
+      if (editorId === pendingRemoval.id) {
+        setEditorId(null);
       }
       removeCleanupPrompt(pendingRemoval.id);
     }
@@ -189,9 +202,8 @@ export function CleanupPromptLibrary() {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
-        Say “run cleanup” or use the toolbar button to send the whole document through a Corti agent
-        that fixes spelling, grammar and punctuation without rewording it. Each prompt is written
-        for one dictation language.
+        Say the active prompt's command phrase or use the toolbar button to send the whole document
+        through a Corti agent that fixes spelling, grammar and punctuation without rewording it.
       </p>
 
       <div className="flex items-center gap-2 text-xs">
@@ -209,46 +221,37 @@ export function CleanupPromptLibrary() {
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
 
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Prompt in use
-        </span>
-        <select
-          value={pinnedId ?? ""}
-          onChange={(e) => setPinnedPromptId(e.target.value || null)}
-          className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-corti-lime"
-        >
-          <option value="">Follow dictation language ({language})</option>
-          {prompts.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.title} ({item.language})
-            </option>
-          ))}
-        </select>
-      </label>
+      {showSelector && (
+        <>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Prompt in use
+            </span>
+            <select
+              value={selectedId}
+              onChange={(e) => setSelectedPromptId(e.target.value)}
+              className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-corti-lime"
+            >
+              {prompts.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.title} ({item.language})
+                </option>
+              ))}
+            </select>
+          </label>
 
-      {active.reason === "language" && active.prompt && (
-        <p className="text-xs text-muted-foreground">
-          Using <span className="font-medium text-foreground">{active.prompt.title}</span> — matches
-          the dictation language ({language}).
-        </p>
-      )}
-      {active.reason === "pinned" && active.prompt && (
-        <p className="text-xs text-muted-foreground">
-          Pinned to <span className="font-medium text-foreground">{active.prompt.title}</span> (
-          {active.prompt.language}) for every dictation language.
-        </p>
-      )}
-      {active.reason === "fallback" && active.prompt && (
-        <p className="text-xs text-amber-600 dark:text-amber-400">
-          No prompt for {language} — falling back to {active.prompt.title} ({active.prompt.language}
-          ), which may copy-edit into the wrong language. Add a prompt for {language}.
-        </p>
-      )}
-      {active.reason === "empty" && (
-        <p className="text-xs text-red-600 dark:text-red-400">
-          The library is empty, so cleanup has nothing to run. Add a prompt.
-        </p>
+          {active && (
+            <p className="text-xs text-muted-foreground">
+              Using <span className="font-medium text-foreground">{active.title}</span> — say "
+              {active.commandPhrase}" to trigger.
+            </p>
+          )}
+          {!active && (
+            <p className="text-xs text-red-600 dark:text-red-400">
+              The library is empty, so cleanup has nothing to run. Add a prompt.
+            </p>
+          )}
+        </>
       )}
 
       {/*
@@ -331,6 +334,18 @@ export function CleanupPromptLibrary() {
 
           <label className="flex flex-col gap-1">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Command phrase
+            </span>
+            <input
+              value={draft.commandPhrase}
+              onChange={(e) => setDraft((d) => ({ ...d, commandPhrase: e.target.value }))}
+              placeholder="copy edit"
+              className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:border-corti-lime"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               System prompt
             </span>
             <textarea
@@ -373,7 +388,7 @@ export function CleanupPromptLibrary() {
               type="button"
               onClick={() => {
                 setCreating(false);
-                setSelectedId(item.id);
+                setEditorId(item.id);
               }}
               className={cn(
                 "min-w-0 flex-1 truncate rounded-md px-2 py-1 text-left text-sm transition-colors",
@@ -386,7 +401,7 @@ export function CleanupPromptLibrary() {
               <span className="ml-1.5 rounded border border-border px-1 text-[10px] uppercase text-muted-foreground">
                 {item.language}
               </span>
-              {item.id === active.prompt?.id && (
+              {item.id === active?.id && (
                 <span className="ml-1 rounded bg-corti-lime/20 px-1 text-[10px] uppercase">
                   in use
                 </span>

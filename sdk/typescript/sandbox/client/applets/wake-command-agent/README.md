@@ -7,10 +7,10 @@ Corti ...", "hey Corti ...", "Corti ...") are routed to the agent — all other
 STT output is discarded.
 
 The agent maintains a **threaded context** across turns within a session. Each
-turn is a `client.agents.messageSend(id, message, { contextId })` call that
-returns an updated `contextId`; subsequent turns pass the same id so the agent
-remembers prior messages. Resetting the conversation deletes the server-side
-context and clears local state.
+turn is a `client.agentic.agents.streamMessage(id, message, { contextId })`
+call that yields incremental text chunks via SSE; subsequent turns pass the same
+`contextId` so the agent remembers prior messages. Resetting the conversation
+deletes the server-side context and clears local state.
 
 ## Flow
 
@@ -23,9 +23,10 @@ context and clears local state.
    - **Voice:** keep the mic running; say "ok Corti [intent]". If _auto-send_
      is on the intent is sent immediately; otherwise it lands in the composer
      for review before sending.
-4. The response is appended to the chat as an assistant message and the
-   `contextId` is persisted so the thread survives a page reload.
-5. **Reset thread** deletes the server-side context and wipes local messages.
+4. The response streams token-by-token into the chat as an assistant message
+   and the `contextId` is persisted so the thread survives a page reload.
+5. **Reset thread** deletes the server-side context via
+   `client.agentic.contexts.delete(contextId)` and wipes local messages.
 
 ## Wake-command mechanics
 
@@ -41,12 +42,13 @@ transcripts are forwarded to the agent.
 
 ## Agent lifecycle
 
-- `ensureAgent` finds an existing agent named **"Sandbox Conversational Clinical
-  Agent"** or creates one.
-- When the system prompt is edited and saved, `client.agents.update` patches the
-  live agent in place — no recreation needed.
-- A 404 on `messageSend` (stale `agentId` or deleted agent) triggers a
+- `ensureAgent` finds an existing agent named **"Wake-command Clinical Agent"**
+  or creates one (model `corti-s1-mini`, lifecycle `persistent`).
+- When the system prompt is edited and saved, `client.agentic.agents.update`
+  patches the live agent in place — no recreation needed.
+- A 404 on `streamMessage` (stale `agentId` or deleted agent) triggers a
   transparent recreation and retries the turn without the stale `contextId`.
+- Conversation context is capped at 10 turns (`historyLength: 10`) for latency.
 
 ## Key files
 

@@ -218,7 +218,7 @@ describe("parseAndValidateTailorResponse", () => {
       sections: validResponse.sections.slice(0, 1),
     };
     expect(() => parseAndValidateTailorResponse(JSON.stringify(response), [candidate])).toThrow(
-      "omitted sectionIds: plan",
+      "omitted sectionIds: Plan",
     );
   });
 

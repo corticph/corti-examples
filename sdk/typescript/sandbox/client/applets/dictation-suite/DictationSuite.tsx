@@ -63,10 +63,10 @@ import {
   useCopyEditStore,
 } from "../on-demand-agent/agent";
 import {
-  resolveActivePrompt,
+  resolveSelectedPrompt,
   setPromptIdentity,
   useCleanupPrompts,
-  usePinnedPromptId,
+  useSelectedPromptId,
 } from "../on-demand-agent/prompts";
 import { replacementStore } from "../text-replacements/replacements";
 import { useDraftPersistence } from "./draftStore";
@@ -131,7 +131,7 @@ export function DictationSuite() {
   const { commands } = useCommandStore();
   const cleanup = useCopyEditStore();
   const cleanupPrompts = useCleanupPrompts();
-  const pinnedPromptId = usePinnedPromptId();
+  const selectedPromptId = useSelectedPromptId();
 
   const [interim, setInterim] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -187,7 +187,7 @@ export function DictationSuite() {
     setCommandIdentity(clientId, tenantName);
     replacementStore.setIdentity(clientId, tenantName);
     termStore.setIdentity(clientId, tenantName);
-    setPromptIdentity(clientId, tenantName);
+    setPromptIdentity(clientId, tenantName, "dictation-suite");
     // The draft re-seeds from the new namespace's storage (see draftStore), so
     // the old document's history no longer describes what's in the editor.
     rebaseHistory();
@@ -198,20 +198,19 @@ export function DictationSuite() {
   }, [authConfig, sdkEnvironment, clientId, tenantName]);
 
   /**
-   * Which library prompt cleanup should run: the one written for the language
-   * being dictated, unless the user pinned one.
+   * Which library prompt cleanup should run: the user's explicit selection,
+   * falling back to the first built-in.
    */
   const activePrompt = useMemo(
-    () => resolveActivePrompt(cleanupPrompts, language, pinnedPromptId),
-    [cleanupPrompts, language, pinnedPromptId],
+    () => resolveSelectedPrompt(cleanupPrompts, selectedPromptId),
+    [cleanupPrompts, selectedPromptId],
   );
 
-  // Install it on the agent as soon as the selection changes, so switching
-  // language mid-session doesn't leave the previous language's prompt live —
-  // and so the round-trip is paid here rather than inside a cleanup run.
+  // Install it on the agent as soon as the selection changes — and so the
+  // round-trip is paid here rather than inside a cleanup run.
   useEffect(() => {
-    if (activePrompt.prompt) {
-      setActivePrompt(activePrompt.prompt.prompt);
+    if (activePrompt) {
+      setActivePrompt(activePrompt.prompt);
     }
   }, [activePrompt]);
 

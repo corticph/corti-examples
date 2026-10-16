@@ -29,13 +29,19 @@ const codes = {
 
 function clientWith(send: ReturnType<typeof vi.fn>) {
   return {
-    agents: {
-      list: vi.fn().mockResolvedValue([
-        { id: "code-agent", name: "Nudge Code Evaluator" },
-        { id: "prompt-agent", name: "Nudge Prompt Evaluator" },
-      ]),
-      update: vi.fn().mockResolvedValue({}),
-      messageSend: send,
+    agentic: {
+      agents: {
+        list: vi.fn().mockResolvedValue({
+          response: {
+            agents: [
+              { id: "code-agent", name: "Nudge Code Evaluator" },
+              { id: "prompt-agent", name: "Nudge Prompt Evaluator" },
+            ],
+          },
+        }),
+        update: vi.fn().mockResolvedValue({}),
+        sendMessage: send,
+      },
     },
   } as unknown as CortiClient;
 }
@@ -47,7 +53,7 @@ function predictClient(predict: ReturnType<typeof vi.fn>) {
 }
 
 function response(text: string) {
-  return { message: { parts: [{ kind: "text", text }] } };
+  return { message: { parts: [{ text }] } };
 }
 
 afterEach(() => {

@@ -3,7 +3,7 @@
  * run-metadata id grid, the flattened-transcript output card (with JSON view +
  * download actions), and the raw-JSON dialog. All logic-free.
  */
-import { Download } from "lucide-react";
+import { Copy, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -109,39 +109,15 @@ export function TranscriptOutputCard({
   runState,
   downloadPrefix,
   title = "Transcript output",
-  description = "Flattened to one concatenated string for review.",
+  description = "Flattened to one concatenated string for improved readability and review.",
   rows = 16,
   onViewJson,
 }: TranscriptOutputCardProps) {
   return (
-    <section className="rounded-xl border border-border bg-card p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          <p className="text-xs text-muted-foreground">{description}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onViewJson}
-            disabled={!runState.transcriptJson}
-          >
-            View JSON
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() =>
-              runState.transcriptJson &&
-              runState.transcriptId &&
-              downloadTranscriptJson(runState.transcriptId, runState.transcriptJson, downloadPrefix)
-            }
-            disabled={!runState.transcriptJson || !runState.transcriptId}
-          >
-            <Download className="h-4 w-4" /> Download JSON
-          </Button>
-        </div>
+    <section className="flex flex-col rounded-xl border border-border bg-card p-4">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
 
       <Textarea
@@ -149,8 +125,39 @@ export function TranscriptOutputCard({
         readOnly
         rows={rows}
         placeholder="Transcript output will appear here after /transcripts completes."
-        className="resize-y font-mono text-xs"
+        className="mb-4 flex-1 resize-y font-mono text-xs"
       />
+
+      <div className="flex flex-col gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onViewJson}
+          disabled={!runState.transcriptJson}
+        >
+          View JSON
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() =>
+            runState.transcriptJson &&
+            runState.transcriptId &&
+            downloadTranscriptJson(runState.transcriptId, runState.transcriptJson, downloadPrefix)
+          }
+          disabled={!runState.transcriptJson || !runState.transcriptId}
+        >
+          <Download className="h-4 w-4" /> Download JSON
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => navigator.clipboard.writeText(runState.transcriptText)}
+          disabled={!runState.transcriptText}
+        >
+          <Copy className="h-4 w-4" /> Copy
+        </Button>
+      </div>
     </section>
   );
 }

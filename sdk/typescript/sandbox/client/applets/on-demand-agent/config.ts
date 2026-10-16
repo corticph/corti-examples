@@ -2,7 +2,10 @@ import type { Corti } from "@corti/sdk";
 import { COPY_EDIT_COMMAND_ID } from "./agent";
 
 /** Dictation config: a single command that triggers the agentic copy-edit. */
-export function buildCopyEditConfig(primaryLanguage: string): Corti.TranscribeConfig {
+export function buildCopyEditConfig(
+  primaryLanguage: string,
+  commandPhrase: string,
+): Corti.TranscribeConfig {
   return {
     primaryLanguage,
     interimResults: true,
@@ -11,7 +14,7 @@ export function buildCopyEditConfig(primaryLanguage: string): Corti.TranscribeCo
     commands: [
       {
         id: COPY_EDIT_COMMAND_ID,
-        phrases: ["copy edit", "clean up", "proofread"],
+        phrases: [commandPhrase || "copy edit"],
       },
     ],
   };

@@ -1,105 +1,96 @@
 # Applet: Conversational agent
 
 **Concept:** an always-on conversational voice agent backed by the Corti
-**Agentic Framework**. Unlike the wake-command approach of the conversational
-agent, the mic runs continuously and every completed utterance is sent to the
-agent — no trigger phrase required.
-
-The core UX idea is **speculative prefetch**: the agent fires a stateless
-request during the user's speech (on the first stable interim result) so the
-response is often ready the instant the user stops talking. A **response
-debounce** window (default 1.5 s, configurable) prevents firing mid-sentence
-by waiting for speech to genuinely pause before treating a turn as complete.
+**Agentic Framework**. Unlike the wake-command approach, the mic runs
+continuously and every completed utterance is sent to the agent — no trigger
+phrase required. Responses stream incrementally via SSE for minimal latency.
 
 ## Flow
 
-1. Authenticate — `configureVoiceAgent` initialises the `CortiClient` and
-   lazily creates the agent via `ensureAgent` on first use.
+1. Authenticate — `configureConversationalAgent` initialises the
+   `CortiClient` and lazily creates the agent via `ensureAgent` on first use.
 2. The user starts speaking. Interim transcripts arrive via
-   `@corti/dictation-web`'s `transcript` event (`isFinal: false`).
-3. On the **first** interim of a turn, `scheduleSpeculative` fires a 200 ms
-   debounce and then calls `fireSpeculative` — a **stateless**
-   `client.agents.messageSend` with no `contextId`. The response is held in
-   `heldResponse` in module state, never written to the conversation thread.
-4. Further interims extend the response-debounce timer and update the ghost
-   bubble. `speculativeFiredThisTurn` ensures only one speculative call fires
-   per turn.
-5. When `isFinal: true` segments stop arriving for `responseDebounceMs` ms (or
+   `@corti/dictation-web`'s `transcript` event (`isFinal: false`) and update a
+   ghost bubble in the chat.
+3. When `isFinal: true` segments stop arriving for `responseDebounceMs` ms (or
    recording stops), `flushFinal` fires `handleFinal` with all buffered final
    segments joined.
-6. `handleFinal`:
-   - Cancels any in-flight speculative timer.
-   - If a `heldResponse` is ready, immediately appends both the user message
-     and a provisional assistant bubble (`pending: true`) to the UI, then
-     calls `replaceProvisional` with the full final text.
-   - If no `heldResponse` exists (agent was slow), appends the user message and
-     fires `sendContextual` directly, showing a thinking spinner.
-7. `replaceProvisional` / `sendContextual` call `sendAgentMessageWithContext`
-   with the real `contextId` so the server thread stays coherent. The response
-   replaces the provisional bubble in-place; `detectedMode` is updated from the
-   `[MODE:key]` prefix (orchestrator mode only).
+4. `handleFinal` appends the user message and calls `streamResponse`, which
+   uses `streamAgentMessageWithContext` to stream the agent's reply via SSE.
+   A placeholder assistant message is created and updated in-place as chunks
+   arrive — the text appears token-by-token in the chat panel.
+5. The orchestrator prompt instructs the LLM to prefix every response with
+   `[MODE:key]` on its own line. `extractMode()` strips all mode tags from
+   the text before displaying and stores `detectedMode` in state. The resolved
+   specialist label appears in a pill at the top of the chat window.
 
-## Speculative prefetch — why stateless
+## Turn merging
 
-The speculative call is made **without a `contextId`** so it never writes to
-the real conversation thread. Partial interim text (e.g. "Dan Engel April")
-would corrupt the thread if sent as a real turn. The provisional response is
-shown immediately for perceived speed, then replaced in-place by the real
-contextual response which has the full final text and full thread history.
+STT can send multiple `isFinal` segments for a single utterance (with gaps
+of 100s of ms). A post-response continuation window (2× `responseDebounceMs`)
+detects when new speech is part of the same turn. In that case the new text is
+merged into the last user message, the stale assistant response is removed,
+and the stream restarts with the merged text.
 
-## Response debounce
-
-`ConversationalAgent.tsx` buffers consecutive `isFinal: true` segments in
-`finalBufferRef` and restarts a `responseDebounceMs` timer on every new event
-(interim or final). When recording stops, `flushFinal` fires immediately so
-there is no artificial delay at end-of-session. The timeout is user-configurable
-via a slider in the details panel (0.5 – 3.0 s, persisted to `localStorage`).
-
-## Preset system and orchestrator
+## Preset system and connectors
 
 Eight presets are defined in `model.ts`:
 
-| Key | Label | Mode |
-|-----|-------|------|
-| `orchestrator` | Auto-detect | Default — detects use case from first message |
-| `clinical` | Clinical assistant | Clinician clinical queries |
-| `pharmacyTriage` | Pharmacy triage | Patient prescription refill |
-| `appointmentScheduling` | Appointment scheduling | Patient scheduling |
-| `patientIntake` | Patient intake | Pre-visit intake |
-| `symptomTriage` | Symptom triage | Symptom triage and routing |
-| `cpoeCapture` | CPOE capture | Clinician medication order entry |
-| `patientEducation` | Patient education | Diagnosis/medication education |
+| Key                     | Label                  | Connectors      |
+| ----------------------- | ---------------------- | --------------- |
+| `orchestrator`          | Auto-detect            | —               |
+| `clinical`              | Clinical assistant     | `pubmed-expert` |
+| `pharmacyTriage`        | Pharmacy triage        | `posos-expert`  |
+| `appointmentScheduling` | Appointment scheduling | —               |
+| `patientIntake`         | Patient intake         | —               |
+| `symptomTriage`         | Symptom triage         | —               |
+| `cpoeCapture`           | CPOE capture           | `coding-expert` |
+| `patientEducation`      | Patient education      | —               |
 
-When `orchestrator` is active, the system prompt instructs the LLM to prefix
-every response with `[MODE:key]` on its own line. `extractMode()` in `agent.ts`
-strips this tag before displaying the message and stores `detectedMode` in
-state. `ConversationalAgent.tsx` shows the resolved label in a pill at the top of the
-chat window — updating live as the conversation evolves.
+Specialist presets attach registry connectors at agent creation/update time
+via `client.agentic.agents.update`. The agent's system prompt tells it when to
+invoke each connector (e.g. "use the PubMed connector to search for evidence").
 
-`applyPreset` persists the chosen key and calls `client.agents.update` to push
-the new system prompt to the server. Reset the thread after switching presets to
-start a clean context.
+A **connectors toggle** in the details view (default on) controls whether
+connectors are included in the agent spec. Disabling it removes connectors
+from the agent update call — useful for comparing latency with and without
+connector overhead.
+
+When `orchestrator` is active, the system prompt instructs the LLM to detect
+the use case from the first message and route accordingly.
+
+`applyPreset` persists the chosen key and calls `client.agentic.agents.update`
+to push the new system prompt and connectors to the server. Reset the thread
+after switching presets to start a clean context.
 
 ## Agent lifecycle
 
-- `ensureAgent` finds an existing agent named **"Voice Agent"** or creates one.
-- Prompt edits call `client.agents.update` — no recreation needed.
-- A 404 on `messageSend` (stale or deleted agent) transparently recreates the
-  agent and retries the turn without the stale `contextId`.
+- Agent uses model `corti-s1` with lifecycle `persistent`.
+- `ensureAgent` finds an existing agent named **"Conversational Agent"** or
+  creates one.
+- Prompt and connector edits call `client.agentic.agents.update` — no
+  recreation needed.
+- A 404 on stream (stale or deleted agent) transparently recreates the agent
+  and retries the turn without the stale `contextId`.
+- Reset calls `client.agentic.contexts.delete(contextId)` to clear the
+  server-side thread.
 
 ## Key files
 
-- `agent.ts` — module-level singleton state; `useVoiceAgentStore`,
-  `configureVoiceAgent`, `handleInterim`, `handleFinal`, `resetConversation`,
-  speculative scheduling, `extractMode`, preset management.
-- `ConversationalAgent.tsx` — chat UI, ghost bubble, thinking spinner, response-debounce
-  buffering, `CortiDictationComponent` wiring.
-- `ConversationalAgentDetails.tsx` — mode toggle, response-delay slider, provisional
-  details toggle, system-prompt editor.
+- `agent.ts` — module-level singleton state; `useConversationalAgentStore`,
+  `configureConversationalAgent`, `handleInterim`, `handleFinal`,
+  `resetConversation`, streaming via `streamResponse`, `extractMode`, preset
+  management.
+- `ConversationalAgent.tsx` — chat UI, ghost bubble, streaming display with
+  cursor indicator, turn-debounce buffering, `CortiDictationComponent` wiring,
+  debug log panel (session config, stream events, mode detection) with
+  expandable rows, copy, and download JSON.
+- `ConversationalAgentDetails.tsx` — mode toggle, turn mode, connectors
+  toggle, external agent ID, specialist presets, system-prompt editor.
 - `config.ts` — `buildVoiceConfig` (sets `interimResults: true`,
   `automaticPunctuation: false`, `audioEvents: { enabled: true }`).
-- `model.ts` — `VoicePreset`, `VoiceMessage`, all eight system prompts,
-  `ORCHESTRATOR_KEY`, `SPECIALIST_KEYS`, `DEFAULT_PRESET_KEY`.
+- `model.ts` — `VoicePreset` (with `connectors`), `VoiceMessage`, all eight
+  system prompts, `ORCHESTRATOR_KEY`, `SPECIALIST_KEYS`, `DEFAULT_PRESET_KEY`.
 
 ## Dependencies to copy
 
@@ -107,6 +98,25 @@ start a clean context.
 - shared: `../_shared/cortiAgent.ts`, `../_shared/configStore.ts`,
   `../_shared/cortiDictationReact.tsx`, `../_shared/useCortiAccessToken.ts`
 - local: `agent.ts`, `config.ts`, `model.ts`
+
+## Debug log
+
+A debug log panel sits below the live demo (not in the details view). Each
+row is expandable to show full untruncated text. Buttons: copy (plain text),
+download JSON, clear. Events logged:
+
+- `session_config` — agent name, model, lifecycle, preset, turn mode,
+  connectors enabled, connector names, system prompt preview. Fires on
+  prepare and reset.
+- `interim` — interim STT transcript text
+- `final_flushed` — final transcript text sent to the agent
+- `turn_merged` — merged user text when speech continues mid-response
+- `agent_stream_start` — text sent to the agent
+- `agent_stream_chunk` — each SSE delta from the stream
+- `agent_stream_done` — final response text with latency
+- `agent_error` — error message from a failed stream
+- `mode_detected` — detected orchestrator mode key
+- `audio_event` — audio event type from dictation
 
 ## Authentication
 

@@ -2,21 +2,17 @@ import type { CortiClient } from "@corti/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mock = vi.hoisted(() => ({
-  agents: {
-    list: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    messageSend: vi.fn(),
-  },
   agentic: {
     agents: {
+      list: vi.fn(),
+      create: vi.fn(),
       update: vi.fn().mockResolvedValue({}),
+      sendMessage: vi.fn(),
     },
   },
 }));
 vi.mock("@corti/sdk", () => ({
   CortiClient: class {
-    agents = mock.agents;
     agentic = mock.agentic;
   },
 }));
@@ -46,19 +42,22 @@ const env = {
 };
 const emptyNudgeState = { triggered: [], resolved: [], dismissed: [] };
 function setup(tenant = "a") {
-  mock.agents.list.mockResolvedValue([
-    { id: "code", name: "Nudge Code Evaluator" },
-    { id: "prompt", name: "Nudge Prompt Evaluator" },
-  ]);
-  mock.agents.create.mockResolvedValue({ id: "new", name: "test" });
-  mock.agents.update.mockResolvedValue({});
-  mock.agents.messageSend.mockImplementation(async (_id, req) => {
+  mock.agentic.agents.list.mockResolvedValue({
+    response: {
+      agents: [
+        { id: "code", name: "Nudge Code Evaluator" },
+        { id: "prompt", name: "Nudge Prompt Evaluator" },
+      ],
+    },
+  });
+  mock.agentic.agents.create.mockResolvedValue({ id: "new", name: "test" });
+  mock.agentic.agents.update.mockResolvedValue({});
+  mock.agentic.agents.sendMessage.mockImplementation(async (_id, req) => {
     const payload = JSON.parse(req.message.parts[0].text);
     return {
       message: {
         parts: [
           {
-            kind: "text",
             text: JSON.stringify({
               decisions: payload.criteria.map((c: { id: string; condition?: string }) => ({
                 id: c.id,
@@ -104,7 +103,7 @@ describe("agent lifecycle and completed caches", () => {
     };
     await evaluatePromptWithAgent(client, req);
     await evaluatePromptWithAgent(client, req);
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(1);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(1);
     await evaluatePromptWithAgent(client, {
       ...req,
       criteria: [
@@ -112,11 +111,11 @@ describe("agent lifecycle and completed caches", () => {
         { id: "b", prompt: "A" },
       ],
     });
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(2);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(2);
     setup("b");
     await evaluatePromptWithAgent(client, req);
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(3);
-    expect(mock.agents.list).toHaveBeenCalledTimes(4);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(3);
+    expect(mock.agentic.agents.list).toHaveBeenCalledTimes(4);
   });
   it("keeps the active agent revision and cache across token refresh", async () => {
     setup();
@@ -126,8 +125,8 @@ describe("agent lifecycle and completed caches", () => {
     configureNudgeAgent({ accessToken: "refreshed" }, env, "client", "a", "eu");
     expect(useNudgeAgentPrompt().revision).toBe(revision);
     await evaluatePromptWithAgent(client, req);
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(1);
-    expect(mock.agents.list).toHaveBeenCalledTimes(2);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(1);
+    expect(mock.agentic.agents.list).toHaveBeenCalledTimes(2);
   });
 
   it("evaluates absence-only criteria with empty predictions", async () => {
@@ -149,13 +148,13 @@ describe("agent lifecycle and completed caches", () => {
       nudgeState: emptyNudgeState,
     });
     // op="=" criteria are pre-evaluated client-side — agent is not called.
-    expect(mock.agents.messageSend).not.toHaveBeenCalled();
+    expect(mock.agentic.agents.sendMessage).not.toHaveBeenCalled();
     expect(result.decisions[0].outcome).toBe("matched");
   });
   it("keeps the active prompt/revision unchanged when the remote update fails", async () => {
     setup();
     const before = useNudgeAgentPrompt();
-    mock.agents.update.mockRejectedValue(new Error("offline"));
+    mock.agentic.agents.update.mockRejectedValue(new Error("offline"));
     await saveAgentPrompt("New prompt");
     expect(useNudgeAgentPrompt()).toMatchObject({
       prompt: before.prompt,
@@ -172,7 +171,7 @@ describe("agent lifecycle and completed caches", () => {
       revision: before + 1,
       status: "ready",
     });
-    const saveCall = mock.agents.update.mock.calls.find(
+    const saveCall = mock.agentic.agents.update.mock.calls.find(
       ([, arg]) =>
         typeof arg?.systemPrompt === "string" && arg.systemPrompt.startsWith("New prompt"),
     );
@@ -182,17 +181,17 @@ describe("agent lifecycle and completed caches", () => {
       text: "note",
       criteria: [{ id: "a", prompt: "A" }],
     });
-    expect(mock.agents.list).toHaveBeenCalledTimes(4);
+    expect(mock.agentic.agents.list).toHaveBeenCalledTimes(4);
   });
   it("does not cache incomplete responses", async () => {
     setup();
-    mock.agents.messageSend.mockResolvedValue({
-      message: { parts: [{ kind: "text", text: '{"decisions":[]}' }] },
+    mock.agentic.agents.sendMessage.mockResolvedValue({
+      message: { parts: [{ text: '{"decisions":[]}' }] },
     });
     const req = { text: "note", criteria: [{ id: "a", prompt: "A" }] };
     expect((await evaluatePromptWithAgent(client, req)).decisions[0].outcome).toBe("unknown");
     await evaluatePromptWithAgent(client, req);
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(2);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(2);
   });
 
   it("caches identical code agent requests via RequestStage", async () => {
@@ -204,22 +203,22 @@ describe("agent lifecycle and completed caches", () => {
       nudgeState: emptyNudgeState,
     };
     await evaluateCodesWithAgent(client, req);
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(1);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(1);
     // Same request → cached, no second agent call
     await evaluateCodesWithAgent(client, req);
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(1);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(1);
   });
 
   it("does not call agents.update when creating a new agent", async () => {
-    mock.agents.list.mockResolvedValue([]);
-    mock.agents.create.mockImplementation(async (spec: { name: string }) => ({
+    mock.agentic.agents.list.mockResolvedValue({ response: { agents: [] } });
+    mock.agentic.agents.create.mockImplementation(async (spec: { name: string }) => ({
       id: `new-${spec.name}`,
       name: spec.name,
     }));
-    mock.agents.update.mockResolvedValue({});
-    mock.agents.messageSend.mockImplementation(async () => ({
+    mock.agentic.agents.update.mockResolvedValue({});
+    mock.agentic.agents.sendMessage.mockImplementation(async () => ({
       message: {
-        parts: [{ kind: "text", text: '{"decisions":[]}' }],
+        parts: [{ text: '{"decisions":[]}' }],
       },
     }));
     configureNudgeAgent({ accessToken: "test" }, env, "client", "fresh", "eu");
@@ -230,8 +229,13 @@ describe("agent lifecycle and completed caches", () => {
       nudgeState: emptyNudgeState,
     };
     await evaluateCodesWithAgent(client, req);
-    expect(mock.agents.create).toHaveBeenCalled();
-    expect(mock.agents.update).not.toHaveBeenCalled();
+    expect(mock.agentic.agents.create).toHaveBeenCalled();
+    // prepare() should not call update with systemPrompt when creating a new
+    // agent (setAgentModel may call update with { model } — that's expected).
+    expect(mock.agentic.agents.update).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ systemPrompt: expect.any(String) }),
+    );
   });
 
   it("includes nudgeState in the agent request payload", async () => {
@@ -248,7 +252,9 @@ describe("agent lifecycle and completed caches", () => {
       nudgeState,
     };
     await evaluateCodesWithAgent(client, req, false);
-    const payload = JSON.parse(mock.agents.messageSend.mock.calls[0][1].message.parts[0].text);
+    const payload = JSON.parse(
+      mock.agentic.agents.sendMessage.mock.calls[0][1].message.parts[0].text,
+    );
     expect(payload.nudgeState).toEqual(nudgeState);
   });
 
@@ -261,7 +267,7 @@ describe("agent lifecycle and completed caches", () => {
       nudgeState: emptyNudgeState,
     };
     await evaluateCodesWithAgent(client, req, false);
-    const firstCall = mock.agents.messageSend.mock.calls[0][1];
+    const firstCall = mock.agentic.agents.sendMessage.mock.calls[0][1];
     expect(firstCall.message.contextId).toBeUndefined();
     const firstPayload = JSON.parse(firstCall.message.parts[0].text);
     expect(firstPayload.clinicalText).toBe("CHF");
@@ -269,7 +275,7 @@ describe("agent lifecycle and completed caches", () => {
 
     // Second call: still full text, no contextId (stateless)
     await evaluateCodesWithAgent(client, { ...req, text: "CHF more text" }, false);
-    const secondCall = mock.agents.messageSend.mock.calls[1][1];
+    const secondCall = mock.agentic.agents.sendMessage.mock.calls[1][1];
     expect(secondCall.message.contextId).toBeUndefined();
     const secondPayload = JSON.parse(secondCall.message.parts[0].text);
     expect(secondPayload.clinicalText).toBe("CHF more text");
@@ -288,13 +294,13 @@ describe("agent lifecycle and completed caches", () => {
     await evaluateCodesWithAgent(client, req);
     // Same text — should hit cache (no second call)
     await evaluateCodesWithAgent(client, req);
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(1);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(1);
     // Different text — new call
     await evaluateCodesWithAgent(client, { ...req, text: "CHF more" });
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(2);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(2);
     // Same as first — cache hit
     await evaluateCodesWithAgent(client, req);
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(2);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(2);
   });
 
   it("discards stale stored prompt when default version changes", async () => {
@@ -307,24 +313,26 @@ describe("agent lifecycle and completed caches", () => {
     expect(store.get("systemPrompt", "")).toBe(DEFAULT_SYSTEM_PROMPT);
   });
 
-  it("handles agents.list() returning { items: [...] } wrapper", async () => {
-    mock.agents.list.mockResolvedValue({
-      items: [
-        { id: "code", name: "Nudge Code Evaluator" },
-        { id: "prompt", name: "Nudge Prompt Evaluator" },
-      ],
+  it("handles agents.list() returning a Page with response.agents", async () => {
+    mock.agentic.agents.list.mockResolvedValue({
+      response: {
+        agents: [
+          { id: "code", name: "Nudge Code Evaluator" },
+          { id: "prompt", name: "Nudge Prompt Evaluator" },
+        ],
+      },
     });
-    mock.agents.create.mockResolvedValue({ id: "new", name: "test" });
-    mock.agents.update.mockResolvedValue({});
-    mock.agents.messageSend.mockResolvedValue({
+    mock.agentic.agents.create.mockResolvedValue({ id: "new", name: "test" });
+    mock.agentic.agents.update.mockResolvedValue({});
+    mock.agentic.agents.sendMessage.mockResolvedValue({
       message: {
-        parts: [{ kind: "text", text: '{"decisions":[]}' }],
+        parts: [{ text: '{"decisions":[]}' }],
         contextId: "ctx-1",
       },
     });
     configureNudgeAgent({ accessToken: "test" }, env, "client", "items-test", "eu");
     const req = { text: "note", criteria: [{ id: "a", prompt: "A" }] };
     await evaluatePromptWithAgent(client, req);
-    expect(mock.agents.messageSend).toHaveBeenCalledTimes(1);
+    expect(mock.agentic.agents.sendMessage).toHaveBeenCalledTimes(1);
   });
 });

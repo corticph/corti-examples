@@ -14,6 +14,28 @@ import {
 } from "../_shared/cortiAgent";
 import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
+import {
+  type AgentEntry,
+  agentStore,
+  CLINICAL_SUMMARY_PROMPT,
+  setAgentLibraryIdentity,
+  setSelectedAgentId,
+  setSelectionIdentity,
+} from "./agentLibrary";
+
+export {
+  type AgentEntry,
+  type AgentOrigin,
+  agentOrigin,
+  agentStore,
+  isCatalogAgent,
+  removeAgentEntry,
+  saveAgentEntry,
+  setSelectedAgentId,
+  toExport as toExportAgents,
+  useAgentLibrary,
+  useSelectedAgentId,
+} from "./agentLibrary";
 
 export const SECOND_PASS_AGENT = {
   name: "Second Pass",
@@ -21,21 +43,15 @@ export const SECOND_PASS_AGENT = {
     "Second-pass LLM processor for transcript results generated from uploaded or archived audio.",
 };
 
-export const DEFAULT_PROMPT = `You are a second-pass processor for healthcare transcripts.
-You will receive transcript text that may include speaker or channel labels.
-Produce a concise, clinically useful output from that transcript.
-Preserve important medications, numbers, units, timing, and uncertainty.
-Return only the final result with no preamble, labels, or markdown fences.`;
-
-const PROMPT_KEY = "secondPass.systemPrompt";
-const AGENT_ID_KEY = "secondPass.agentId";
+export const DEFAULT_PROMPT = CLINICAL_SUMMARY_PROMPT;
 
 export type SecondPassAgentStatus = "idle" | "preparing" | "ready" | "running" | "error";
 
 interface SecondPassAgentState {
-  prompt: string;
   status: SecondPassAgentStatus;
   error?: string;
+  /** The name of the currently active agent entry. */
+  activeName: string;
 }
 
 let client: CortiClient | null = null;
@@ -44,11 +60,14 @@ let lastEnv: CortiSdkEnvironment | null = null;
 let namespace = "default";
 let store: ConfigStore = createLocalConfigStore(namespace);
 let agentId: string | null = null;
-let preparedFor: string | null = null;
+/** The prompt currently installed on the remote agent, or null when unknown. */
+let installedPrompt: string | null = null;
+/** The entry currently selected — tracked so runSecondPassAgent can rebuild the spec. */
+let currentEntry: AgentEntry | null = null;
 
 let state: SecondPassAgentState = {
-  prompt: DEFAULT_PROMPT,
   status: "idle",
+  activeName: "",
 };
 
 const listeners = new Set<() => void>();
@@ -66,25 +85,46 @@ const set = (patch: Partial<SecondPassAgentState>) => {
   emit();
 };
 
-const spec = (): AgentSpec => ({
-  ...SECOND_PASS_AGENT,
-  systemPrompt: state.prompt,
-});
+let syncChain: Promise<void> = Promise.resolve();
 
-async function prepare() {
+const AGENT_ID_KEY = "secondPass.agentId";
+
+function spec(prompt: string): AgentSpec {
+  return {
+    ...SECOND_PASS_AGENT,
+    systemPrompt: prompt,
+    model: "corti-s1-mini",
+    lifecycle: "persistent",
+  };
+}
+
+async function syncPrompt(entry: AgentEntry) {
   if (!client) {
     return;
   }
-  set({ status: "preparing", error: undefined });
-  try {
-    if (!agentId) {
-      agentId = await ensureAgent(client, spec());
-      store.set(AGENT_ID_KEY, agentId);
-    }
-    set({ status: "ready" });
-  } catch (error) {
-    set({ status: "error", error: describeAgentError(error) });
+  currentEntry = entry;
+  set({ status: "preparing", error: undefined, activeName: entry.name });
+  if (!agentId) {
+    agentId = await ensureAgent(client, spec(entry.prompt));
+    store.set(AGENT_ID_KEY, agentId);
+    installedPrompt = null;
   }
+  if (installedPrompt === entry.prompt) {
+    set({ status: "ready" });
+    return;
+  }
+  await client.agentic.agents.update(agentId, { systemPrompt: entry.prompt });
+  installedPrompt = entry.prompt;
+  set({ status: "ready" });
+}
+
+function queueSync(entry: AgentEntry): Promise<void> {
+  syncChain = syncChain
+    .then(() => syncPrompt(entry))
+    .catch((e: unknown) => {
+      set({ status: "error", error: describeAgentError(e) });
+    });
+  return syncChain;
 }
 
 export function configureSecondPassAgent(
@@ -110,51 +150,19 @@ export function configureSecondPassAgent(
     namespace = nextNamespace;
     store = createLocalConfigStore(nextNamespace);
     agentId = store.get<string>(AGENT_ID_KEY, "") || null;
-    preparedFor = null;
-    set({
-      prompt: store.get<string>(PROMPT_KEY, "") || DEFAULT_PROMPT,
-      status: "idle",
-      error: undefined,
-    });
+    installedPrompt = null;
+    currentEntry = null;
+    set({ status: "idle", error: undefined, activeName: "" });
   }
 
-  if (client && preparedFor !== namespace) {
-    preparedFor = namespace;
-    void prepare();
-  }
+  setAgentLibraryIdentity(clientId, tenant);
+  setSelectionIdentity(clientId, tenant);
 }
 
-export async function savePrompt(prompt: string) {
-  store.set(PROMPT_KEY, prompt);
-  set({ prompt });
-  if (!client || !agentId) {
-    return;
-  }
-
-  set({ status: "preparing", error: undefined });
-  try {
-    await client.agents.update(agentId, { systemPrompt: prompt });
-    set({ status: "ready" });
-  } catch (error) {
-    set({ status: "error", error: describeAgentError(error) });
-  }
-}
-
-export const resetPrompt = () => savePrompt(DEFAULT_PROMPT);
-
-export function exportAgent() {
-  const payload = {
-    agent: { ...SECOND_PASS_AGENT, systemPrompt: state.prompt },
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "corti-second-pass-agent.json";
-  link.click();
-  URL.revokeObjectURL(url);
+/** Install a specific agent entry's prompt on the platform agent. */
+export function selectAgent(entry: AgentEntry) {
+  setSelectedAgentId(entry.id);
+  void queueSync(entry);
 }
 
 export async function runSecondPassAgent(text: string): Promise<string> {
@@ -169,15 +177,24 @@ export async function runSecondPassAgent(text: string): Promise<string> {
   set({ status: "running", error: undefined });
   try {
     if (!agentId) {
-      agentId = await ensureAgent(client, spec());
+      if (!currentEntry) {
+        const library = agentStore.getItems();
+        currentEntry = library[0] ?? null;
+      }
+      if (!currentEntry) {
+        throw new Error("No agent selected. Pick one from the dropdown.");
+      }
+      agentId = await ensureAgent(client, spec(currentEntry.prompt));
       store.set(AGENT_ID_KEY, agentId);
+      installedPrompt = currentEntry.prompt;
     }
     let output = "";
     try {
       output = await sendAgentMessage(client, agentId, normalized);
     } catch (error) {
       if (/404|not.?found/i.test(String(error))) {
-        agentId = await ensureAgent(client, spec());
+        const prompt = currentEntry?.prompt ?? installedPrompt ?? DEFAULT_PROMPT;
+        agentId = await ensureAgent(client, spec(prompt));
         store.set(AGENT_ID_KEY, agentId);
         output = await sendAgentMessage(client, agentId, normalized);
       } else {

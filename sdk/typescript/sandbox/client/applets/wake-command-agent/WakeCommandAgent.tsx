@@ -1,6 +1,6 @@
 import type { TranscriptEventDetail } from "@corti/dictation-web";
-import { Brain, Loader2, RotateCcw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { Brain, ChevronRight, Loader2, RotateCcw, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,11 +9,14 @@ import { CortiDictationComponent } from "../_shared/cortiDictationReact";
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import { useHidNoCommands } from "../_shared/useDictationDevice";
 import { useDictationLanguage } from "../_shared/useDictationLanguage";
+import { cn } from "../_shared/utils";
 import {
   clearConversationError,
+  clearDebugLog,
   configureConversation,
   handleWakeCommand,
   logFinalTranscript,
+  logInterimTranscript,
   logWakeCommand,
   resetConversation,
   sendComposer,
@@ -22,7 +25,7 @@ import {
   useConversationStore,
 } from "./agent";
 import { buildConversationalConfig } from "./config";
-import { WAKE_COMMAND_ID } from "./model";
+import { type DebugEntry, WAKE_COMMAND_ID } from "./model";
 
 const STATUS_LABEL: Record<string, string> = {
   preparing: "Preparing...",
@@ -34,7 +37,8 @@ const STATUS_LABEL: Record<string, string> = {
 export function WakeCommandAgent() {
   const { authConfig, clientId, tenantName, sdkEnvironment } = useCortiAccessToken();
   const { language, onLanguagesChanged } = useDictationLanguage();
-  const { status, error, messages, composer, autoSend, contextId } = useConversationStore();
+  const { status, error, messages, composer, autoSend, contextId, debugLog } =
+    useConversationStore();
   const viewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,10 +61,14 @@ export function WakeCommandAgent() {
 
   const handleTranscript = useCallback((e: CustomEvent<TranscriptEventDetail>) => {
     const data = e.detail?.data;
-    if (!data || Array.isArray(data) || !data.isFinal) {
+    if (!data || Array.isArray(data)) {
       return;
     }
-    logFinalTranscript(data.text);
+    if (data.isFinal) {
+      logFinalTranscript(data.text);
+    } else {
+      logInterimTranscript(data.text);
+    }
   }, []);
 
   const onCommand = useCallback(async (e: CustomEvent) => {
@@ -231,6 +239,85 @@ export function WakeCommandAgent() {
         </div>
 
         {error && <p className="mt-3 text-sm text-variant-error-foreground">{error}</p>}
+      </div>
+
+      <DebugLogPanel entries={debugLog} onClear={clearDebugLog} />
+    </div>
+  );
+}
+
+function formatDebugTime(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}:${pad(d.getMilliseconds(), 3)}`;
+}
+
+const TYPE_COLORS: Record<string, string> = {
+  "session-config": "",
+  "interim-transcript": "text-muted-foreground",
+  "final-transcript": "text-blue-600 dark:text-blue-400",
+  command: "text-corti-lime",
+  "agent-request": "text-purple-600 dark:text-purple-400",
+  "agent-response": "text-purple-600 dark:text-purple-400",
+  "agent-error": "text-red-600 dark:text-red-400",
+};
+
+function DebugLogRow({ entry }: { entry: DebugEntry }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasDetail = entry.text.length > 120 || entry.data !== undefined;
+  const color = TYPE_COLORS[entry.type] ?? "";
+
+  return (
+    <div>
+      <div className="flex items-start gap-2">
+        {hasDetail ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="mt-0.5 shrink-0 text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight className={cn("h-3 w-3 transition-transform", expanded && "rotate-90")} />
+          </button>
+        ) : (
+          <span className="mt-0.5 w-3 shrink-0" />
+        )}
+        <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+          {formatDebugTime(entry.at)}
+        </span>
+        <span className={cn("shrink-0 text-[11px] font-medium", color)}>{entry.type}</span>
+        <span className="min-w-0 flex-1 truncate text-xs text-foreground">{entry.text}</span>
+      </div>
+      {expanded && hasDetail && (
+        <pre className="ml-10 mt-0.5 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded bg-muted/50 p-2 text-[11px] text-muted-foreground">
+          {entry.data !== undefined ? JSON.stringify(entry.data, null, 2) : entry.text}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+function DebugLogPanel({ entries, onClear }: { entries: DebugEntry[]; onClear: () => void }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Debug log
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Session config, transcripts, commands, agent requests and responses.
+          </p>
+        </div>
+        <Button size="sm" variant="ghost" onClick={onClear}>
+          <Trash2 className="h-4 w-4" /> Clear
+        </Button>
+      </div>
+      <div className="flex max-h-64 flex-col gap-1 overflow-auto rounded-md border border-border bg-background p-3">
+        {entries.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No entries yet.</p>
+        ) : (
+          entries.map((entry) => <DebugLogRow key={entry.id} entry={entry} />)
+        )}
       </div>
     </div>
   );

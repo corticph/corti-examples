@@ -2,22 +2,23 @@
  * The cleanup prompt library: named, language-tagged system prompts for the
  * copy-editor agent.
  *
- * WHY THIS EXISTS: there used to be exactly one system prompt per API client
- * (`copyEdit.systemPrompt`). Dictating in Danish and then in English meant
- * hand-editing that single prompt each time, because a copy-editor instructed
- * in English will happily "correct" Danish text into English. A prompt is only
- * ever right for the language it was written for, so the language is part of
- * the prompt's identity here, not a label bolted on.
+ * Each prompt defines a title, a language tag (informational — the prompt is
+ * written for that language), a system prompt body, and a command phrase that
+ * triggers the agent by voice when the prompt is active.
  *
- * SELECTION: `resolveActivePrompt` picks the entry matching the current
- * dictation language, unless the user has pinned one explicitly. The pin and
- * the user's own prompts persist per API client (clientId:tenant) through the
- * same ConfigStore seam the command / replacement / term stores use, so
- * switching tenant doesn't leak prompts across environments.
+ * SELECTION: the user explicitly picks which prompt to run from a dropdown.
+ * There is no automatic language matching — a prompt is only correct for the
+ * language it was written for, so auto-selecting risks silently rewriting
+ * clinical text in the wrong language. The first built-in is the default.
+ *
+ * The user's own prompts and the selection persist per API client
+ * (clientId:tenant) through the same ConfigStore seam the command / replacement
+ * / term stores use, so switching tenant doesn't leak prompts across
+ * environments.
  *
  * The resolution helpers are pure and exported for tests — getting the wrong
- * prompt silently rewrites clinical text in the wrong language, which is the
- * one failure here worth pinning down with unit tests.
+ * prompt silently rewrites clinical text, which is the one failure here worth
+ * pinning down with unit tests.
  */
 import { useMemo, useSyncExternalStore } from "react";
 import {
@@ -33,18 +34,25 @@ Do NOT reword, rephrase, summarize, expand, or remove content. Do NOT change cli
 Preserve line breaks and overall structure.
 Return ONLY the corrected text — no commentary, preamble, labels, or quotation marks.`;
 
+export const SUMMARY_LIST_PROMPT = `You are a meticulous copy editor for dictated clinical text.
+Apply ONLY the minimal spelling, grammar, capitalization, spacing, and punctuation corrections needed to make the text readable and adherent to standard written conventions.
+Rephrase, summarize, and restructure the narrative paragraphs into concise bullet points.
+Do NOT change clinical meaning, numbers, units, medication names, or the author's vocabulary.
+Return ONLY the corrected text — no commentary, preamble, labels, or quotation marks.`;
+
 export interface CleanupPrompt extends RuleBase {
   /** Shown in the library list and the active-prompt readout. */
   title: string;
   /**
    * Dictation language this prompt is written for, as a Corti transcribe
-   * language tag ("en", "da", "en-US"). Free-form rather than an enum: the
-   * supported set comes from the dictation component at runtime and grows
-   * server-side without a client release.
+   * language tag ("en", "da", "en-US"). Informational only — does not drive
+   * automatic selection.
    */
   language: string;
   /** The system prompt installed on the agent when this entry is active. */
   prompt: string;
+  /** Voice command phrase that triggers the agent when this prompt is active. */
+  commandPhrase: string;
 }
 
 const CATALOG: CleanupPrompt[] = [
@@ -54,8 +62,20 @@ const CATALOG: CleanupPrompt[] = [
     title: "Minimal copy edit",
     language: "en",
     prompt: DEFAULT_PROMPT,
+    commandPhrase: "copy edit",
+  },
+  {
+    id: "builtin:summary-list-en",
+    builtin: true,
+    title: "Summary list",
+    language: "en",
+    prompt: SUMMARY_LIST_PROMPT,
+    commandPhrase: "summarize that",
   },
 ];
+
+/** The default selected prompt id (first catalog entry). */
+export const DEFAULT_PROMPT_ID = CATALOG[0].id;
 
 /**
  * Holds the user's own entries only — the catalog is merged in by
@@ -111,6 +131,17 @@ export function useCleanupPrompts(): CleanupPrompt[] {
   return useMemo(() => mergeWithCatalog(userItems), [userItems]);
 }
 
+/** Resolve the selected prompt from the library, falling back to the default. */
+export function resolveSelectedPrompt(prompts: CleanupPrompt[], id: string): CleanupPrompt | null {
+  if (id) {
+    const found = prompts.find((p) => p.id === id);
+    if (found) {
+      return found;
+    }
+  }
+  return prompts[0] ?? null;
+}
+
 /**
  * Save an edit or a new prompt. Always stored as a user entry, including when it
  * overrides a catalog id — that's what persists it.
@@ -125,136 +156,66 @@ export function removeCleanupPrompt(id: string) {
 }
 
 /* ------------------------------------------------------------------ */
-/* language matching                                                   */
+/* selection                                                           */
 /* ------------------------------------------------------------------ */
 
-/** Base subtag of a language tag: "en-US" → "en". */
-function baseTag(language: string): string {
-  return language.toLowerCase().trim().split(/[-_]/)[0];
-}
+const SELECTION_KEY = "copyEdit.selectedPromptId";
 
-/**
- * Whether a prompt written for `promptLanguage` applies to dictation in
- * `dictationLanguage`.
- *
- * Region-tolerant in both directions — a prompt tagged "en" is the right prompt
- * for "en-US" dictation, and vice versa. Copy-editing rules are a property of
- * the language, not the locale, so requiring an exact tag match would leave the
- * user with no prompt for the sake of a distinction that doesn't matter here.
- */
-export function languageMatches(promptLanguage: string, dictationLanguage: string): boolean {
-  if (!promptLanguage || !dictationLanguage) {
-    return false;
-  }
-  const a = promptLanguage.toLowerCase().trim();
-  const b = dictationLanguage.toLowerCase().trim();
-  return a === b || baseTag(a) === baseTag(b);
-}
+let selNamespace = "default";
+let selStore: ConfigStore = createLocalConfigStore(selNamespace);
+let selectedId: string = selStore.get<string>(SELECTION_KEY, "") || DEFAULT_PROMPT_ID;
 
-export interface ActivePrompt {
-  /** The prompt to run, or null when the library is empty. */
-  prompt: CleanupPrompt | null;
-  /** How it was chosen — drives the panel's explanation of what's happening. */
-  reason: "pinned" | "language" | "fallback" | "empty";
-}
-
-/**
- * Choose the prompt to run.
- *
- * A pin always wins, including when its language disagrees with what's being
- * dictated: an explicit choice by the user is not something to second-guess.
- * Otherwise prefer an exact tag match over a base-subtag one, so a prompt
- * written specifically for "en-US" beats the generic "en" entry when dictating
- * en-US. Falling back to *some* prompt beats refusing to run, but the caller is
- * told via `reason` so it can say the language doesn't match.
- */
-export function resolveActivePrompt(
-  prompts: CleanupPrompt[],
-  dictationLanguage: string,
-  pinnedId: string | null,
-): ActivePrompt {
-  if (pinnedId) {
-    const pinned = prompts.find((p) => p.id === pinnedId);
-    if (pinned) {
-      return { prompt: pinned, reason: "pinned" };
-    }
-  }
-  const tag = dictationLanguage.toLowerCase().trim();
-  const exact = prompts.find((p) => p.language.toLowerCase().trim() === tag);
-  if (exact) {
-    return { prompt: exact, reason: "language" };
-  }
-  const loose = prompts.find((p) => languageMatches(p.language, tag));
-  if (loose) {
-    return { prompt: loose, reason: "language" };
-  }
-  const fallback = prompts.find((p) => p.builtin) ?? prompts[0];
-  if (fallback) {
-    return { prompt: fallback, reason: "fallback" };
-  }
-  return { prompt: null, reason: "empty" };
-}
-
-/* ------------------------------------------------------------------ */
-/* the pin                                                             */
-/* ------------------------------------------------------------------ */
-
-const PIN_KEY = "copyEdit.pinnedPromptId";
-
-let pinNamespace = "default";
-let pinStore: ConfigStore = createLocalConfigStore(pinNamespace);
-let pinnedId: string | null = pinStore.get<string>(PIN_KEY, "") || null;
-
-const pinListeners = new Set<() => void>();
-const pinSubscribe = (l: () => void) => {
-  pinListeners.add(l);
-  return () => pinListeners.delete(l);
+const selListeners = new Set<() => void>();
+const selSubscribe = (l: () => void) => {
+  selListeners.add(l);
+  return () => selListeners.delete(l);
 };
-const pinSnapshot = () => pinnedId;
-const emitPin = () => {
-  pinListeners.forEach((l) => {
+const selSnapshot = () => selectedId;
+const emitSel = () => {
+  selListeners.forEach((l) => {
     l();
   });
 };
 
-/** `null` means "follow the dictation language". */
-export function setPinnedPromptId(id: string | null) {
-  if (id === pinnedId) {
+export function setSelectedPromptId(id: string) {
+  if (id === selectedId) {
     return;
   }
-  pinnedId = id;
-  pinStore.set(PIN_KEY, id ?? "");
-  emitPin();
+  selectedId = id;
+  selStore.set(SELECTION_KEY, id);
+  emitSel();
 }
 
-export function usePinnedPromptId(): string | null {
-  return useSyncExternalStore(pinSubscribe, pinSnapshot, pinSnapshot);
+export function useSelectedPromptId(): string {
+  return useSyncExternalStore(selSubscribe, selSnapshot, selSnapshot);
 }
 
 /**
- * Point both the library and the pin at one API client's namespace. Wraps the
- * two so callers can't update one and forget the other, which would pin an id
- * belonging to a different tenant's library.
+ * Point both the library and the selection at one API client's namespace.
+ * `scope` is an app-specific suffix so each app (on-demand, dictation suite,
+ * speech-flex) keeps its own prompt selection under the same clientId:tenant.
  */
-export function setPromptIdentity(clientId?: string, tenant?: string) {
+export function setPromptIdentity(clientId?: string, tenant?: string, scope?: string) {
   promptStore.setIdentity(clientId, tenant);
   const ns = identityNamespace(clientId, tenant);
-  if (ns === pinNamespace) {
+  const scopedNs = scope ? `${ns}:${scope}` : ns;
+  if (scopedNs === selNamespace) {
     return;
   }
-  pinNamespace = ns;
-  pinStore = createLocalConfigStore(ns);
-  pinnedId = pinStore.get<string>(PIN_KEY, "") || null;
-  emitPin();
+  selNamespace = scopedNs;
+  selStore = createLocalConfigStore(scopedNs);
+  selectedId = selStore.get<string>(SELECTION_KEY, "") || DEFAULT_PROMPT_ID;
+  emitSel();
 }
 
 /** JSON payload for the library's export button. */
 export function toExport(prompts: CleanupPrompt[]) {
   return {
-    prompts: prompts.map(({ title, language, prompt }) => ({
+    prompts: prompts.map(({ title, language, prompt, commandPhrase }) => ({
       title,
       language,
       prompt,
+      commandPhrase,
     })),
   };
 }

@@ -1,7 +1,7 @@
 import type { Corti } from "@corti/sdk";
 
 export const WAKE_COMMAND_ID = "conversational_agent_wake";
-export const DEBUG_LOG_LIMIT = 50;
+export const DEBUG_LOG_LIMIT = 100;
 
 export type ConversationRole = "user" | "assistant";
 export type ConversationSource = "typed" | "voice";
@@ -14,12 +14,22 @@ export interface ConversationMessage {
   at: number;
 }
 
+export type DebugEntryType =
+  | "session-config"
+  | "interim-transcript"
+  | "final-transcript"
+  | "command"
+  | "agent-request"
+  | "agent-response"
+  | "agent-stream-chunk"
+  | "agent-error";
+
 export interface DebugEntry {
-  id: string;
-  type: "transcript" | "command";
+  id: number;
+  type: DebugEntryType;
   text: string;
   at: number;
-  variables?: Record<string, string | null> | null;
+  data?: unknown;
 }
 
 export interface ResettableConversationState {
@@ -43,18 +53,20 @@ export function extractWakeIntent(
   return command.rawTranscriptText.replace(WAKE_PREFIX_RE, "").replace(/\s+/g, " ").trim();
 }
 
+let debugSeq = 0;
+
 export function appendDebugEntry(
   entries: DebugEntry[],
   entry: Omit<DebugEntry, "id" | "at">,
 ): DebugEntry[] {
   return [
+    ...entries,
     {
       ...entry,
-      id: crypto.randomUUID(),
+      id: debugSeq++,
       at: Date.now(),
     },
-    ...entries,
-  ].slice(0, DEBUG_LOG_LIMIT);
+  ].slice(-DEBUG_LOG_LIMIT);
 }
 
 export function clearConversationState<T extends ResettableConversationState>(state: T): T {

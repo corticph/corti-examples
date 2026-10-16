@@ -1,14 +1,7 @@
-import { Download, Trash2 } from "lucide-react";
+import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  clearDebugLog,
-  resetPrompt,
-  savePrompt,
-  useConversationStore,
-  WAKE_COMMAND_AGENT,
-} from "./agent";
+import { resetPrompt, savePrompt, useConversationStore, WAKE_COMMAND_AGENT } from "./agent";
 
 function exportAgent(prompt: string) {
   const payload = { agent: { ...WAKE_COMMAND_AGENT, systemPrompt: prompt } };
@@ -24,7 +17,7 @@ function exportAgent(prompt: string) {
 }
 
 export function WakeCommandAgentDetails() {
-  const { prompt, debugLog } = useConversationStore();
+  const { prompt, status } = useConversationStore();
   const [draft, setDraft] = useState(prompt);
 
   useEffect(() => setDraft(prompt), [prompt]);
@@ -46,8 +39,10 @@ export function WakeCommandAgentDetails() {
           </li>
           <li>
             When the wake phrase is recognized, the spoken intent is extracted from the command
-            variable and sent to a Corti Agentic Framework agent. The response appears in the chat
-            panel. Threaded memory persists across turns until you reset the conversation.
+            variable and sent to a Corti Agentic Framework agent. Responses stream incrementally via
+            SSE for minimal latency, appearing token-by-token in the chat panel. The agent uses
+            model <code>corti-s1-mini</code> with lifecycle <code>persistent</code>. Threaded memory
+            persists across turns until you reset the conversation.
           </li>
           <li>
             You can also type directly into the composer. An auto-send toggle controls whether
@@ -61,48 +56,6 @@ export function WakeCommandAgentDetails() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agent</p>
         <p className="mt-1 text-foreground">{WAKE_COMMAND_AGENT.name}</p>
         <p className="text-xs text-muted-foreground">{WAKE_COMMAND_AGENT.description}</p>
-      </div>
-
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              STT debug log
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Final transcript events and matched commands only. No interim results are shown here.
-            </p>
-          </div>
-          <Button size="sm" variant="ghost" onClick={clearDebugLog}>
-            <Trash2 className="h-4 w-4" /> Clear
-          </Button>
-        </div>
-        <ScrollArea className="h-56 rounded-md border border-border bg-background">
-          <div className="flex flex-col gap-2 p-3">
-            {debugLog.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                No final transcript or command events captured yet.
-              </p>
-            ) : (
-              debugLog.map((entry) => (
-                <div key={entry.id} className="rounded-md border border-border bg-card px-3 py-2">
-                  <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-wide text-muted-foreground">
-                    <span>{entry.type}</span>
-                    <span>{new Date(entry.at).toLocaleTimeString()}</span>
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap font-mono text-xs text-foreground">
-                    {entry.text || "(empty)"}
-                  </p>
-                  {entry.variables && Object.keys(entry.variables).length > 0 && (
-                    <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-                      variables: {JSON.stringify(entry.variables)}
-                    </p>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </ScrollArea>
       </div>
 
       <div>

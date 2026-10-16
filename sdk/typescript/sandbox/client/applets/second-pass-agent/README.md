@@ -41,18 +41,22 @@ second-pass error.
 
 ## Agent behavior
 
-- The prompt is stored per API client (`clientId:tenant`) and edited in the
-  inputs card.
-- The agent is created lazily on first use and updated in place when the prompt
-  changes.
-- Each second-pass run is isolated: `client.agents.messageSend(...)` is called
+- The agent library is stored per API client (`clientId:tenant`) and managed in
+  the details card. Each entry defines a name and system prompt — pick which one
+  to apply from the dropdown in the live demo.
+- The agent is created lazily on first use (model `corti-s1-mini`, lifecycle
+  `persistent`) and updated in place when the selection changes — one platform
+  agent with a swapped prompt, not one per library entry.
+- Each second-pass run is isolated: `client.agentic.agents.sendMessage(...)` is called
   without a context id.
 
 ## Key files
 
 - `SecondPassAgent.tsx` — composes the shared runner (form + result cards) and
-  wires the agent prompt editor + second-pass output panel
-- `SecondPassAgentDetails.tsx` — agent prompt editor / reset / export
-- `agent.ts` — second-pass agent lifecycle and persisted prompt
+  wires the agent selector + second-pass output panel
+- `SecondPassAgentDetails.tsx` — agent library editor / reset / export
+- `agent.ts` — second-pass agent lifecycle and selection
+- `agentLibrary.ts` — agent library store, selection, and built-in catalog
+- `AgentLibraryEditor.tsx` — agent library management UI (name + prompt editor)
 - `model.ts` — speaker-labelled flattening for the agent input
 - `README.md` — behavior + composition notes

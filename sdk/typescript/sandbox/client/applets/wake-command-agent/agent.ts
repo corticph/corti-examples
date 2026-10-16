@@ -10,7 +10,7 @@ import {
   type AgentSpec,
   describeAgentError,
   ensureAgent,
-  sendAgentMessageWithContext,
+  streamAgentMessageWithContext,
 } from "../_shared/cortiAgent";
 import { EXAMPLES_ANALYTICS } from "../_shared/examplesAnalytics";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
@@ -33,6 +33,7 @@ Provide concise, clinically appropriate responses for a healthcare professional 
 Maintain conversational memory within the current thread so follow-up questions stay grounded in prior turns.
 Do not claim actions you did not perform. If information is missing or uncertain, say so plainly.
 Respond in clear professional language. Prefer short paragraphs or brief lists when they improve readability.
+Maximum 2-3 sentences per response unless the user asks for detail.
 Do not add boilerplate disclaimers unless the user asks for medical advice that requires caution.`;
 
 const PROMPT_KEY = "wakeCommandAgent.systemPrompt";
@@ -90,6 +91,8 @@ const set = (patch: Partial<ConversationState>) => {
 const spec = (): AgentSpec => ({
   ...WAKE_COMMAND_AGENT,
   systemPrompt: state.prompt,
+  model: "corti-s1-mini",
+  lifecycle: "persistent",
 });
 
 function persistConversationData() {
@@ -188,7 +191,7 @@ export function configureConversation(
 
   if (client && preparedFor !== namespace) {
     preparedFor = namespace;
-    void prepare();
+    void prepare().then(() => logSessionConfig());
   }
 }
 
@@ -201,7 +204,7 @@ export async function savePrompt(prompt: string) {
 
   set({ status: "preparing", error: undefined });
   try {
-    await client.agents.update(agentId, { systemPrompt: prompt });
+    await client.agentic.agents.update(agentId, { systemPrompt: prompt });
     set({ status: "ready" });
   } catch (error) {
     set({ status: "error", error: describeAgentError(error) });
@@ -232,14 +235,37 @@ export function logFinalTranscript(text: string) {
   if (!normalized) {
     return;
   }
-  logDebug({ type: "transcript", text: normalized });
+  logDebug({ type: "final-transcript", text: normalized });
+}
+
+export function logInterimTranscript(text: string) {
+  const normalized = text.trim();
+  if (!normalized) {
+    return;
+  }
+  logDebug({ type: "interim-transcript", text: normalized });
 }
 
 export function logWakeCommand(command: Corti.TranscribeCommandData) {
   logDebug({
     type: "command",
     text: command.rawTranscriptText.trim(),
-    variables: command.variables,
+    data: { variables: command.variables },
+  });
+}
+
+export function logSessionConfig() {
+  logDebug({
+    type: "session-config",
+    text: `Model: corti-s1-mini, Lifecycle: persistent`,
+    data: {
+      agentName: WAKE_COMMAND_AGENT.name,
+      model: "corti-s1-mini",
+      lifecycle: "persistent",
+      autoSend: state.autoSend,
+      contextId: state.contextId,
+      promptPreview: state.prompt.slice(0, 200),
+    },
   });
 }
 
@@ -257,12 +283,16 @@ export async function sendText(text: string, source: ConversationSource): Promis
     return false;
   }
   if (isBusy(state.status)) {
-    set({ error: "Wait for the current response before sending another turn." });
+    set({
+      error: "Wait for the current response before sending another turn.",
+    });
     return false;
   }
 
   set({ status: "running", error: undefined, composer: "" });
   appendMessage("user", normalized, source);
+
+  const assistantId = crypto.randomUUID();
 
   try {
     if (!agentId) {
@@ -270,26 +300,100 @@ export async function sendText(text: string, source: ConversationSource): Promis
       store.set(AGENT_ID_KEY, agentId);
     }
 
+    // Create a pending assistant message that will grow as chunks arrive.
+    state = {
+      ...state,
+      messages: [
+        ...state.messages,
+        {
+          id: assistantId,
+          role: "assistant",
+          text: "",
+          source: "typed",
+          at: Date.now(),
+        },
+      ],
+    };
+    emit();
+
+    let accumulated = "";
+    let contextId = state.contextId;
     let retriedWithoutContext = false;
-    let result: Awaited<ReturnType<typeof sendAgentMessageWithContext>> | undefined;
+
+    logDebug({
+      type: "agent-request",
+      text: normalized.slice(0, 200),
+      data: { agentId, contextId, historyLength: 10, fullText: normalized },
+    });
 
     try {
-      result = await sendAgentMessageWithContext(client, agentId, normalized, {
-        contextId: state.contextId || undefined,
+      const stream = streamAgentMessageWithContext(client, agentId, normalized, {
+        contextId: contextId || undefined,
+        historyLength: 10,
       });
+
+      for await (const chunk of stream) {
+        if (chunk.contextId) {
+          contextId = chunk.contextId;
+        }
+        accumulated += chunk.delta;
+        state = {
+          ...state,
+          messages: state.messages.map((m) =>
+            m.id === assistantId ? { ...m, text: accumulated } : m,
+          ),
+          contextId,
+        };
+        emit();
+      }
     } catch (error) {
       if (/404|not.?found/i.test(String(error))) {
         agentId = await ensureAgent(client, spec());
         store.set(AGENT_ID_KEY, agentId);
-        retriedWithoutContext = Boolean(state.contextId);
-        result = await sendAgentMessageWithContext(client, agentId, normalized);
+        retriedWithoutContext = Boolean(contextId);
+        accumulated = "";
+        contextId = null;
+
+        const stream = streamAgentMessageWithContext(client, agentId, normalized, {
+          historyLength: 10,
+        });
+
+        for await (const chunk of stream) {
+          if (chunk.contextId) {
+            contextId = chunk.contextId;
+          }
+          accumulated += chunk.delta;
+          state = {
+            ...state,
+            messages: state.messages.map((m) =>
+              m.id === assistantId ? { ...m, text: accumulated } : m,
+            ),
+            contextId,
+          };
+          emit();
+        }
       } else {
         throw error;
       }
     }
 
-    const responseText = result.text.trim();
+    const responseText = accumulated.trim();
+    logDebug({
+      type: "agent-response",
+      text: responseText.slice(0, 200) || "(empty)",
+      data: {
+        agentId,
+        contextId,
+        fullText: responseText,
+        chunkCount: accumulated.length,
+      },
+    });
+
     if (!responseText) {
+      state = {
+        ...state,
+        messages: state.messages.filter((m) => m.id !== assistantId),
+      };
       set({
         status: "ready",
         error: "Agent returned no text; the conversation was left unchanged.",
@@ -299,20 +403,31 @@ export async function sendText(text: string, source: ConversationSource): Promis
 
     state = {
       ...state,
-      contextId: result.contextId ?? state.contextId,
+      contextId: contextId ?? state.contextId,
     };
-    appendMessage("assistant", responseText, "typed");
     persistConversationData();
     set({
       status: "ready",
-      contextId: result.contextId ?? state.contextId,
+      contextId: contextId ?? state.contextId,
       error: retriedWithoutContext
         ? "The saved thread was unavailable on the server, so a new one was started for this turn."
         : undefined,
     });
     return true;
   } catch (error) {
-    set({ status: "error", error: describeAgentError(error) });
+    // Remove the pending assistant message on error so it doesn't linger as
+    // an empty "Assistant typed" bubble.
+    state = {
+      ...state,
+      messages: state.messages.filter((m) => m.id !== assistantId),
+    };
+    const errMsg = describeAgentError(error);
+    logDebug({
+      type: "agent-error",
+      text: errMsg,
+      data: { error: String(error) },
+    });
+    set({ status: "error", error: errMsg });
     return false;
   }
 }
@@ -342,14 +457,13 @@ export async function handleWakeCommand(command: Corti.TranscribeCommandData): P
 }
 
 export async function resetConversation() {
-  const currentAgentId = agentId;
   const currentContextId = state.contextId;
   let resetError: string | undefined;
   set({ status: "resetting", error: undefined });
 
   try {
-    if (client && currentAgentId && currentContextId) {
-      await client.agents.deleteContext(currentAgentId, currentContextId);
+    if (client && currentContextId) {
+      await client.agentic.contexts.delete(currentContextId);
     }
   } catch (error) {
     if (!/404|not.?found/i.test(String(error))) {

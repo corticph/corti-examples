@@ -11,18 +11,19 @@ result.
 
 ## Agent lifecycle
 
-- On first use, `client.agents.list()` looks for an agent named
-  “Sandbox Copy Editor”; if absent, `client.agents.create({ name,
-description, systemPrompt, experts: [] })` makes one. The id is cached per
+- On first use, `client.agentic.agents.list()` looks for an agent named
+  "Sandbox Copy Editor"; if absent, `client.agentic.agents.create({ name,
+description, systemPrompt, model: "corti-s1-mini-instant", lifecycle:
+"persistent", connectors: [] })` makes one. The id is cached per
   **API client** (`clientId:tenant`) via the `ConfigStore` seam.
-- A copy-edit calls `client.agents.messageSend(id, { message: … })` with no
+- A copy-edit calls `client.agentic.agents.sendMessage(id, { message: … })` with no
   `contextId` (each call isolated) and reads the text from
-  `task.status.message.parts[].text` (fallback: artifacts).
+  `message.parts[].text` (fallback: artifacts).
 - The behavior lives entirely in the **system prompt**, and there is a library
   of them in `prompts.ts` — each with a title and the dictation language it was
   written for. `resolveActivePrompt` picks the one matching the current
   dictation language unless the user pinned one; `setActivePrompt` then installs
-  it on the single cached agent via `client.agents.update`. A prompt is only
+  it on the single cached agent via `client.agentic.agents.update`. A prompt is only
   correct for its own language, so an English copy-editor prompt will happily
   "correct" Danish text into English — hence the pairing rather than one global
   prompt.
