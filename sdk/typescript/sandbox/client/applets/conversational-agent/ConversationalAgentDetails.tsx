@@ -1,37 +1,21 @@
-import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useSessionState } from "../_shared/sessionState";
 import {
   applyPreset,
   CONVERSATIONAL_AGENT,
-  clearDebugLog,
   savePrompt,
+  setConnectorsEnabled,
   setExternalAgentId,
-  setMinSpeculativeWords,
-  setShowProvisionalDetails,
-  setSpeculativeEnabled,
   setTurnMode,
   type TurnMode,
   useConversationalAgentStore,
-  useDebugLogStore,
 } from "./agent";
 import { ORCHESTRATOR_KEY, SPECIALIST_KEYS, VOICE_PRESETS } from "./model";
 
 export function ConversationalAgentDetails() {
-  const {
-    prompt,
-    presetKey,
-    status,
-    turnMode,
-    minSpeculativeWords,
-    showProvisionalDetails,
-    speculativeEnabled,
-    externalAgentId,
-  } = useConversationalAgentStore();
-  const debugLog = useDebugLogStore();
+  const { prompt, presetKey, status, turnMode, externalAgentId, connectorsEnabled } =
+    useConversationalAgentStore();
   const [draft, setDraft] = useState(prompt);
-  const [debugOpen, setDebugOpen] = useSessionState("debugOpen", false);
   const [agentIdDraft, setAgentIdDraft] = useState(externalAgentId ?? "");
 
   useEffect(() => setDraft(prompt), [prompt]);
@@ -50,8 +34,8 @@ export function ConversationalAgentDetails() {
         <ul className="ml-4 mt-1 list-disc text-muted-foreground">
           <li>
             Always-on voice chat — hold the mic button and speak freely, no wake phrase needed.
-            Everything spoken is transcribed and sent to the agent, which responds in the chat panel
-            when you finish talking.
+            Everything spoken is transcribed and sent to the agent, which streams its response via
+            SSE for minimal latency.
           </li>
           <li>
             Turn modes control how aggressively the agent responds: instant fires on the first
@@ -59,11 +43,9 @@ export function ConversationalAgentDetails() {
           </li>
           <li>
             Auto-detect mode lets the orchestrator identify the use case from your first message and
-            route to the right specialist. Pin a specialist to override auto-detection.
-          </li>
-          <li>
-            Speculative prefetch (alpha) pre-generates responses from interim transcripts to reduce
-            latency. When enabled, the response may be ready the moment you stop speaking.
+            route to the right specialist. Pin a specialist to override auto-detection. Specialist
+            presets attach registry connectors — e.g. clinical gets PubMed, pharmacy triage gets
+            POSOS, CPOE capture gets coding.
           </li>
           <li>
             Paste an external agent ID to use an agent created elsewhere instead of auto-creating
@@ -76,6 +58,10 @@ export function ConversationalAgentDetails() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agent</p>
         <p className="mt-1 text-foreground">{CONVERSATIONAL_AGENT.name}</p>
         <p className="text-xs text-muted-foreground">{CONVERSATIONAL_AGENT.description}</p>
+        <p className="text-xs text-muted-foreground">
+          Model: <code>{CONVERSATIONAL_AGENT.model}</code>, lifecycle:{" "}
+          <code>{CONVERSATIONAL_AGENT.lifecycle}</code>
+        </p>
       </div>
 
       {/* External agent ID — when set, skip agent creation and use this ID directly */}
@@ -118,9 +104,9 @@ export function ConversationalAgentDetails() {
         </p>
       </div>
 
-      {/* Settings grid — 2×3: toggles on top two rows, slider on bottom row */}
+      {/* Settings — mode toggle, turn mode, connectors toggle */}
       <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-border text-xs">
-        {/* Mode toggle — row 1, col 1 */}
+        {/* Mode toggle */}
         <div className="flex flex-col gap-2 border-b border-r border-border p-3">
           <p className="font-semibold uppercase tracking-wide text-muted-foreground">Mode</p>
           <div className="flex items-center justify-between gap-2">
@@ -148,58 +134,7 @@ export function ConversationalAgentDetails() {
           </div>
         </div>
 
-        {/* Speculative toggle — row 1, col 2 */}
-        <div className="flex flex-col gap-2 border-b border-border p-3">
-          <p className="flex items-center gap-1.5 font-semibold uppercase tracking-wide text-muted-foreground">
-            Speculative
-            <span className="rounded bg-muted-foreground/15 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
-              alpha
-            </span>
-          </p>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-muted-foreground">Prefetch</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={speculativeEnabled}
-              onClick={() => setSpeculativeEnabled(!speculativeEnabled)}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none ${
-                speculativeEnabled ? "bg-corti-lime" : "bg-muted-foreground/30"
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                  speculativeEnabled ? "translate-x-4" : "translate-x-0"
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* Provisional toggle — row 2, col 1 */}
-        <div className="flex flex-col gap-2 border-b border-r border-border p-3">
-          <p className="font-semibold uppercase tracking-wide text-muted-foreground">Provisional</p>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-muted-foreground">Show details</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={showProvisionalDetails}
-              onClick={() => setShowProvisionalDetails(!showProvisionalDetails)}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none ${
-                showProvisionalDetails ? "bg-corti-lime" : "bg-muted-foreground/30"
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                  showProvisionalDetails ? "translate-x-4" : "translate-x-0"
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* Turn mode — row 2, col 2 */}
+        {/* Turn mode */}
         <div className="flex flex-col gap-2 border-b border-border p-3">
           <p className="font-semibold uppercase tracking-wide text-muted-foreground">Turn mode</p>
           <div className="flex gap-1">
@@ -220,24 +155,32 @@ export function ConversationalAgentDetails() {
           </div>
         </div>
 
-        {/* Min words slider — row 3, spanning 2 cols */}
-        <div
-          className={`flex flex-col gap-2 p-3 col-span-2 ${speculativeEnabled ? "" : "opacity-40"}`}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-semibold uppercase tracking-wide text-muted-foreground">Min words</p>
-            <span className="tabular-nums text-muted-foreground">{minSpeculativeWords}</span>
+        {/* Connectors toggle — spans both columns */}
+        <div className="flex items-center justify-between gap-2 p-3">
+          <div>
+            <p className="font-semibold uppercase tracking-wide text-muted-foreground">
+              Connectors
+            </p>
+            <p className="text-muted-foreground">
+              Attach registry connectors (PubMed, POSOS, coding) to specialist presets
+            </p>
           </div>
-          <input
-            type="range"
-            min={1}
-            max={10}
-            step={1}
-            value={minSpeculativeWords}
-            disabled={!speculativeEnabled}
-            onChange={(e) => setMinSpeculativeWords(Number(e.target.value))}
-            className="w-full accent-corti-lime"
-          />
+          <button
+            type="button"
+            role="switch"
+            aria-checked={connectorsEnabled}
+            disabled={saving || usingExternal}
+            onClick={() => setConnectorsEnabled(!connectorsEnabled)}
+            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none disabled:opacity-50 ${
+              connectorsEnabled ? "bg-corti-lime" : "bg-muted-foreground/30"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                connectorsEnabled ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
       </div>
 
@@ -260,7 +203,8 @@ export function ConversationalAgentDetails() {
           ))}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Selecting a specialist overrides auto-detect mode. Reset the thread after switching.
+          Selecting a specialist overrides auto-detect mode and attaches its connectors. Reset the
+          thread after switching.
         </p>
       </div>
 
@@ -299,61 +243,6 @@ export function ConversationalAgentDetails() {
             Discard
           </Button>
         </div>
-      </div>
-
-      {/* Debug log */}
-      <div className="rounded-lg border border-border">
-        <button
-          type="button"
-          onClick={() => setDebugOpen((o) => !o)}
-          className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
-        >
-          <span>Debug log ({debugLog.length} events)</span>
-          <ChevronDown
-            className={`h-3.5 w-3.5 transition-transform ${debugOpen ? "rotate-180" : ""}`}
-          />
-        </button>
-
-        {debugOpen && (
-          <div className="border-t border-border p-3">
-            <div className="mb-2 flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={debugLog.length === 0}
-                onClick={() => {
-                  const text = debugLog
-                    .map(
-                      (e) =>
-                        `+${String(e.tMs).padStart(6)}ms  ${e.event.padEnd(24)} ${e.text}${e.latencyMs != null ? `  (${e.latencyMs}ms)` : ""}`,
-                    )
-                    .join("\n");
-                  void navigator.clipboard.writeText(text);
-                }}
-              >
-                Copy
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={debugLog.length === 0}
-                onClick={clearDebugLog}
-              >
-                Clear
-              </Button>
-            </div>
-            <pre className="max-h-72 overflow-y-auto rounded-md bg-muted p-2 font-mono text-[11px] leading-relaxed text-foreground">
-              {debugLog.length === 0
-                ? "No events yet — speak to start recording."
-                : debugLog
-                    .map(
-                      (e) =>
-                        `+${String(e.tMs).padStart(6)}ms  ${e.event.padEnd(24)} ${e.text}${e.latencyMs != null ? `  (${e.latencyMs}ms)` : ""}`,
-                    )
-                    .join("\n")}
-            </pre>
-          </div>
-        )}
       </div>
     </div>
   );

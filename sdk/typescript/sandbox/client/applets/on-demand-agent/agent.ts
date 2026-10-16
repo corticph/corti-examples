@@ -104,6 +104,8 @@ const set = (patch: Partial<CopyEditState>) => {
 const spec = (systemPrompt: string): AgentSpec => ({
   ...COPY_EDIT_AGENT,
   systemPrompt,
+  model: "corti-s1-mini-instant",
+  lifecycle: "persistent",
 });
 
 /**
@@ -134,7 +136,7 @@ async function syncPrompt() {
     return;
   }
   set({ status: "preparing", error: undefined });
-  await client.agents.update(agentId, { systemPrompt: target });
+  await client.agentic.agents.update(agentId, { systemPrompt: target });
   installedPrompt = target;
   set({ status: "ready" });
 }
@@ -260,7 +262,9 @@ export async function runCopyEdit(adapter: EditorAdapter) {
         store.set(AGENT_ID_KEY, agentId);
         // ensureAgent may have handed back an agent it found rather than one it
         // created, whose systemPrompt is then unknown — write ours over it.
-        await client.agents.update(agentId, { systemPrompt: desiredPrompt });
+        await client.agentic.agents.update(agentId, {
+          systemPrompt: desiredPrompt,
+        });
         installedPrompt = desiredPrompt;
         corrected = await sendAgentMessage(client, agentId, text);
       } else {

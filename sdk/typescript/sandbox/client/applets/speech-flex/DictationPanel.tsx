@@ -46,10 +46,10 @@ import {
   useCopyEditStore,
 } from "../on-demand-agent/agent";
 import {
-  resolveActivePrompt,
+  resolveSelectedPrompt,
   setPromptIdentity,
   useCleanupPrompts,
-  usePinnedPromptId,
+  useSelectedPromptId,
 } from "../on-demand-agent/prompts";
 import { useInteractionDraft } from "./interactionDraft";
 
@@ -115,7 +115,7 @@ export function DictationPanel({
 
   const cleanup = useCopyEditStore();
   const cleanupPrompts = useCleanupPrompts();
-  const pinnedPromptId = usePinnedPromptId();
+  const selectedPromptId = useSelectedPromptId();
 
   // Rebase history when the interaction changes — the restored draft belongs
   // to a different visit, so the old undo stack no longer describes the editor.
@@ -126,20 +126,20 @@ export function DictationPanel({
 
   // Wire agent identity and config.
   useEffect(() => {
-    setPromptIdentity(clientId, tenant);
+    setPromptIdentity(clientId, tenant, "speech-flex");
   }, [clientId, tenant]);
 
   useEffect(() => {
     configureCopyEdit(authConfig, sdkEnvironment, clientId, tenant);
   }, [authConfig, sdkEnvironment, clientId, tenant]);
 
-  const activePrompt = resolveActivePrompt(cleanupPrompts, language, pinnedPromptId);
+  const activePrompt = resolveSelectedPrompt(cleanupPrompts, selectedPromptId);
 
   // Install the active prompt on the agent whenever it changes.
   useEffect(() => {
-    if (activePrompt.prompt) {
+    if (activePrompt) {
       import("../on-demand-agent/agent").then(({ setActivePrompt }) => {
-        setActivePrompt(activePrompt.prompt.prompt);
+        setActivePrompt(activePrompt.prompt);
       });
     }
   }, [activePrompt]);

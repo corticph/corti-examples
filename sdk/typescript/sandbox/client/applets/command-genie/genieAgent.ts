@@ -52,8 +52,8 @@ Return:
 Insert predefined text:
   { "kind": "insert_text", "text": "the text to insert at the cursor" }
 
-Run a JavaScript script (variables: editor, command, variables in scope):
-  { "kind": "script", "code": "const t = variables.text; editor.insert(t);" }
+Run a JavaScript script. The 'editor' object has these methods only: 'editor.getText()' returns plain text (newlines may be lost in rich-text editors), 'editor.getHTML()' returns full HTML markup, 'editor.setHTML(html)' replaces all content, 'editor.replaceRange(start, end, text)' replaces a text-offset range, 'editor.setSelection(start, end)' moves the caret, 'editor.insert(text)' inserts at cursor with spacing rules. Never use 'editor.setText' — it does not exist.
+  { "kind": "script", "code": "const html = editor.getHTML(); editor.setHTML(html.replace(/\\[/g, ''));" }
 
 Delete the last dictated segment:
   { "kind": "delete_last" }

@@ -1,5 +1,5 @@
-import { Download, RotateCcw, Sparkles, Upload } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Copy, Download, Sparkles, Upload } from "lucide-react";
+import { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSessionState } from "../_shared/sessionState";
@@ -13,18 +13,20 @@ import {
 import { useCortiAccessToken } from "../_shared/useCortiAccessToken";
 import {
   configureSecondPassAgent,
-  exportAgent,
-  resetPrompt,
   runSecondPassAgent,
-  savePrompt,
+  selectAgent,
+  useAgentLibrary,
   useSecondPassAgentStore,
+  useSelectedAgentId,
 } from "./agent";
+import { resolveSelectedAgent } from "./agentLibrary";
 import { flattenTranscriptForAgent } from "./model";
 
 export function SecondPassAgent() {
   const { authConfig, clientId, tenantName, sdkEnvironment } = useCortiAccessToken();
   const agentStore = useSecondPassAgentStore();
-  const [promptDraft, setPromptDraft] = useState(agentStore.prompt);
+  const agents = useAgentLibrary();
+  const selectedAgentId = useSelectedAgentId();
 
   const runner = useTranscriptRunner();
   const [agentOutput, setAgentOutput] = useSessionState("agentOutput", "");
@@ -34,18 +36,23 @@ export function SecondPassAgent() {
     configureSecondPassAgent(authConfig, sdkEnvironment, clientId, tenantName);
   }, [authConfig, sdkEnvironment, clientId, tenantName]);
 
-  useEffect(() => {
-    setPromptDraft(agentStore.prompt);
-  }, [agentStore.prompt]);
+  const selectedAgent = useMemo(
+    () => resolveSelectedAgent(agents, selectedAgentId),
+    [agents, selectedAgentId],
+  );
 
-  const promptDirty = promptDraft !== agentStore.prompt;
+  // Install the selected agent's prompt on the platform agent whenever the
+  // selection changes (or on first load when the library resolves).
+  useEffect(() => {
+    if (selectedAgent) {
+      selectAgent(selectedAgent);
+    }
+  }, [selectedAgent]);
 
   function handleGenerate() {
     setJsonOpen(false);
     void runner.generate({
       onRunStart: () => setAgentOutput(""),
-      // Runs once the transcript is finalized; a failure here keeps the raw
-      // transcript on screen (the runner preserves it on error).
       secondPass: async (transcript) => {
         const agentInput = flattenTranscriptForAgent(transcript);
         setAgentOutput(await runSecondPassAgent(agentInput));
@@ -67,7 +74,7 @@ export function SecondPassAgent() {
       <TranscriptRunnerForm
         runner={runner}
         idPrefix="second-pass"
-        description="Configure transcript generation, edit the agent prompt, then run the second-pass agent."
+        description="Configure transcript generation, pick an agent, then run the second-pass agent."
         actionLabel="Generate"
         actionIcon={
           runner.sourceMode === "upload" ? (
@@ -80,45 +87,34 @@ export function SecondPassAgent() {
         generateDisabled={agentStore.status === "preparing"}
         phaseLabel={{ second_pass: "Running agent..." }}
       >
-        <div className="rounded-lg border border-border bg-background p-4">
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <div>
-              <h4 className="text-sm font-semibold text-foreground">Agent prompt</h4>
-              <p className="text-xs text-muted-foreground">
-                Edit the second-pass prompt before running the agent.
-              </p>
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {agentStore.status === "preparing"
-                ? "Updating agent..."
-                : promptDirty
-                  ? "Unsaved changes"
-                  : `Agent ${agentStore.status}`}
-            </span>
-          </div>
-          <Textarea
-            value={promptDraft}
-            onChange={(e) => setPromptDraft(e.target.value)}
-            rows={8}
-            spellCheck={false}
-            className="resize-y font-mono text-xs"
-          />
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              onClick={() => void savePrompt(promptDraft)}
-              disabled={!promptDirty || agentStore.status === "preparing"}
-            >
-              Save prompt
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => void resetPrompt()}>
-              <RotateCcw className="h-4 w-4" /> Reset
-            </Button>
-            <Button size="sm" variant="outline" onClick={exportAgent}>
-              <Download className="h-4 w-4" /> Export
-            </Button>
-          </div>
-        </div>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Agent
+          </span>
+          <select
+            value={selectedAgentId}
+            onChange={(e) => {
+              const entry = agents.find((a) => a.id === e.target.value);
+              if (entry) {
+                selectAgent(entry);
+              }
+            }}
+            className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-corti-lime"
+          >
+            {agents.map((agent) => (
+              <option key={agent.id} value={agent.id}>
+                {agent.name}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-muted-foreground">
+            {agentStore.status === "preparing"
+              ? "Updating agent..."
+              : agentStore.activeName
+                ? `Active: ${agentStore.activeName}`
+                : ""}
+          </span>
+        </label>
       </TranscriptRunnerForm>
 
       <TranscriptRunMetadata
@@ -135,11 +131,11 @@ export function SecondPassAgent() {
           onViewJson={() => setJsonOpen(true)}
         />
 
-        <section className="rounded-xl border border-border bg-card p-4">
+        <section className="flex flex-col rounded-xl border border-border bg-card p-4">
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-foreground">Agent second pass</h3>
             <p className="text-xs text-muted-foreground">
-              Output from the second-pass Corti agent using the stored system prompt.
+              Output from the second-pass Corti agent using the selected agent's system prompt.
             </p>
           </div>
 
@@ -148,8 +144,47 @@ export function SecondPassAgent() {
             readOnly
             rows={14}
             placeholder="The agent output will appear here after the transcript is finalized."
-            className="resize-y font-mono text-xs"
+            className="mb-4 flex-1 resize-y font-mono text-xs"
           />
+
+          <div className="flex flex-col gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setJsonOpen(true)}
+              disabled={!runner.runState.transcriptJson}
+            >
+              View JSON
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (runner.runState.transcriptJson && runner.runState.transcriptId) {
+                  const blob = new Blob([JSON.stringify(runner.runState.transcriptJson, null, 2)], {
+                    type: "application/json",
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = `${runner.runState.transcriptId}.json`;
+                  link.click();
+                  URL.revokeObjectURL(url);
+                }
+              }}
+              disabled={!runner.runState.transcriptJson || !runner.runState.transcriptId}
+            >
+              <Download className="h-4 w-4" /> Download JSON
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigator.clipboard.writeText(agentOutput)}
+              disabled={!agentOutput}
+            >
+              <Copy className="h-4 w-4" /> Copy
+            </Button>
+          </div>
         </section>
       </div>
 

@@ -562,7 +562,7 @@ const runs = groupBySpeakerRuns(ordered);           // never arrival order`,
       "Speech to text commands can be linked to calls to the Corti Agentic Framework. For example, an on-demand agent can copy-edit text entered by typing or dictation to catch spelling, grammar, and punctuation issues without rewording or changing meaning.",
     ],
     how: [
-      "On first use the app finds or creates a named copy editor agent and caches its id per API client. A copy edit sends the current text with no contextId so each call is isolated, then reads the edited text back from the task result. The minimal edit behavior lives entirely in the agent system prompt.",
+      "On first use the app finds or creates a named copy editor agent (model corti-s1-mini-instant, lifecycle persistent) and caches its id per API client. Each prompt in the library defines a command phrase; the active prompt's command phrase is registered with the STT engine so the user can trigger the agent by voice. A copy edit sends the current text with no contextId so each call is isolated, then reads the edited text back from the message response. The minimal edit behavior lives entirely in the agent system prompt.",
     ],
     snippets: [
       {
@@ -570,8 +570,8 @@ const runs = groupBySpeakerRuns(ordered);           // never arrival order`,
         lang: "typescript",
         code: `const agentId = await ensureAgent(client, agentSpec); // list or create, cached
 
-const task = await client.agents.messageSend(agentId, { message });
-const edited = task.status.message.parts.find((p) => p.text)?.text;`,
+const resp = await client.agentic.agents.sendMessage(agentId, { message });
+const edited = resp.message.parts.find((p) => p.text)?.text;`,
       },
     ],
   },
@@ -2525,29 +2525,29 @@ const result = parseGenieResponse(responseText, mode);
       "A raw transcript from pre-recorded audio is a first draft — accurate but unstructured, with speaker labels, no formatting, and no clinical synthesis. The second-pass agent processes the finalized transcript text to produce a concise, clinically useful output.",
     ],
     how: [
-      "Two phases run in sequence: first the REST /transcripts endpoint transcribes the uploaded audio, then the agent receives the flattened transcript text and returns a cleaned-up version. The original transcript stays visible alongside the agent output, so neither the transcript nor the agent pass is lost if the other fails. The agent is created once and reused; its system prompt is editable and persists per API client.",
+      "Two phases run in sequence: first the REST /transcripts endpoint transcribes the uploaded audio, then the agent receives the flattened transcript text and returns a cleaned-up version. The original transcript stays visible alongside the agent output, so neither the transcript nor the agent pass is lost if the other fails. The agent library offers multiple named agents (clinical summary, SOAP note, referral letter) — the user picks which one to apply from a dropdown in the live demo. The agent is created once (model corti-s1-mini, lifecycle persistent) and reused; its system prompt is swapped when the selection changes.",
     ],
   },
 
   "wake-command-agent": {
     summary:
-      "Agent conversations are gated behind a wake phrase ('hey Corti summarize the plan') so the microphone isn't always streaming to the agent. STT recognizes the wake command, extracts the spoken intent, and sends it to a Corti Agentic Framework agent with threaded memory that persists across turns. Users can also type directly, and an auto-send toggle controls whether intents go straight to the agent or land in the composer for review.",
+      "Agent conversations are gated behind a wake phrase ('hey Corti summarize the plan') so the microphone isn't always streaming to the agent. STT recognizes the wake command, extracts the spoken intent, and sends it to a Corti Agentic Framework agent (model corti-s1-mini) with threaded memory that persists across turns. Responses stream token-by-token via SSE for minimal latency. Users can also type directly, and an auto-send toggle controls whether intents go straight to the agent or land in the composer for review.",
     premise: [
       "Gate agent conversations behind a wake phrase so the microphone isn't always streaming to an agent. Keep the mic live and speak a single-utterance wake command like 'hey Corti summarize the plan' — STT results not preceded by the wake phrase are ignored.",
     ],
     how: [
-      "When the wake phrase is recognized, the spoken intent is extracted from the command variable and sent to a Corti Agentic Framework agent. The response appears in a chat panel, and threaded memory persists across turns until the conversation is reset. Users can also type directly into the composer. An auto-send toggle controls whether wake-command intents go straight to the agent or land in the composer for review.",
+      "When the wake phrase is recognized, the spoken intent is extracted from the command variable and sent to a Corti Agentic Framework agent (model corti-s1-mini, lifecycle persistent). Responses stream incrementally via SSE, appearing token-by-token in the chat panel. Conversation context is capped at 10 turns for latency, and threaded memory persists across turns until the conversation is reset. Users can also type directly into the composer. An auto-send toggle controls whether wake-command intents go straight to the agent or land in the composer for review.",
     ],
   },
 
   "conversational-agent": {
     summary:
-      "Always-on voice chat with a Corti Agentic Framework agent — no wake phrase needed. Push-to-talk, everything spoken is transcribed and sent to the agent when the turn ends. Turn modes (instant, standard, deliberate) control how aggressively the agent responds. Auto-detect mode lets an orchestrator route to the right specialist from the first message; speculative prefetch (alpha) pre-generates responses from interim transcripts to reduce latency. An external agent ID can be pasted to bypass auto-creation.",
+      "Always-on voice chat with a Corti Agentic Framework agent — no wake phrase needed. Push-to-talk, everything spoken is transcribed and sent to the agent when the turn ends. Responses stream incrementally via SSE for minimal latency. Turn modes (instant, standard, deliberate) control how aggressively the agent responds. Auto-detect mode lets an orchestrator route to the right specialist from the first message. Specialist presets attach registry connectors — clinical gets PubMed, pharmacy triage gets POSOS, CPOE capture gets coding. An external agent ID can be pasted to bypass auto-creation.",
     premise: [
-      "Always-on voice chat with an agent that responds as you finish speaking — no wake phrase, no single-utterance commands. Push-to-talk, and the agent orchestrates the request and responds based on the supported specialists.",
+      "Always-on voice chat with an agent that streams its response as you finish speaking — no wake phrase, no single-utterance commands. Push-to-talk, and the agent orchestrates the request and responds based on the supported specialists.",
     ],
     how: [
-      "Hold the mic button and speak freely. Everything spoken is transcribed and sent to the agent when the turn ends. Turn modes (instant, standard, deliberate) control how aggressively the agent responds — instant fires on the first pause, standard waits longer, deliberate waits for mic-off or a long silence. Auto-detect mode lets the orchestrator identify the use case from the first message and route to the right specialist. Speculative prefetch (alpha) pre-generates responses from interim transcripts to reduce latency. An external agent ID can be pasted to bypass auto-creation.",
+      "Hold the mic button and speak freely. Everything spoken is transcribed and sent to the agent when the turn ends. Responses stream incrementally via SSE, appearing token-by-token in the chat panel. The agent uses model corti-s1 with lifecycle persistent. Turn modes (instant, standard, deliberate) control how aggressively the agent responds — instant fires on the first pause, standard waits longer, deliberate waits for mic-off or a long silence. Auto-detect mode lets the orchestrator identify the use case from the first message and route to the right specialist. Specialist presets attach registry connectors — clinical gets PubMed, pharmacy triage gets POSOS, CPOE capture gets coding. An external agent ID can be pasted to bypass auto-creation.",
     ],
   },
 };

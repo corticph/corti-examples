@@ -1053,7 +1053,8 @@ export function CommandGenie() {
 
 function CommandLogRow({ entry }: { entry: CommandLogEntry }) {
   const [expanded, setExpanded] = useState(false);
-  const hasDetail = entry.variables && Object.keys(entry.variables).length > 0;
+  const isError = entry.description.startsWith("Script error:");
+  const hasDetail = (entry.variables && Object.keys(entry.variables).length > 0) || isError;
 
   return (
     <div>
@@ -1071,8 +1072,14 @@ function CommandLogRow({ entry }: { entry: CommandLogEntry }) {
           ) : (
             <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
           )}
-          <code className="shrink-0 font-semibold text-foreground">{entry.id}</code>
-          <span className="truncate text-foreground">{entry.description}</span>
+          <code
+            className={cn("shrink-0 font-semibold", isError && "text-red-600 dark:text-red-400")}
+          >
+            {entry.id}
+          </code>
+          <span className={cn("truncate", isError && "text-red-600 dark:text-red-400")}>
+            {entry.description}
+          </span>
         </button>
       ) : (
         <div className="flex items-baseline gap-2 text-xs">
@@ -1083,14 +1090,23 @@ function CommandLogRow({ entry }: { entry: CommandLogEntry }) {
           <span className="truncate text-foreground">{entry.description}</span>
         </div>
       )}
-      {expanded && hasDetail && entry.variables && (
-        <div className="ml-10 mt-1.5">
-          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Variables
-          </p>
-          <pre className="max-h-48 overflow-auto rounded bg-muted/50 p-2 text-[11px] text-muted-foreground">
-            {JSON.stringify(entry.variables, null, 2)}
-          </pre>
+      {expanded && hasDetail && (
+        <div className="ml-10 mt-1.5 space-y-2">
+          {isError && (
+            <pre className="max-h-48 overflow-auto rounded bg-red-500/10 p-2 text-[11px] text-red-600 dark:text-red-400">
+              {entry.description}
+            </pre>
+          )}
+          {entry.variables && Object.keys(entry.variables).length > 0 && (
+            <div>
+              <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Variables
+              </p>
+              <pre className="max-h-48 overflow-auto rounded bg-muted/50 p-2 text-[11px] text-muted-foreground">
+                {JSON.stringify(entry.variables, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       )}
     </div>

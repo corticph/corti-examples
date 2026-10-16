@@ -10,9 +10,13 @@ export interface VoiceMessage {
   pending?: boolean;
 }
 
+import type { Corti } from "@corti/sdk";
+
 export interface VoicePreset {
   label: string;
   prompt: string;
+  /** Registry connectors to attach when this preset's agent is created/updated. */
+  connectors?: Corti.CommonConnectorCreateRequest[];
 }
 
 export const ORCHESTRATOR_KEY = "orchestrator";
@@ -101,7 +105,9 @@ RESPONSE RULES:
 - For differentials, give the top 3 with one-line reasoning each.
 - For dosing or calculation questions, show the working.
 - Answer confidently. Say "I'm not certain" rather than hedging with generic disclaimers.
-- No boilerplate safety disclaimers unless the question involves a genuine patient-safety risk.`,
+- No boilerplate safety disclaimers unless the question involves a genuine patient-safety risk.
+- Use the PubMed connector to search for evidence when the clinician asks about literature, guidelines, or recent studies.`,
+    connectors: [{ type: "registry", name: "pubmed-expert" }],
   },
   pharmacyTriage: {
     label: "Pharmacy triage",
@@ -126,7 +132,9 @@ BEHAVIOR:
 - Opening turn: greet briefly and ask for all four fields in one sentence.
 - Each subsequent turn: silently note what is now known, then ask only for what is still missing — one brief question.
 - Once all four fields are confirmed: summarize them back and close with exactly this phrasing: "Your refill request has been submitted. You'll receive a text when it's ready for pickup." Do not add caveats about pharmacist review, fill times, or processing.
-- Maximum 2 sentences per response. Never re-ask for anything already provided. Never ask the caller to "confirm" something they just stated clearly.`,
+- Maximum 2 sentences per response. Never re-ask for anything already provided. Never ask the caller to "confirm" something they just stated clearly.
+- Use the POSOS connector for medication lookups, interaction checks, and dosing guidance when needed.`,
+    connectors: [{ type: "registry", name: "posos-expert" }],
   },
   appointmentScheduling: {
     label: "Appointment scheduling",
@@ -264,7 +272,9 @@ BEHAVIOR:
 - Once all required elements are confirmed: read the complete order back in standardized format: "[Drug] [dose] [route] [frequency] for [duration] — indication: [indication][special instructions if any]. Please confirm to submit." Then await verbal confirmation.
 - On confirmation: respond "Order captured." (In this demo, no system submission occurs.)
 - Never accept an incomplete order without flagging the missing elements.
-- Maximum 2 sentences per response except when reading back the full order.`,
+- Maximum 2 sentences per response except when reading back the full order.
+- Use the coding connector to assign ICD-10 codes when the clinician requests diagnosis coding.`,
+    connectors: [{ type: "registry", name: "coding-expert" }],
   },
   patientEducation: {
     label: "Patient education",

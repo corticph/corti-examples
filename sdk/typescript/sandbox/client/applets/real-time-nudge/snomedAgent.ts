@@ -282,7 +282,7 @@ async function prepare(
       systemPrompt: prompt + contract,
     });
     if (!created) {
-      await client.agents.update(id, { systemPrompt: prompt + contract });
+      await client.agentic.agents.update(id, { systemPrompt: prompt + contract });
     }
     await setAgentModel(id);
     state[key] = id;
@@ -308,7 +308,7 @@ export async function saveAgentPrompt(prompt: string) {
       const hadId = Boolean(state.codeId);
       const id = await prepare(client, state, "code", prompt);
       if (hadId) {
-        await client.agents.update(id, {
+        await client.agentic.agents.update(id, {
           systemPrompt: prompt + RESPONSE_CONTRACT,
         });
       }

@@ -16,7 +16,7 @@ export function OnDemandAgentDetails() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Prompt library
         </p>
-        <CleanupPromptLibrary />
+        <CleanupPromptLibrary showSelector={false} />
       </div>
 
       <div>
@@ -25,26 +25,27 @@ export function OnDemandAgentDetails() {
         </p>
         <ul className="ml-4 mt-1 list-disc text-muted-foreground">
           <li>
-            On first use the agent is created via <code>client.agents.create</code> if one named “
+            On first use the agent is created via <code>client.agentic.agents.create</code> (model{" "}
+            <code>corti-s1-mini-instant</code>, lifecycle <code>persistent</code>) if one named “
             {COPY_EDIT_AGENT.name}” doesn’t already exist; its id is cached per API client.
           </li>
           <li>
-            A copy-edit sends the editor text via <code>client.agents.messageSend</code> (no
+            A copy-edit sends the editor text via <code>client.agentic.agents.sendMessage</code> (no
             contextId — each call is isolated) and replaces the editor with the returned text. When
             the agent makes no edits it returns the text unchanged, so your content is always
             preserved.
           </li>
           <li>
             There is <strong>one agent with a swapped prompt</strong>, not an agent per library
-            entry: changing the active prompt calls <code>client.agents.update</code>. An agent per
-            entry would litter the tenant with agents for every prompt anyone ever tried, and they
-            would outlive the local library that named them.
+            entry: changing the active prompt calls <code>client.agentic.agents.update</code>. An
+            agent per entry would litter the tenant with agents for every prompt anyone ever tried,
+            and they would outlive the local library that named them.
           </li>
           <li>
-            The prompt to install is chosen by dictation language unless you pin one. A prompt is
-            only correct for the language it was written for — an English copy-editor will happily
-            “correct” Danish text into English — so the language is part of a prompt’s identity
-            here.
+            The active prompt is selected explicitly from the dropdown in the live demo, defaulting
+            to the first built-in. Each prompt also defines a <strong>command phrase</strong> that
+            triggers the agent by voice; the active prompt's command phrase is what the dictation
+            engine listens for.
           </li>
         </ul>
       </div>

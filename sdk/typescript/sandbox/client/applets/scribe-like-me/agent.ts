@@ -19,7 +19,7 @@
  * Both prompts are editable (see `ScribeLikeMeDetails.tsx`), same pattern as
  * second-pass-agent / wake-command-agent: a draft is persisted to
  * localStorage per API client, and saving pushes it to the live agent via
- * `client.agents.update`. `ensureAgent` matches an existing agent by *name*,
+ * `client.agentic.agents.update`. `ensureAgent` matches an existing agent by *name*,
  * so if "Scribe Style Reviewer"/"Scribe Template Tailor" were already
  * created in a tenant before a prompt change lands here, that tenant keeps
  * running the old prompt until it's explicitly saved (or reset) once from
@@ -330,7 +330,7 @@ async function getTailorAgentId(activeClient: CortiClient): Promise<string> {
 }
 
 /** Persist a Style Reviewer prompt draft and, if that agent already exists,
- * push it live via `client.agents.update` (if it doesn't exist yet, the next
+ * push it live via `client.agentic.agents.update` (if it doesn't exist yet, the next
  * call just creates it with this prompt). */
 export async function saveReviewerPrompt(prompt: string) {
   store.set(REVIEWER_PROMPT_KEY, prompt);
@@ -340,7 +340,9 @@ export async function saveReviewerPrompt(prompt: string) {
   }
   setPromptState({ status: "preparing", error: undefined });
   try {
-    await client.agents.update(reviewerAgentId, { systemPrompt: prompt });
+    await client.agentic.agents.update(reviewerAgentId, {
+      systemPrompt: prompt,
+    });
     setPromptState({ status: "ready" });
   } catch (e) {
     setPromptState({ status: "error", error: describeAgentError(e) });
@@ -358,7 +360,7 @@ export async function saveTailorPrompt(prompt: string) {
   }
   setPromptState({ status: "preparing", error: undefined });
   try {
-    await client.agents.update(tailorAgentId, { systemPrompt: prompt });
+    await client.agentic.agents.update(tailorAgentId, { systemPrompt: prompt });
     setPromptState({ status: "ready" });
   } catch (e) {
     setPromptState({ status: "error", error: describeAgentError(e) });
@@ -478,7 +480,9 @@ export function parseAndValidateTailorResponse(
 
   const missingIds = [...expectedIds].filter((sectionId) => !seenIds.has(sectionId));
   if (missingIds.length > 0) {
-    throw new Error(`Template Tailor omitted sectionIds: ${missingIds.join(", ")}.`);
+    const headingMap = new Map(chosen.sections.map((s) => [s.sectionId, s.heading]));
+    const names = missingIds.map((id) => headingMap.get(id) ?? id);
+    throw new Error(`Template Tailor omitted sectionIds: ${names.join(", ")}.`);
   }
   return { templateId: chosen.templateId, templatePromptOverride, sections };
 }
