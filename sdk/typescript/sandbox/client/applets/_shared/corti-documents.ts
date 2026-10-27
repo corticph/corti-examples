@@ -62,8 +62,30 @@ async function fetchTemplates(
   return inFlight;
 }
 
+/**
+ * Whether a template can generate a document in `lang`.
+ *
+ * `languages` lists the BCP 47 tags the template has been *tweaked* for —
+ * empty means no language-specific tweaks, i.e. the template is generic and
+ * can be generated in any language (this covers most Corti standard
+ * templates). A tweak like "da-DK" matches its primary subtag, so "da-DK"
+ * tweaked templates are offered for the "da" output language and vice versa.
+ */
+export function templateSupportsLanguage(
+  t: Pick<Corti.GuidedTemplateListItem, "languages">,
+  lang: string,
+): boolean {
+  if (t.languages.length === 0) {
+    return true;
+  }
+  const primary = lang.split("-")[0].toLowerCase();
+  return t.languages.some((l) => l.split("-")[0].toLowerCase() === primary);
+}
+
 /** Fetches (and session-caches) the tenant's guided document templates.
- * When `language` is provided, only templates that support it are returned. */
+ * When `language` is provided, the list is narrowed to templates that can
+ * generate in it: generic templates (empty `languages`) plus any tweaked for
+ * the same primary language. */
 export function useGuidedTemplates(
   authConfig: CortiAuth.AuthTokenDerivable,
   sdkEnvironment: CortiSdkEnvironment,
@@ -78,7 +100,7 @@ export function useGuidedTemplates(
       if (!active) {
         return;
       }
-      const filtered = language ? all.filter((t) => t.languages.includes(language)) : all;
+      const filtered = language ? all.filter((t) => templateSupportsLanguage(t, language)) : all;
       setTemplates(filtered);
       setLoading(false);
     };

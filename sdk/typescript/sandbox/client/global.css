@@ -166,6 +166,87 @@
   }
 }
 
+/* Motion for the full-screen clinical apps (Speech Flex and friends) —
+   from the Corti clinical app design language. Both are disabled under
+   prefers-reduced-motion. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 12px 0;
+  }
+}
+
+@layer utilities {
+  /* New cards fade up on mount (e.g. a freshly generated note). */
+  .animate-rise {
+    animation: rise 0.35s ease-out both;
+  }
+
+  /* Loading bar — a thin striped gradient that flows while work is running
+     (e.g. note generation in flight). */
+  .animate-flow {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--foreground) / 0.35) 50%,
+      transparent 50%
+    );
+    background-size: 12px 2px;
+    background-repeat: repeat-x;
+    background-position-y: center;
+    animation: flow 0.8s linear infinite;
+  }
+}
+
+/* Override corti-dictation / corti-ambient web component CSS variables so
+   the mic button and settings popover match the clinical design system
+   instead of the component's default blue (#007bff). CSS custom properties
+   inherit through the shadow DOM boundary, so setting them on the host
+   element overrides the defaults inside. */
+.clinical-mic {
+  /* Accent (recording) button — use foreground (near-black in light,
+     near-white in dark) like the "Generate note" button. */
+  --action-accent-background: hsl(var(--foreground));
+  --action-accent-background-hover: hsl(var(--foreground) / 0.85);
+  --action-accent-text-color: hsl(var(--background));
+  /* Red (stop) button — keep semantic red but use the design-system tone. */
+  --action-red-background: hsl(var(--destructive));
+  --action-red-background-hover: hsl(var(--destructive) / 0.85);
+  --action-red-text-color: hsl(var(--destructive-foreground));
+  /* Plain (settings gear) button — borderless, subtle hover. */
+  --action-plain-background: transparent;
+  --action-plain-background-hover: hsl(var(--accent));
+  --component-text-color: hsl(var(--muted-foreground));
+  /* Card / popover surfaces — align with the design system. */
+  --card-background: hsl(var(--card));
+  --card-border-color: hsl(var(--border));
+  --card-inner-border-radius: 5px;
+  --card-box-shadow: 0 1px 3px hsl(var(--foreground) / 0.06);
+  /* Focus ring — use the muted-foreground tone instead of blue. */
+  --callout-info-background: hsl(var(--variant-info-bg));
+  --callout-info-border: hsl(var(--variant-info-border));
+  --callout-info-text: hsl(var(--variant-info-text));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-flow {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

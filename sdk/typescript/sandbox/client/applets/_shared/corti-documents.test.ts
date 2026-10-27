@@ -6,6 +6,7 @@ import {
   documentSections,
   findDefaultTemplate,
   generateFromText,
+  templateSupportsLanguage,
 } from "./corti-documents";
 
 function makeDoc(
@@ -62,6 +63,44 @@ describe("findDefaultTemplate", () => {
 
   it("returns undefined for empty list", () => {
     expect(findDefaultTemplate([], "soap")).toBeUndefined();
+  });
+});
+
+describe("templateSupportsLanguage", () => {
+  it("offers generic templates (empty languages) for any language", () => {
+    // Empty `languages` means no language-specific tweaks — the template is
+    // generic and covers every language, incl. the Corti standard ones.
+    const generic = makeTemplate({ id: "std", languages: [] });
+    for (const lang of ["en", "en-GB", "da", "es", "pt", "sv"]) {
+      expect(templateSupportsLanguage(generic, lang)).toBe(true);
+    }
+  });
+
+  it("offers templates tweaked for the same primary language", () => {
+    expect(templateSupportsLanguage(makeTemplate({ languages: ["en"] }), "en")).toBe(true);
+    // "da-DK" tweak matches the "da" output language and vice versa.
+    expect(templateSupportsLanguage(makeTemplate({ languages: ["da-DK"] }), "da")).toBe(true);
+    expect(templateSupportsLanguage(makeTemplate({ languages: ["da"] }), "da-DK")).toBe(true);
+  });
+
+  it("does not offer templates tweaked for another language", () => {
+    expect(templateSupportsLanguage(makeTemplate({ languages: ["en"] }), "da")).toBe(false);
+    expect(templateSupportsLanguage(makeTemplate({ languages: ["en", "en-GB"] }), "fr")).toBe(
+      false,
+    );
+  });
+
+  it("matches BCP 47 tags case-insensitively", () => {
+    expect(templateSupportsLanguage(makeTemplate({ languages: ["DA-dk"] }), "da")).toBe(true);
+    expect(templateSupportsLanguage(makeTemplate({ languages: ["da"] }), "DA-DK")).toBe(true);
+  });
+
+  it("matches when any one of several tweaks applies", () => {
+    const template = makeTemplate({ languages: ["en-GB", "de"] });
+    expect(templateSupportsLanguage(template, "de")).toBe(true);
+    expect(templateSupportsLanguage(template, "de-CH")).toBe(true);
+    expect(templateSupportsLanguage(template, "en-US")).toBe(true);
+    expect(templateSupportsLanguage(template, "fr")).toBe(false);
   });
 });
 

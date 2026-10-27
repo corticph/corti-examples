@@ -11,6 +11,7 @@ import {
   FileText,
   Key,
   Loader2,
+  Maximize2,
   Mic,
   Sparkles,
   Stethoscope,
@@ -21,6 +22,7 @@ import { toast } from "sonner";
 import {
   APPLETS,
   type AppletDefinition,
+  appletFullscreenPath,
   appletPath,
   getApplet,
   getAppletByPath,
@@ -272,6 +274,7 @@ function DocsArticle({ applet }: { applet: AppletDefinition }) {
   const writeup = getAppletWriteup(applet.id);
   const Details = applet.Details;
   const Demo = applet.Component;
+  const AppletIcon = applet.icon;
   const detailsBelowDemo = !!applet.detailsBelowDemo;
 
   const detailsSection = Details && (
@@ -304,10 +307,42 @@ function DocsArticle({ applet }: { applet: AppletDefinition }) {
         {!detailsBelowDemo && detailsSection}
 
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Live demo
-          </h2>
-          {authed ? (
+          {applet.demoPlacement === "both" ? (
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Live demo
+              </h2>
+              <Button asChild variant="outline" size="sm">
+                <Link to={appletFullscreenPath(applet)}>
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  Open full screen
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Live demo
+            </h2>
+          )}
+          {applet.demoPlacement === "fullscreen" ? (
+            // Full-screen demos run as standalone viewport-filling apps on
+            // their own route; the docs card links to it instead of mounting
+            // the component (the app gates itself on authentication).
+            <div className="flex flex-col items-center justify-center gap-4 rounded border border-border bg-card py-14 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <AppletIcon className="h-6 w-6 text-muted-foreground" />
+              </span>
+              <p className="text-sm font-semibold text-foreground">Runs as a full-screen app</p>
+              <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">
+                {applet.title} opens in its own full-viewport workspace with the Corti clinical
+                design — capture bar, visit schedule, dictation editor, transcript, and note
+                generation side by side.
+              </p>
+              <Button asChild>
+                <Link to={appletFullscreenPath(applet)}>Open full screen</Link>
+              </Button>
+            </div>
+          ) : authed ? (
             <div className="rounded border border-border bg-card p-5">
               <Demo key={applet.id} />
             </div>

@@ -9,13 +9,28 @@
  *     (`<corti-ambient>`) with diarized transcription and optional facts
  *
  * A visit schedule (Corti interactions sorted by scheduled date) anchors
- * both modes to the same patient encounter. A toggle switch below the
- * mic control switches the recording and recognition behavior while
- * keeping the visit context constant.
+ * both modes to the same patient encounter. A toggle in the capture bar
+ * switches the recording and recognition behavior while keeping the visit
+ * context constant.
  *
- * The editor (DictationPanel) is collapsible — it is the "EHR" surface.
- * Mode toggling changes only the mic control in the header; the editor,
- * collapsible transcript/facts panels, and note generation card stay put.
+ * Runs as a full-viewport clinical app on its own route
+ * (`/:workflow/:applet/fullscreen`, via the registry's
+ * `demoPlacement: "fullscreen"`). Layout per the Corti
+ * clinical app design language:
+ *
+ *   ┌─────────────────────────────────────────────────────────────┐
+ *   │ TopBar: logo · label · config · exit                        │
+ *   │ Capture bar: mic control · mode pills · recording status    │
+ *   ├──────────┬──────────────────────────┬──────────────────────┤
+ *   │ Left rail│ Main panel               │ Note generation      │
+ *   │ 320px   │ dictation editor,        │ flex-1 — template,   │
+ *   │ patient  │ collapsible transcript   │ sources, generated   │
+ *   │ schedule │ + facts, command monitor │ notes                │
+ *   └──────────┴──────────────────────────┴──────────────────────┘
+ *
+ * The editor (DictationPanel) is the "EHR" surface. Mode toggling changes
+ * only the mic control in the capture bar; the editor, collapsible
+ * transcript/facts panels, and note generation card stay put.
  *
  * All interaction-scoped data (transcripts, facts, existing notes) is
  * fetched in a single effect when a visit is selected, using the validated
@@ -30,15 +45,19 @@
  * Phase 7: UX refactor — editor always visible, collapsible ambient
  * panels, combined context for note generation.
  * Phase 8: paste-transcript mode, preserve-dictated-text verbatim toggle
- * (client-side prepend), combined-no-facts source, collapsible
+ * (client-side verbatim routing via agent), collapsible
  * dictation editor.
+ * Phase 9: full-screen clinical app redesign — TopBar + capture bar +
+ * three-panel layout per the Corti clinical design language; patient
+ * identity lives in the left rail; runs on its own route.
  */
 
 import type { Corti } from "@corti/sdk";
 import { CortiClient } from "@corti/sdk";
-import { Loader2, Mic, Pencil, Radio, Save, Stethoscope, Trash2, X } from "lucide-react";
+import { Loader2, Mic, Radio, Stethoscope, Terminal, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Switch } from "@/components/ui/switch";
+import { Link } from "react-router-dom";
+import { Button as UiButton } from "@/components/ui/button";
 import { CortiAmbientComponent } from "../_shared/cortiAmbientReact";
 import { CortiDictationComponent } from "../_shared/cortiDictationReact";
 import { type DiarizedSegment, mergeDiarizedSegments } from "../_shared/diarizedTranscript";
@@ -60,7 +79,6 @@ import { setPromptIdentity } from "../on-demand-agent/prompts";
 import { replacementStore } from "../text-replacements/replacements";
 import {
   type AmbientClip,
-  CollapsibleSection,
   FactsPanel,
   RecordingStatusBar,
   TranscriptPanel,
@@ -68,9 +86,18 @@ import {
   useAmbientHandlers,
 } from "./AmbientPanel";
 import { DictationPanel } from "./DictationPanel";
+import { Button, Card, CardHeader } from "./kit";
 import { type ExistingNote, NoteGeneration } from "./NoteGeneration";
+import { PatientContext, type VisitEditParams } from "./PatientContext";
 import { parsePastedTranscript } from "./pastedTranscript";
-import { loadSettings, SpeechFlexConfig, type SpeechFlexSettings } from "./SpeechFlexConfig";
+import {
+  type DocumentSource,
+  loadSettings,
+  SpeechFlexConfig,
+  type SpeechFlexSettings,
+  saveSettings,
+} from "./SpeechFlexConfig";
+import { TopBar } from "./TopBar";
 import { useInteractions } from "./useInteractions";
 import { VisitSchedule } from "./VisitSchedule";
 import type { WorkspaceMode } from "./workspaceState";
@@ -83,31 +110,23 @@ import type { WorkspaceMode } from "./workspaceState";
  */
 const greenText = "text-lime-600 dark:text-corti-lime";
 
-const ENCOUNTER_TYPE_LABELS: Record<string, string> = {
-  first_consultation: "First consult",
-  consultation: "Consultation",
-  emergency: "Emergency",
-  inpatient: "Inpatient",
-  outpatient: "Outpatient",
-};
-
-/** A disabled mic control shown in ambient mode when no visit is selected. */
-function DisabledMicControl({ message }: { message: string }) {
-  return (
-    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 opacity-60">
-      <Mic className="h-4 w-4 text-muted-foreground" />
-      <span className="text-sm text-muted-foreground">{message}</span>
-    </div>
-  );
-}
-
-export function SpeechFlex() {
+export function SpeechFlex({ onExit }: { onExit?: () => void }) {
   const { authConfig, clientId, sdkEnvironment, isReady, tenantName } = useCortiAccessToken();
   const { language, onLanguagesChanged } = useDictationLanguage();
   const [mode, setMode] = useSessionState<WorkspaceMode>("mode", "dictation");
   const [creatingVisit, setCreatingVisit] = useState(false);
   const [dictationText, setDictationText] = useState("");
   const [settings, setSettings] = useState<SpeechFlexSettings>(loadSettings);
+
+  // Persist source dropdown changes back to settings so the selection
+  // survives page reloads.
+  const handleSourceChange = useCallback((source: DocumentSource) => {
+    setSettings((prev) => {
+      const next = { ...prev, documentSource: source };
+      saveSettings(next);
+      return next;
+    });
+  }, []);
 
   // Interaction-scoped data — all fetched in a single effect when a visit
   // is selected. Owned here so it survives mode toggles. Cleared when the
@@ -169,7 +188,7 @@ export function SpeechFlex() {
     setPromptIdentity(clientId, tenantName, "speech-flex");
   }, [clientId, tenantName]);
 
-  // Ref bridge: the dictation web component lives in the header, the
+  // Ref bridge: the dictation web component lives in the capture bar, the
   // DictationPanel lives below. The ref forwards transcript events.
   const dictationTranscriptRef = useRef<((e: CustomEvent) => void) | null>(null);
   const commandHandlerRef = useRef<((e: CustomEvent) => void) | null>(null);
@@ -198,8 +217,16 @@ export function SpeechFlex() {
     });
   }, [sdkEnvironment, authConfig, isReady]);
 
-  const { visits, loading, error, selectedVisitId, selectVisit, createVisit, updateVisit } =
-    useInteractions(client);
+  const {
+    visits,
+    loading,
+    error,
+    selectedVisitId,
+    selectVisit,
+    createVisit,
+    updateVisit,
+    deleteVisit,
+  } = useInteractions(client);
 
   const selectedVisit = visits.find((v) => v.interactionId === selectedVisitId);
 
@@ -222,60 +249,37 @@ export function SpeechFlex() {
   );
   const effectiveSegments = transcriptPanelMode === "paste" ? pastedSegments : ambientSegments;
 
-  // Inline edit state for the patient context bar
-  const [editingVisit, setEditingVisit] = useState(false);
-  const [editForm, setEditForm] = useState<{
-    patientName: string;
-    patientIdentifier: string;
-    encounterType: string;
-    encounterStatus: string;
-    scheduledAt: string;
-  }>({
-    patientName: "",
-    patientIdentifier: "",
-    encounterType: "outpatient",
-    encounterStatus: "planned",
-    scheduledAt: "",
-  });
-  const [savingVisit, setSavingVisit] = useState(false);
+  // Persist edits from the left rail's patient context. Rejected promises
+  // keep the edit form open (PatientContext awaits this callback).
+  const handleSaveVisit = useCallback(
+    async (params: VisitEditParams) => {
+      if (!selectedVisitId) {
+        return;
+      }
+      try {
+        await updateVisit({ interactionId: selectedVisitId, ...params });
+      } catch (e) {
+        console.error("Failed to update visit:", e);
+        throw e;
+      }
+    },
+    [selectedVisitId, updateVisit],
+  );
 
-  const startEditing = () => {
-    if (!selectedVisit) {
-      return;
-    }
-    setEditForm({
-      patientName: selectedVisit.patient?.name ?? "",
-      patientIdentifier: selectedVisit.patient?.identifier ?? "",
-      encounterType: selectedVisit.encounter.type ?? "outpatient",
-      encounterStatus: selectedVisit.encounter.status ?? "planned",
-      scheduledAt: selectedVisit.encounter.period.startedAt
-        ? new Date(selectedVisit.encounter.period.startedAt).toISOString().slice(0, 16)
-        : "",
-    });
-    setEditingVisit(true);
-  };
-
-  const handleSaveVisit = async () => {
-    if (!selectedVisitId) {
-      return;
-    }
-    setSavingVisit(true);
-    try {
-      await updateVisit({
-        interactionId: selectedVisitId,
-        patientName: editForm.patientName,
-        patientIdentifier: editForm.patientIdentifier,
-        encounterType: editForm.encounterType,
-        encounterStatus: editForm.encounterStatus,
-        scheduledAt: editForm.scheduledAt ? new Date(editForm.scheduledAt) : undefined,
-      });
-      setEditingVisit(false);
-    } catch (e) {
-      console.error("Failed to update visit:", e);
-    } finally {
-      setSavingVisit(false);
-    }
-  };
+  // Delete a visit from the server-side schedule. Rejected promises re-throw
+  // so the delete button in PatientContext can re-enable (it awaits this
+  // callback).
+  const handleDeleteVisit = useCallback(
+    async (visitId: string) => {
+      try {
+        await deleteVisit({ interactionId: visitId });
+      } catch (e) {
+        console.error("Failed to delete visit:", e);
+        throw e;
+      }
+    },
+    [deleteVisit],
+  );
 
   const handleNoteGenerated = useCallback(
     (docId: string) => {
@@ -411,6 +415,9 @@ export function SpeechFlex() {
     setCreatingVisit(true);
     try {
       await createVisit(params);
+    } catch (e) {
+      console.error("Failed to create visit:", e);
+      throw e;
     } finally {
       setCreatingVisit(false);
     }
@@ -444,13 +451,73 @@ export function SpeechFlex() {
     [settings.formatting],
   );
 
+  // Memoize the ambient stream config so it doesn't get a new object identity
+  // on every render — the web component re-initializes the stream when the
+  // config reference changes, which would interrupt the connection.
+  const ambientConfig = useMemo<Corti.StreamConfig>(
+    () => ({
+      transcription: {
+        primaryLanguage: language,
+        isDiarization: true,
+        isMultichannel: false,
+        participants: [],
+      },
+      mode: settings.factsEnabled
+        ? { type: "facts" as const, outputLocale: language }
+        : { type: "transcription" as const },
+      audioEvents: { enabled: true },
+      ...(ambientFormatting
+        ? {
+            // Cast because the app-level FormattingConfig types its fields as
+            // `string`, while SDK v6's StreamConfig expects the literal-union
+            // StreamFormatting* types. The values come from FORMATTING_OPTIONS,
+            // whose entries match the SDK literals exactly.
+            formatting: {
+              dates: ambientFormatting.dates,
+              times: ambientFormatting.times,
+              numbers: ambientFormatting.numbers,
+              measurements: ambientFormatting.measurements,
+              numericRanges: ambientFormatting.numericRanges,
+              ordinals: ambientFormatting.ordinals,
+            } as Corti.StreamFormatting,
+          }
+        : {}),
+    }),
+    [language, settings.factsEnabled, ambientFormatting],
+  );
+
+  // Not authenticated — full-height empty state (the docs page gates the
+  // same way; the homepage owns the auth form).
+  if (!tokenSeen) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+          <Stethoscope className={cn("h-6 w-6 animate-pulse text-muted-foreground")} />
+        </span>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">Waiting for authentication…</p>
+          <p className="mx-auto max-w-sm text-[13px] leading-relaxed text-muted-foreground">
+            Speech Flex runs against your Corti environment. Sign in on the homepage first.
+          </p>
+        </div>
+        <UiButton asChild>
+          <Link to="/">Go to homepage to authenticate</Link>
+        </UiButton>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Header: mic control + config + visit indicator with clear button */}
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        {/* Web component — always visible, disabled in ambient mode without a visit */}
-        <div className="flex items-center gap-2">
-          {tokenSeen && mode === "dictation" ? (
+    <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
+      <TopBar
+        actions={<SpeechFlexConfig settings={settings} onSettingsChange={setSettings} />}
+        onExit={onExit}
+      >
+        {/* Capture bar — mic web component, always visible. Disabled (greyed
+            out, non-interactive) when no visit is selected, since both
+            dictation and ambient require a visit to produce output. */}
+        <div className="clinical-mic relative flex min-w-0 items-center gap-2">
+          {mode === "dictation" ? (
             <CortiDictationComponent
               key="dictation"
               authConfig={authConfig}
@@ -460,323 +527,158 @@ export function SpeechFlex() {
               onCommand={(e) => commandHandlerRef.current?.(e)}
               onLanguagesChanged={onLanguagesChanged}
             />
-          ) : tokenSeen && mode === "ambient" && selectedVisitId ? (
+          ) : mode === "ambient" && selectedVisitId ? (
             <CortiAmbientComponent
               key="ambient"
               authConfig={authConfig}
               interactionId={selectedVisitId}
-              ambientConfig={
-                {
-                  transcription: {
-                    primaryLanguage: language,
-                    isDiarization: true,
-                    isMultichannel: false,
-                    participants: [],
-                  },
-                  mode: settings.factsEnabled
-                    ? { type: "facts" as const, outputLocale: language }
-                    : { type: "transcription" as const },
-                  audioEvents: { enabled: true },
-                  ...(ambientFormatting
-                    ? {
-                        formatting: {
-                          dates: ambientFormatting.dates,
-                          times: ambientFormatting.times,
-                          numbers: ambientFormatting.numbers,
-                          measurements: ambientFormatting.measurements,
-                          numericRanges: ambientFormatting.numericRanges,
-                          ordinals: ambientFormatting.ordinals,
-                        },
-                      }
-                    : {}),
-                } as Corti.StreamConfig
-              }
+              ambientConfig={ambientConfig}
               settingsEnabled={["device", "language"]}
               onTranscript={handleAmbientTranscript}
               onFacts={settings.factsEnabled ? handleAmbientFacts : undefined}
               onRecordingStateChanged={handleAmbientRecordingState}
               onLanguagesChanged={onLanguagesChanged}
             />
-          ) : tokenSeen && mode === "ambient" && !selectedVisitId ? (
-            <DisabledMicControl message="Select a visit to enable ambient recording" />
           ) : (
-            <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-              <Stethoscope className="h-4 w-4 animate-pulse" />
-              Waiting for authentication…
+            <CortiDictationComponent
+              key="dictation-disabled"
+              authConfig={authConfig}
+              dictationConfig={dictationConfig}
+              settingsEnabled={["device", "language", "keybinding"]}
+              onTranscript={handleDictationTranscript}
+              onCommand={(e) => commandHandlerRef.current?.(e)}
+              onLanguagesChanged={onLanguagesChanged}
+            />
+          )}
+          {!selectedVisitId && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-[5px] bg-background/60 backdrop-grayscale" />
+          )}
+        </div>
+
+        {/* Mode pills — dictation vs ambient capture, same visit context. */}
+        <div className="inline-flex shrink-0 overflow-hidden rounded-[5px] border border-border">
+          {(["dictation", "ambient"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              aria-pressed={mode === m}
+              className={cn(
+                "inline-flex h-7 cursor-pointer items-center gap-1.5 px-2.5 text-xs font-medium transition-colors",
+                m === "dictation" && "border-r border-border",
+                m === "ambient" && greenText,
+                mode === "dictation" && m === "dictation" && "text-foreground",
+                mode === m
+                  ? "bg-lime-600/10 dark:bg-corti-lime/10"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              )}
+            >
+              {m === "dictation" ? (
+                <Mic className="h-3.5 w-3.5" />
+              ) : (
+                <Radio className="h-3.5 w-3.5" />
+              )}
+              {m === "dictation" ? "Dictation" : "Ambient"}
+            </button>
+          ))}
+        </div>
+
+        {/* Capture status — loading indicator + recording state with clips. */}
+        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-3">
+          {interactionLoading && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Loading interaction data…
             </span>
           )}
-        </div>
-
-        {/* Config wrench — right-aligned in header */}
-        <div className="ml-auto">
-          <SpeechFlexConfig settings={settings} onSettingsChange={setSettings} />
-        </div>
-      </header>
-
-      {/* Mode toggle — below the mic control */}
-      <div className="flex items-center gap-2">
-        <Mic
-          className={cn(
-            "h-4 w-4 transition-colors",
-            mode === "dictation" ? greenText : "text-muted-foreground",
-          )}
-        />
-        <Switch
-          checked={mode === "ambient"}
-          onCheckedChange={(checked) => setMode(checked ? "ambient" : "dictation")}
-          aria-label="Toggle between dictation and ambient mode"
-        />
-        <Radio
-          className={cn(
-            "h-4 w-4 transition-colors",
-            mode === "ambient" ? greenText : "text-muted-foreground",
-          )}
-        />
-        <span className="text-sm font-medium text-foreground">
-          {mode === "dictation" ? "Dictation" : "Ambient"}
-        </span>
-      </div>
-
-      {/* Main content area: visit schedule + always-visible editor + collapsibles + notes */}
-      <div className="flex flex-col gap-4 lg:flex-row">
-        {/* Left column: visit schedule */}
-        <div className="w-full shrink-0 lg:w-80">
-          <VisitSchedule
-            visits={visits}
-            loading={loading}
-            error={error}
-            selectedVisitId={selectedVisitId}
-            onSelect={selectVisit}
-            onCreate={handleCreateVisit}
-            creating={creatingVisit}
-          />
-        </div>
-
-        {/* Right column: context bar + editor + collapsible panels + note generation */}
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          {/* Patient context bar — spans the editor width */}
-          <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
-            <Stethoscope
-              className={cn(
-                "h-4 w-4 shrink-0",
-                selectedVisit ? greenText : "text-muted-foreground",
-              )}
-            />
-            {selectedVisit ? (
-              editingVisit ? (
-                /* Inline edit form */
-                <div className="flex flex-1 flex-wrap items-end gap-3">
-                  <div className="flex flex-1 flex-col gap-1 min-w-[120px]">
-                    <label htmlFor="edit-patient-name" className="text-xs text-muted-foreground">
-                      Patient name
-                    </label>
-                    <input
-                      id="edit-patient-name"
-                      type="text"
-                      value={editForm.patientName}
-                      onChange={(e) =>
-                        setEditForm((f) => ({
-                          ...f,
-                          patientName: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 min-w-[80px]">
-                    <label htmlFor="edit-mrn" className="text-xs text-muted-foreground">
-                      MRN
-                    </label>
-                    <input
-                      id="edit-mrn"
-                      type="text"
-                      value={editForm.patientIdentifier}
-                      onChange={(e) =>
-                        setEditForm((f) => ({
-                          ...f,
-                          patientIdentifier: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 min-w-[120px]">
-                    <label htmlFor="edit-visit-type" className="text-xs text-muted-foreground">
-                      Visit type
-                    </label>
-                    <select
-                      id="edit-visit-type"
-                      value={editForm.encounterType}
-                      onChange={(e) =>
-                        setEditForm((f) => ({
-                          ...f,
-                          encounterType: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    >
-                      {Object.entries(ENCOUNTER_TYPE_LABELS).map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1 min-w-[120px]">
-                    <label htmlFor="edit-visit-date" className="text-xs text-muted-foreground">
-                      Visit date
-                    </label>
-                    <input
-                      id="edit-visit-date"
-                      type="datetime-local"
-                      value={editForm.scheduledAt}
-                      onChange={(e) =>
-                        setEditForm((f) => ({
-                          ...f,
-                          scheduledAt: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    />
-                  </div>
-                  <div className="flex gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => void handleSaveVisit()}
-                      disabled={savingVisit}
-                      className="inline-flex items-center gap-1 rounded border border-lime-600 bg-lime-600/10 px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-lime-600/20 disabled:opacity-50 dark:border-corti-lime dark:bg-corti-lime/10 dark:hover:bg-corti-lime/20"
-                    >
-                      {savingVisit ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Save className="h-3.5 w-3.5" />
-                      )}
-                      {savingVisit ? "Saving…" : "Save"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditingVisit(false)}
-                      className="rounded border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* View mode */
-                <>
-                  <span className="text-sm font-medium text-foreground">
-                    {selectedVisit.patient?.name ?? selectedVisit.encounter.title ?? "Unknown"}
-                  </span>
-                  <span className="text-muted-foreground/30">|</span>
-                  <span className="text-sm text-muted-foreground">
-                    {ENCOUNTER_TYPE_LABELS[selectedVisit.encounter.type] ??
-                      selectedVisit.encounter.type}
-                  </span>
-                  <span className="text-muted-foreground/30">|</span>
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(selectedVisit.encounter.period.startedAt).toLocaleString([], {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                  <span className="text-muted-foreground/30">|</span>
-                  <span className="font-mono text-xs text-muted-foreground/60">
-                    MRN: {selectedVisit.patient?.identifier ?? "—"}
-                  </span>
-                  <div className="ml-auto flex items-center gap-1.5">
-                    <span className="font-mono text-[10px] text-muted-foreground/40">
-                      {selectedVisit.interactionId}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => startEditing()}
-                      title="Edit visit details"
-                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => selectVisit(null)}
-                      title="Clear patient context"
-                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </>
-              )
-            ) : (
-              <span className="text-sm text-muted-foreground">No visit selected</span>
+          {mode === "ambient" &&
+            selectedVisitId &&
+            (ambientRecording || ambientClips.length > 0) && (
+              <RecordingStatusBar isRecording={ambientRecording} clips={ambientClips} />
             )}
-          </div>
+        </div>
+      </TopBar>
 
-          {/* Dictation editor — collapsible, like the Transcript and Facts panels. */}
-          <CollapsibleSection title="Dictation" defaultOpen>
-            <DictationPanel
-              interactionId={selectedVisitId}
-              clientId={clientId}
-              tenant={tenantName}
-              language={language}
-              transcriptHandlerRef={dictationTranscriptRef}
-              commandHandlerRef={commandHandlerRef}
-              onTextChange={setDictationText}
-              authConfig={authConfig}
-              sdkEnvironment={sdkEnvironment}
+      {/* Panels */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto xl:flex-row xl:overflow-hidden">
+        {/* Left rail — patient context + visit schedule */}
+        <aside className="themed-scrollbar flex w-full shrink-0 flex-col gap-5 border-border px-5 py-4 xl:min-h-0 xl:w-80 xl:overflow-y-auto xl:border-r">
+          <PatientContext
+            visit={selectedVisit}
+            onSave={handleSaveVisit}
+            onClear={() => selectVisit(null)}
+            onDelete={handleDeleteVisit}
+          />
+          <div className="border-t border-border pt-5">
+            <VisitSchedule
+              visits={visits}
+              loading={loading}
+              error={error}
+              selectedVisitId={selectedVisitId}
+              onSelect={selectVisit}
+              onCreate={handleCreateVisit}
+              creating={creatingVisit}
             />
-          </CollapsibleSection>
+          </div>
+        </aside>
 
-          {/* Command monitor — detected commands + executed action */}
-          {log.length > 0 && (
-            <div className="rounded-md border border-border bg-background">
-              <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Command monitor
-                </p>
-                <button
-                  type="button"
-                  onClick={clearLog}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  <Trash2 className="h-3 w-3" /> Clear
-                </button>
-              </div>
-              <ul className="max-h-48 divide-y divide-border overflow-auto">
-                {log.map((entry) => (
-                  <li
-                    key={`${entry.at}-${entry.id}`}
-                    className="flex items-baseline gap-2 px-3 py-1.5 text-xs"
-                  >
-                    <code className="shrink-0 font-semibold text-foreground">{entry.id}</code>
-                    {entry.variables && Object.keys(entry.variables).length > 0 && (
-                      <code className="shrink-0 text-muted-foreground">
-                        {JSON.stringify(entry.variables)}
-                      </code>
-                    )}
-                    <span className="truncate text-foreground">{entry.description}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Recording status bar — ambient mode only, when a visit is selected */}
-          {mode === "ambient" && selectedVisitId && (
-            <RecordingStatusBar isRecording={ambientRecording} clips={ambientClips} />
-          )}
-
-          {/* Collapsible transcript + facts panels — visible when a visit is selected */}
-          {selectedVisitId && (
+        {/* Main panel — editor (the "EHR") + collapsible transcript/facts */}
+        <main className="themed-scrollbar flex min-h-0 min-w-0 flex-1 flex-col gap-4 px-6 py-4 xl:overflow-y-auto">
+          {selectedVisitId ? (
             <>
-              {interactionLoading && (
-                <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Loading interaction data…</span>
-                </div>
+              <DictationPanel
+                interactionId={selectedVisitId}
+                clientId={clientId}
+                tenant={tenantName}
+                language={language}
+                transcriptHandlerRef={dictationTranscriptRef}
+                commandHandlerRef={commandHandlerRef}
+                onTextChange={setDictationText}
+                authConfig={authConfig}
+                sdkEnvironment={sdkEnvironment}
+              />
+
+              {/* Command monitor — detected commands + executed action */}
+              {log.length > 0 && (
+                <Card>
+                  <CardHeader
+                    icon={Terminal}
+                    title="Command monitor"
+                    meta={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                        onClick={clearLog}
+                        className="h-5 px-1 text-[11px]"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Clear
+                      </Button>
+                    }
+                  />
+                  <ul className="themed-scrollbar max-h-48 divide-y divide-border overflow-auto">
+                    {log.map((entry) => (
+                      <li
+                        key={`${entry.at}-${entry.id}`}
+                        className="flex items-baseline gap-2 px-3 py-1.5 text-[12px]"
+                      >
+                        <code className="shrink-0 font-mono font-semibold text-foreground">
+                          {entry.id}
+                        </code>
+                        {entry.variables && Object.keys(entry.variables).length > 0 && (
+                          <code className="shrink-0 font-mono text-muted-foreground">
+                            {JSON.stringify(entry.variables)}
+                          </code>
+                        )}
+                        <span className="truncate text-foreground">{entry.description}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
               )}
+
+              {/* Collapsible transcript + facts panels */}
               <TranscriptPanel
                 segments={effectiveSegments}
                 mode={transcriptPanelMode}
@@ -788,9 +690,19 @@ export function SpeechFlex() {
                 <FactsPanel facts={ambientFacts} setFacts={setAmbientFacts} />
               )}
             </>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 py-20 text-center">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                <Stethoscope className="h-5 w-5 text-muted-foreground" />
+              </span>
+              <p className="text-[13px] font-semibold text-foreground">Select a visit to begin</p>
+            </div>
           )}
+        </main>
 
-          {/* Note generation — always available */}
+        {/* Right panel — note generation + generated notes. Same width as the
+            main panel (both flex-1) so the two content columns are equal. */}
+        <aside className="themed-scrollbar flex w-full min-w-0 flex-col gap-4 border-border px-5 py-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:border-l">
           <NoteGeneration
             authConfig={authConfig}
             sdkEnvironment={sdkEnvironment}
@@ -800,12 +712,15 @@ export function SpeechFlex() {
             spokenLanguage={language}
             defaultTemplateKeywords={["soap"]}
             documentSource={settings.documentSource}
+            factsEnabled={settings.factsEnabled}
+            showInteractionSource={settings.showInteractionSource}
+            onSourceChange={handleSourceChange}
             getFacts={() => ambientFacts}
             getSegments={() => effectiveSegments}
             existingNotes={existingNotes}
             onNoteGenerated={handleNoteGenerated}
           />
-        </div>
+        </aside>
       </div>
     </div>
   );

@@ -4,23 +4,20 @@
  * Renders interactions sorted by scheduled visit date (encounter.period.startedAt).
  * Each row shows the patient name, encounter type, and scheduled time. Selecting
  * a visit sets the active interaction for both dictation and ambient modes.
+ * Interactions created without patient data (most other applets on the shared
+ * tenant) get a deterministic fallback name — see visitPatientName.
  *
  * Includes a "New visit" form to simulate a schedule feed entry — in a
  * real EHR integration these interactions would be created server-side
- * from the scheduling system, not from the browser.
+ * from the scheduling system, not from the browser. The form expands below
+ * the "Visit schedule" heading, spanning the full rail width.
  */
 import { CalendarPlus, Loader2, User } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../_shared/utils";
+import { Eyebrow } from "./kit";
 import type { VisitItem } from "./workspaceState";
-
-const ENCOUNTER_TYPE_LABELS: Record<string, string> = {
-  first_consultation: "First consult",
-  consultation: "Consultation",
-  emergency: "Emergency",
-  inpatient: "Inpatient",
-  outpatient: "Outpatient",
-};
+import { ENCOUNTER_TYPE_LABELS, visitPatientName } from "./workspaceState";
 
 function formatVisitTime(iso: string): string {
   const date = new Date(iso);
@@ -37,46 +34,49 @@ function formatVisitTime(iso: string): string {
   });
 }
 
+/**
+ * The expanded new-visit form — rendered as a sibling below the schedule
+ * heading so it spans the full rail width. Never render it inside the
+ * heading's flex row: next to the Eyebrow the fixed-width inputs overflow the
+ * narrow rail and get clipped by its scroll container.
+ */
 function NewVisitForm({
   onCreate,
+  onClose,
   creating,
 }: {
-  onCreate: (params: { patientIdentifier: string; patientName: string; scheduledAt: Date }) => void;
+  onCreate: (params: {
+    patientIdentifier: string;
+    patientName: string;
+    scheduledAt: Date;
+  }) => Promise<void>;
+  onClose: () => void;
   creating: boolean;
 }) {
-  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [mrn, setMrn] = useState("");
   const [time, setTime] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !mrn.trim() || !time) {
+    if (creating || !name.trim() || !mrn.trim() || !time) {
       return;
     }
-    onCreate({
-      patientIdentifier: mrn.trim(),
-      patientName: name.trim(),
-      scheduledAt: new Date(time),
-    });
+    try {
+      await onCreate({
+        patientIdentifier: mrn.trim(),
+        patientName: name.trim(),
+        scheduledAt: new Date(time),
+      });
+    } catch {
+      // onCreate already logged; keep the form open so nothing is lost.
+      return;
+    }
     setName("");
     setMrn("");
     setTime("");
-    setOpen(false);
+    onClose();
   };
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      >
-        <CalendarPlus className="h-3.5 w-3.5" />
-        New visit
-      </button>
-    );
-  }
 
   return (
     <form
@@ -88,33 +88,33 @@ function NewVisitForm({
         placeholder="Patient name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="rounded border border-border bg-background px-2 py-1 text-sm"
+        className="rounded-[5px] border border-border bg-background px-2 py-1 text-[13px] outline-none focus:border-lime-600 dark:focus:border-corti-lime"
       />
       <input
         type="text"
         placeholder="MRN"
         value={mrn}
         onChange={(e) => setMrn(e.target.value)}
-        className="rounded border border-border bg-background px-2 py-1 text-sm"
+        className="rounded-[5px] border border-border bg-background px-2 py-1 font-mono text-[13px] outline-none focus:border-lime-600 dark:focus:border-corti-lime"
       />
       <input
         type="datetime-local"
         value={time}
         onChange={(e) => setTime(e.target.value)}
-        className="rounded border border-border bg-background px-2 py-1 text-sm"
+        className="rounded-[5px] border border-border bg-background px-2 py-1 text-[13px] outline-none focus:border-lime-600 dark:focus:border-corti-lime"
       />
       <div className="flex gap-2">
         <button
           type="submit"
           disabled={creating || !name.trim() || !mrn.trim() || !time}
-          className="rounded border border-lime-600 bg-lime-600/10 px-2 py-1 text-xs font-medium text-foreground disabled:opacity-50 dark:border-corti-lime dark:bg-corti-lime/10"
+          className="rounded-[5px] border border-lime-600 bg-lime-600/10 px-2 py-1 text-xs font-medium text-foreground disabled:opacity-50 dark:border-corti-lime dark:bg-corti-lime/10"
         >
           {creating ? "Creating…" : "Add to schedule"}
         </button>
         <button
           type="button"
-          onClick={() => setOpen(false)}
-          className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+          onClick={onClose}
+          className="rounded-[5px] border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           Cancel
         </button>
@@ -137,15 +137,40 @@ export function VisitSchedule({
   error: string | null;
   selectedVisitId: string | null;
   onSelect: (id: string | null) => void;
-  onCreate: (params: { patientIdentifier: string; patientName: string; scheduledAt: Date }) => void;
+  onCreate: (params: {
+    patientIdentifier: string;
+    patientName: string;
+    scheduledAt: Date;
+  }) => Promise<void>;
   creating: boolean;
 }) {
+  const [newVisitOpen, setNewVisitOpen] = useState(false);
+
   return (
-    <div className="flex min-w-0 flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2.5">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">Visit schedule</h3>
-        <NewVisitForm onCreate={onCreate} creating={creating} />
+        <Eyebrow className="shrink-0">Visit schedule</Eyebrow>
+        {!newVisitOpen && (
+          <button
+            type="button"
+            onClick={() => setNewVisitOpen(true)}
+            className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[5px] border border-border px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" />
+            New visit
+          </button>
+        )}
       </div>
+
+      {/* The form opens BELOW the heading, spanning the rail's full width —
+          never inside the heading row (see NewVisitForm above). */}
+      {newVisitOpen && (
+        <NewVisitForm
+          onCreate={onCreate}
+          onClose={() => setNewVisitOpen(false)}
+          creating={creating}
+        />
+      )}
 
       {loading && (
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -153,16 +178,16 @@ export function VisitSchedule({
           Loading visits…
         </p>
       )}
-      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-xs text-variant-error-text">{error}</p>}
 
       {!loading && visits.length === 0 && (
-        <p className="text-xs text-muted-foreground">
-          No visits scheduled. Create one above to get started.
+        <p className="text-[12px] leading-relaxed text-muted-foreground">
+          No visits scheduled. Create one to get started.
         </p>
       )}
 
       {visits.length > 0 && (
-        <ul className="flex max-h-[500px] flex-col gap-1 overflow-auto">
+        <ul className="flex flex-col gap-1">
           {visits.map((visit) => {
             const isSelected = visit.interactionId === selectedVisitId;
             return (
@@ -174,34 +199,33 @@ export function VisitSchedule({
                     "flex w-full flex-col gap-0.5 rounded-md border px-3 py-2 text-left transition-colors",
                     isSelected
                       ? "border-lime-600 bg-lime-600/10 dark:border-corti-lime dark:bg-corti-lime/10"
-                      : "border-border hover:bg-accent",
+                      : "border-border bg-card hover:border-border-strong hover:bg-accent",
                   )}
                 >
                   <div className="flex items-center gap-2">
-                    <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate text-sm font-medium text-foreground">
-                      {visit.patient?.name ?? visit.encounter.title ?? "Unknown patient"}
+                    <User
+                      className={cn(
+                        "h-3.5 w-3.5 shrink-0",
+                        isSelected ? "text-lime-600 dark:text-corti-lime" : "text-muted-foreground",
+                      )}
+                    />
+                    <span className="truncate text-[13px] font-medium text-foreground">
+                      {visitPatientName(visit)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2 pl-5">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[12px] text-muted-foreground">
                       {ENCOUNTER_TYPE_LABELS[visit.encounter.type] ?? visit.encounter.type}
                     </span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
+                    <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
                       {formatVisitTime(visit.encounter.period.startedAt)}
                     </span>
                   </div>
                   {visit.patient?.identifier && (
-                    <span className="pl-5 text-xs text-muted-foreground/70">
-                      MRN: {visit.patient.identifier}
+                    <span className="pl-5 font-mono text-[11px] text-muted-foreground/70">
+                      MRN {visit.patient.identifier}
                     </span>
                   )}
-                  <span
-                    className="pl-5 font-mono text-[10px] text-muted-foreground/50"
-                    title="Encounter ID"
-                  >
-                    {visit.encounter.identifier}
-                  </span>
                 </button>
               </li>
             );
