@@ -1,9 +1,10 @@
 /**
- * useInteractions — list, create, and select patient interactions.
+ * useInteractions — list, create, update, delete, and select patient
+ * interactions.
  *
  * Corti interactions sorted by scheduled visit date serve as the visit
- * schedule. Supports auto-select by MRN or encounter identifier for
- * EHR integrations that pass patient context to the host application.
+ * schedule. The visit lifecycle (create, edit, delete) is managed from the
+ * Speech Flex workspace; selecting a visit anchors both capture modes.
  */
 import type { Corti, CortiClient } from "@corti/sdk";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -64,8 +65,7 @@ export interface UseInteractionsResult {
     encounterStatus?: string;
     scheduledAt?: Date;
   }) => Promise<void>;
-  autoSelectByPatient: (mrn: string) => void;
-  autoSelectByEncounter: (encounterId: string) => void;
+  deleteVisit: (params: { interactionId: string }) => Promise<void>;
 }
 
 export function useInteractions(client: CortiClient | null): UseInteractionsResult {
@@ -194,24 +194,20 @@ export function useInteractions(client: CortiClient | null): UseInteractionsResu
     [client, refresh],
   );
 
-  const autoSelectByPatient = useCallback(
-    (mrn: string) => {
-      const match = visits.find((v) => v.patient?.identifier === mrn);
-      if (match) {
-        setSelectedVisitId(match.interactionId);
+  const deleteVisit = useCallback(
+    async (params: { interactionId: string }) => {
+      if (!client) {
+        throw new Error("SDK client not ready");
       }
-    },
-    [visits],
-  );
-
-  const autoSelectByEncounter = useCallback(
-    (encounterId: string) => {
-      const match = visits.find((v) => v.encounter.identifier === encounterId);
-      if (match) {
-        setSelectedVisitId(match.interactionId);
+      await client.interactions.delete(params.interactionId);
+      // The deleted visit can no longer anchor the workspace — deselect so
+      // the capture mode panels reset instead of pointing at a dead id.
+      if (selectedVisitId === params.interactionId) {
+        setSelectedVisitId(null);
       }
+      await refresh();
     },
-    [visits],
+    [client, selectedVisitId, refresh],
   );
 
   return {
@@ -223,7 +219,6 @@ export function useInteractions(client: CortiClient | null): UseInteractionsResu
     refresh,
     createVisit,
     updateVisit,
-    autoSelectByPatient,
-    autoSelectByEncounter,
+    deleteVisit,
   };
 }

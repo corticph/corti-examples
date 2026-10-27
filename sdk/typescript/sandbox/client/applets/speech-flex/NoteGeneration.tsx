@@ -1,30 +1,37 @@
 /**
  * NoteGeneration — template selection and document generation.
  *
- * Six generation paths controlled by `documentSource`:
- *   - **combined** — explicit `context` array mixing editor text + ambient
- *     transcript segments + non-discarded facts (all three, when available).
- *   - **combined-no-facts** — explicit `context` with editor text + transcript
- *     segments only (no facts).
- *   - **interaction** — `interactionId` path: the SDK pulls persisted
+ * The source selector controls what feeds the note:
+ *   - **Combined** — per-section source control. A table shows each template
+ *     section with three independent toggles: Dictation (verbatim, routed by
+ *     the dictationRouter agent), Ambient (transcript context), and Facts.
+ *     Default: Ambient on, Dictation and Facts off. Dictation-only → that
+ *     section is filled with dictated text verbatim. Dictation + Ambient/Facts
+ *     → a merge agent combines the AI-generated content with the dictated
+ *     text (dictation appears verbatim; AI content fills the gaps). All three
+ *     OFF → omitted.
+ *   - **Interaction** — `interactionId` path: the SDK pulls persisted
  *     transcript + facts server-side. Requires a selected visit.
- *   - **text** — explicit `context` with just the editor text.
- *   - **transcript** — explicit `context` with just transcript segments.
- *   - **facts** — explicit `context` with just non-discarded facts.
+ *   - **Dictation only** — explicit `context` with just the editor text.
+ *   - **Ambient only** — explicit `context` with just transcript segments.
+ *   - **Facts only** — explicit `context` with just non-discarded facts.
  *
- * When "preserve dictated text verbatim" is enabled and the active source
- * includes editor text, the dictated text is prepended as a verbatim section
- * client-side — no extra API call. A single standard generation call is made,
- * and the verbatim [heading, text] pair is unshifted onto the result.
+ * In Combined mode, the AI context includes the dictated text only when at
+ * least one section has Dictation checked. Ambient/facts are included when
+ * any AI or merge section requests them.
  *
  * Existing notes persisted on the interaction are fetched by the parent
  * (`SpeechFlex`) and passed as the `existingNotes` prop. This component does
  * not manage any fetch lifecycle — it only renders existing notes alongside
  * newly generated ones.
  *
- * Template defaults to a per-user preference stored in localStorage, with the
- * ability to select an alternate template at generation time. The template
- * list is filtered by the spoken language.
+ *
+ * The template defaults to a per-user preference stored in localStorage, with
+ * the ability to select an alternate template at generation time. The
+ * template list is filtered by the *output* language: generic templates
+ * (empty `languages` — no language-specific tweaks, including the Corti
+ * standard ones) are offered for every language, alongside any templates
+ * tweaked for the same primary language.
  *
  * Multiple notes can be generated per visit — each result is prepended to a
  * list so the clinician can compare outputs from different templates or
@@ -37,7 +44,7 @@
 
 import type { Corti, CortiAuth, CortiClient } from "@corti/sdk";
 import { Check, ChevronDown, ChevronRight, Copy, FileText, Loader2, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,9 +62,14 @@ import {
   OUTPUT_LANGUAGES,
   useGuidedTemplates,
 } from "../_shared/corti-documents";
+import { describeAgentError } from "../_shared/cortiAgent";
 import type { DiarizedSegment } from "../_shared/diarizedTranscript";
 import type { CortiSdkEnvironment } from "../_shared/useCortiAccessToken";
 import { cn } from "../_shared/utils";
+import type { MergeSection } from "./dictationMerger";
+import { mergeDictationWithGenerated } from "./dictationMerger";
+import { routeDictationToSections } from "./dictationRouter";
+import { Badge, Button, Callout, Card, CardHeader } from "./kit";
 import type { DocumentSource } from "./SpeechFlexConfig";
 
 const DEFAULT_TEMPLATE_KEY = "speech-flex.defaultTemplate";
@@ -89,25 +101,26 @@ interface GeneratedNote extends ExistingNote {
   isExisting?: boolean;
 }
 
-/**
- * BCP 47 primary subtag (e.g. "en" from "en-GB").
- */
-function primarySubtag(tag: string): string {
-  return tag.split("-")[0];
+/** A section from the template's published version. */
+interface TemplateSection {
+  id: string;
+  name: string;
+  heading: string;
 }
 
-/**
- * A template matches the spoken language if it has no language-specific
- * tweaks (empty `languages`), or if any of its language tags share the same
- * primary subtag as the spoken language.
- */
-function templateMatchesLanguage(t: Corti.GuidedTemplate, spoken: string): boolean {
-  if (t.languages.length === 0) {
-    return true;
-  }
-  const spokenPrimary = primarySubtag(spoken);
-  return t.languages.some((l) => primarySubtag(l) === spokenPrimary);
+/** Per-section source selection in Combined mode. */
+interface SectionSources {
+  dictation: boolean;
+  ambient: boolean;
+  facts: boolean;
 }
+
+/** Default: Ambient on, Dictation and Facts off. */
+const DEFAULT_SECTION_SOURCES: SectionSources = {
+  dictation: false,
+  ambient: true,
+  facts: false,
+};
 
 /**
  * Ordered [heading, content] pairs from a generated document.
@@ -129,11 +142,14 @@ export function NoteGeneration({
   text,
   spokenLanguage,
   defaultTemplateKeywords,
-  documentSource = "combined",
+  documentSource = "transcript",
+  factsEnabled = true,
+  showInteractionSource = false,
   getFacts,
   getSegments,
   existingNotes,
   onNoteGenerated,
+  onSourceChange,
 }: {
   authConfig: CortiAuth.AuthTokenDerivable;
   sdkEnvironment: CortiSdkEnvironment;
@@ -143,12 +159,16 @@ export function NoteGeneration({
   interactionId: string | null;
   /** Editor text — always available, used by "combined" and "text" paths. */
   text: string;
-  /** BCP 47 tag from the dictation/ambient language selector — filters the template list. */
+  /** BCP 47 tag from the dictation/ambient language selector — seeds the initial output language. */
   spokenLanguage: string;
   /** Keywords to auto-select a sensible default template (e.g. ["soap"]). */
   defaultTemplateKeywords: string[];
   /** Which context source(s) to use for generation. */
   documentSource?: DocumentSource;
+  /** Whether facts extraction is enabled in settings. Hides facts-related options when off. */
+  factsEnabled?: boolean;
+  /** Whether the "Interaction (server-side)" source option is shown. */
+  showInteractionSource?: boolean;
   /** Getter for live facts. */
   getFacts?: () => Corti.StreamFact[];
   /** Getter for live transcript segments. */
@@ -157,6 +177,8 @@ export function NoteGeneration({
   existingNotes: ExistingNote[];
   /** Called when a note is generated, with the persisted document ID (if available). */
   onNoteGenerated?: (documentId: string) => void;
+  /** Called when the user changes the source dropdown, so the parent can persist it. */
+  onSourceChange?: (source: DocumentSource) => void;
 }) {
   const [templateId, setTemplateId] = useState("");
   const [manualTemplateId, setManualTemplateId] = useState("");
@@ -166,28 +188,45 @@ export function NoteGeneration({
     sdkEnvironment,
     language,
   );
-  const [sourceOverride, setSourceOverride] = useState<DocumentSource | null>(null);
+  const [source, setSource] = useState<DocumentSource>(documentSource);
   const [generatedNotes, setGeneratedNotes] = useState<GeneratedNote[]>([]);
   const [generating, setGenerating] = useState(false);
-  const [preserveDictatedText, setPreserveDictatedText] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Dictated sentences the router agent placed in no verbatim section. */
+  const [unallocatedSentences, setUnallocatedSentences] = useState<string[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
 
-  // The effective source is the per-request override if set, otherwise the
-  // config default. Resets when the config default changes.
+  // Template section overview + per-section source selection (Combined mode).
+  const [templateSections, setTemplateSections] = useState<TemplateSection[]>([]);
+  const [sectionSources, setSectionSources] = useState<Map<string, SectionSources>>(new Map());
+  const [fetchingSections, setFetchingSections] = useState(false);
+  const [sectionsError, setSectionsError] = useState<string | null>(null);
+
+  // Fall back to "combined" if the selected source is no longer available
+  // (e.g. interaction hidden in settings or facts disabled).
+  const activeSource =
+    source === "interaction" && !showInteractionSource
+      ? "combined"
+      : source === "facts" && !factsEnabled
+        ? "combined"
+        : source;
+
+  // Sync `source` to the fallback so the dropdown is honest about what's
+  // selected, and persist the change. Without this, `source` would stay
+  // "interaction" under the hood while the dropdown shows "combined" — and
+  // re-enabling interaction would cause a surprise jump back.
   useEffect(() => {
-    setSourceOverride(null);
-  }, [documentSource]);
+    if (source !== activeSource) {
+      setSource(activeSource);
+      onSourceChange?.(activeSource);
+    }
+  }, [activeSource, source, onSourceChange]);
 
-  const activeSource = sourceOverride ?? documentSource;
-
-  // Deduplicate by name, then filter by spoken language.
-  const uniqueTemplates = deduplicateTemplates(templates);
-  const filteredTemplates = uniqueTemplates.filter((t) =>
-    templateMatchesLanguage(t, spokenLanguage),
-  );
+  // Deduplicate by name; the hook already narrowed the list to templates
+  // that support the selected output language.
+  const filteredTemplates = deduplicateTemplates(templates);
 
   // Clear the selected template if it's filtered out by a language change.
   useEffect(() => {
@@ -225,6 +264,7 @@ export function NoteGeneration({
   useEffect(() => {
     setGeneratedNotes([]);
     setError(null);
+    setUnallocatedSentences([]);
   }, [interactionId]);
 
   // Merge existing (server-fetched) notes with session-generated notes.
@@ -236,6 +276,58 @@ export function NoteGeneration({
 
   const effectiveTemplateId = templateId || manualTemplateId.trim();
 
+  // Fetch the full template (with sections) when a template is selected.
+  // The list endpoint doesn't include publishedVersion — only GET does.
+  // We use a ref for the client to avoid an infinite loop: the CortiClient
+  // is recreated when authConfig changes (e.g. token refresh), which would
+  // re-trigger this effect on every render.
+  const clientRef = useRef(client);
+  clientRef.current = client;
+
+  useEffect(() => {
+    const c = clientRef.current;
+    if (!c || !effectiveTemplateId) {
+      setTemplateSections([]);
+      setSectionSources(new Map());
+      return;
+    }
+    let cancelled = false;
+    setFetchingSections(true);
+    setSectionsError(null);
+    c.documents.templates
+      .get(effectiveTemplateId)
+      .then((t) => {
+        if (cancelled) {
+          return;
+        }
+        const sections = t.publishedVersion?.generation?.sections ?? [];
+        setTemplateSections(
+          sections.map((s) => ({
+            id: s.id,
+            name: s.name,
+            heading: s.publishedVersion?.generation?.heading ?? s.name,
+          })),
+        );
+        setSectionSources(new Map(sections.map((s) => [s.id, { ...DEFAULT_SECTION_SOURCES }])));
+      })
+      .catch((e) => {
+        if (cancelled) {
+          return;
+        }
+        setSectionsError(describeDocumentsError(e));
+        setTemplateSections([]);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setFetchingSections(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- client accessed via ref to avoid re-fetch loop
+  }, [effectiveTemplateId]);
+
   // Determine whether there's enough context to generate, based on the source.
   const hasContext = (() => {
     switch (activeSource) {
@@ -244,11 +336,6 @@ export function NoteGeneration({
         const hasSegs = (getSegments?.() ?? []).length > 0;
         const hasFacts = (getFacts?.() ?? []).some((f) => !f.isDiscarded);
         return hasText || hasSegs || hasFacts;
-      }
-      case "combined-no-facts": {
-        const hasText = text.trim().length > 0;
-        const hasSegs = (getSegments?.() ?? []).length > 0;
-        return hasText || hasSegs;
       }
       case "interaction":
         return !!interactionId;
@@ -263,13 +350,8 @@ export function NoteGeneration({
 
   const canGenerate = !!effectiveTemplateId && hasContext && !!client;
 
-  // The dictated editor text is only sent as context for the combined and
-  // "text" sources, so the preserve-verbatim toggle is only meaningful there.
-  const dictationInContext =
-    (activeSource === "combined" ||
-      activeSource === "combined-no-facts" ||
-      activeSource === "text") &&
-    text.trim().length > 0;
+  // Whether the per-section source table should be shown — only in Combined mode.
+  const showSectionSources = activeSource === "combined" && templateSections.length > 0;
 
   const generate = async () => {
     if (!canGenerate || generating || !client) {
@@ -277,108 +359,397 @@ export function NoteGeneration({
     }
     setGenerating(true);
     setError(null);
+    setUnallocatedSentences([]);
     try {
-      const preserve = preserveDictatedText && dictationInContext;
-
-      // When "preserve dictated text" is on, the dictated text is prepended
-      // as a verbatim section client-side — no API call needed for it. Only
-      // a single standard generation call is made (same as preserve off),
-      // and the verbatim [heading, text] pair is prepended to the result.
-
-      // --- Build the standard context array ---
-      const buildStandardContext = (): Corti.GuidedDocumentContext[] => {
-        const context: Corti.GuidedDocumentContext[] = [];
-
-        if (
-          activeSource === "combined" ||
-          activeSource === "combined-no-facts" ||
-          activeSource === "text"
-        ) {
-          if (text.trim()) {
-            context.push({ type: "text", text });
-          }
-        }
-
-        if (
-          activeSource === "combined" ||
-          activeSource === "combined-no-facts" ||
-          activeSource === "transcript"
-        ) {
-          const segments = getSegments?.() ?? [];
-          if (segments.length > 0) {
-            context.push({
-              type: "transcript",
-              transcript: {
-                transcripts: segments.map((s) => ({
-                  text: s.transcript,
-                  speakerId: s.speakerId,
-                  channel: s.participant?.channel,
-                  start: s.time?.start != null ? Math.round(s.time.start) : undefined,
-                  end: s.time?.end != null ? Math.round(s.time.end) : undefined,
-                })),
-              },
-            });
-          }
-        }
-
-        if (activeSource === "combined" || activeSource === "facts") {
-          const facts = (getFacts?.() ?? []).filter((f) => !f.isDiscarded);
-          for (const f of facts) {
-            context.push({
-              type: "facts",
-              facts: [{ text: f.text, group: f.group }],
-            });
-          }
-        }
-
-        return context;
-      };
+      const templateName =
+        filteredTemplates.find((t) => t.id === effectiveTemplateId)?.name ?? "Custom template";
 
       const plainTemplateRef: Corti.GuidedTemplateRef = {
         templateId: effectiveTemplateId,
       };
 
+      // --- Build a transcript context block from live segments ---
+      const buildTranscriptContext = (): Corti.GuidedDocumentContext | null => {
+        const segments = getSegments?.() ?? [];
+        if (segments.length === 0) {
+          return null;
+        }
+        return {
+          type: "transcript",
+          transcript: {
+            transcripts: segments.map((s) => ({
+              text: s.transcript,
+              speakerId: s.speakerId,
+              channel: s.participant?.channel,
+              start: s.time?.start != null ? Math.round(s.time.start) : undefined,
+              end: s.time?.end != null ? Math.round(s.time.end) : undefined,
+            })),
+          },
+        };
+      };
+
+      // --- Build a facts context block from non-discarded facts ---
+      const buildFactsContext = (): Corti.GuidedDocumentContext[] => {
+        const facts = (getFacts?.() ?? []).filter((f) => !f.isDiscarded);
+        return facts.map((f) => ({
+          type: "facts",
+          facts: [{ text: f.text, group: f.group }],
+        }));
+      };
+
       let result: Corti.GuidedDocumentsCreateEphemeralResponse;
 
-      if (activeSource === "interaction" && interactionId) {
-        result = await client.documents.generate({
-          outputLanguage: language,
-          interactionId,
-          templateRef: plainTemplateRef,
+      if (activeSource === "combined" && templateSections.length > 0) {
+        // --- Combined mode: per-section source control ---
+        //
+        // Three kinds of sections:
+        //   - **Merge** (Dictation + Ambient and/or Facts): AI generates from
+        //     ambient/facts, then a merge agent combines the AI output with
+        //     the routed dictated sentences. If the dictation covers
+        //     everything, only dictation is kept; if partial, the agent weaves
+        //     them together with the dictated text verbatim.
+        //   - **Verbatim-only** (Dictation, no Ambient/Facts): filled with
+        //     dictated text verbatim only. Excluded from AI generation.
+        //   - **AI-only** (no Dictation, Ambient and/or Facts): AI-generated
+        //     from ambient/facts as normal.
+        //
+        // The AI context always includes the dictation text (so the AI has
+        // the full picture even for sections it generates from ambient or
+        // facts). Ambient/facts are included when any AI or merge section
+        // requests them.
+
+        const mergeSections = templateSections.filter((s) => {
+          const src = sectionSources.get(s.id);
+          return !!src && src.dictation && (src.ambient || src.facts);
         });
+        const verbatimOnlySections = templateSections.filter((s) => {
+          const src = sectionSources.get(s.id);
+          return !!src && src.dictation && !src.ambient && !src.facts;
+        });
+        const aiOnlySections = templateSections.filter((s) => {
+          const src = sectionSources.get(s.id);
+          return !!src && !src.dictation && (src.ambient || src.facts);
+        });
+
+        // Sections excluded from the note entirely (all three OFF).
+        const allOffSections = templateSections.filter((s) => {
+          const src = sectionSources.get(s.id);
+          return !src || (!src.dictation && !src.ambient && !src.facts);
+        });
+
+        // Sections included in AI generation (merge + AI-only).
+        const aiGeneratedSections = [...mergeSections, ...aiOnlySections];
+
+        // Should ambient / facts be in the AI context?
+        const includeAmbient = aiGeneratedSections.some((s) => sectionSources.get(s.id)?.ambient);
+        const includeFacts = aiGeneratedSections.some((s) => sectionSources.get(s.id)?.facts);
+
+        // Route dictation to merge + verbatim-only sections.
+        const routingTargets = [...mergeSections, ...verbatimOnlySections];
+        let routedMap = new Map<string, string>();
+        if (routingTargets.length > 0 && text.trim()) {
+          try {
+            const routing = await routeDictationToSections({
+              client,
+              dictationText: text,
+              targetSections: routingTargets.map((s) => ({
+                id: s.id,
+                heading: s.heading,
+                name: s.name,
+              })),
+            });
+            routedMap = routing.routed;
+            // If the router placed no sentence anywhere, the classification
+            // failed — apply the same fallback as an agent error: fill the
+            // dictation sections with the full dictation so dictated text
+            // never silently vanishes from the note.
+            const placed = routingTargets.some((s) => (routing.routed.get(s.id) ?? "").length > 0);
+            if (!placed) {
+              for (const s of routingTargets) {
+                routedMap.set(s.id, text.trim());
+              }
+              setError(
+                "The routing agent placed no sentences in any Dictation section — filled them with the full dictation as a fallback.",
+              );
+            } else if (routing.unallocated.length > 0) {
+              setUnallocatedSentences(routing.unallocated);
+            }
+          } catch (e) {
+            for (const s of routingTargets) {
+              routedMap.set(s.id, text.trim());
+            }
+            setError(
+              `Couldn't route dictation to verbatim sections — ${describeAgentError(e)}. Filled them with the full dictation as a fallback.`,
+            );
+          }
+        }
+
+        // Build the AI context. Dictation text is only included when at least
+        // one section has Dictation checked — if the user left Dictation off
+        // for every section, they don't want the dictated text influencing
+        // the AI-generated content.
+        const includeDictation = routingTargets.length > 0;
+        const buildCombinedContext = (): Corti.GuidedDocumentContext[] => {
+          const context: Corti.GuidedDocumentContext[] = [];
+          if (includeDictation && text.trim()) {
+            context.push({ type: "text", text });
+          }
+          if (includeAmbient) {
+            const tc = buildTranscriptContext();
+            if (tc) {
+              context.push(tc);
+            }
+          }
+          if (includeFacts) {
+            context.push(...buildFactsContext());
+          }
+          return context;
+        };
+
+        if (aiGeneratedSections.length === 0) {
+          // All sections are verbatim-only — no API call.
+          result = {
+            document: {
+              stringDocument: {},
+              sections: [],
+            } as unknown as Corti.GuidedEphemeralDocument,
+            usageInfo: { creditsConsumed: 0 },
+          } as unknown as Corti.GuidedDocumentsCreateEphemeralResponse;
+        } else if (verbatimOnlySections.length > 0 || allOffSections.length > 0) {
+          // Assembly: generate only the AI sections (merge + AI-only),
+          // excluding verbatim-only and all-off sections.
+          const assemblyTemplate: Corti.GuidedAssemblyRequest = {
+            name: `${templateName} (filtered)`,
+            sectionRefs: aiGeneratedSections.map((s) => ({
+              sectionId: s.id,
+            })),
+          };
+          result = await client.documents.generate({
+            outputLanguage: language,
+            assemblyTemplate,
+            context: buildCombinedContext(),
+          });
+        } else {
+          // No excluded sections — standard call with full template.
+          result = await client.documents.generate({
+            outputLanguage: language,
+            templateRef: plainTemplateRef,
+            context: buildCombinedContext(),
+          });
+        }
+
+        const doc = result.document as GeneratedDocument;
+
+        // Build a map of sectionId → [heading, content] from the AI output.
+        const generatedMap = new Map<string, [string, string]>();
+        if (doc.sections) {
+          for (const s of doc.sections) {
+            const content = doc.stringDocument[s.sectionId] ?? "";
+            if (content.length > 0) {
+              generatedMap.set(s.sectionId, [s.heading, content]);
+            }
+          }
+        }
+
+        // For merge sections, call the merge agent to combine dictated text
+        // with AI-generated content. Only merge sections that have BOTH
+        // routed dictation AND AI content are worth merging; the rest fall
+        // back to whichever they have.
+        let mergedMap = new Map<string, string>();
+        const sectionsToMerge: MergeSection[] = [];
+        for (const s of mergeSections) {
+          const routed = routedMap.get(s.id) ?? "";
+          const aiContent = generatedMap.get(s.id)?.[1] ?? "";
+          if (routed.trim() && aiContent.trim()) {
+            sectionsToMerge.push({
+              id: s.id,
+              heading: s.heading,
+              dictatedText: routed,
+              aiContent,
+            });
+          }
+        }
+        if (sectionsToMerge.length > 0) {
+          try {
+            const mergeResult = await mergeDictationWithGenerated({
+              client,
+              sections: sectionsToMerge,
+            });
+            mergedMap = mergeResult.merged;
+          } catch (e) {
+            // Fall back to concatenation for all merge sections.
+            for (const s of sectionsToMerge) {
+              mergedMap.set(s.id, `${s.dictatedText}\n${s.aiContent}`);
+            }
+            setError(
+              `Couldn't merge dictation with AI content — ${describeAgentError(e)}. Concatenated them as a fallback.`,
+            );
+          }
+        }
+
+        // Assemble the final note in template order.
+        const orderedSections = templateSections
+          .map((ts): [string, string] | null => {
+            const src = sectionSources.get(ts.id);
+            if (!src || (!src.dictation && !src.ambient && !src.facts)) {
+              return null; // all-off section: omit
+            }
+
+            // Merge section: use merged result if available.
+            const merged = mergedMap.get(ts.id);
+            if (merged != null) {
+              return [ts.heading, merged];
+            }
+
+            // AI-generated section (merge section without merge result, or
+            // AI-only section): use the AI output.
+            const generated = generatedMap.get(ts.id);
+            if (generated) {
+              return generated;
+            }
+
+            // Verbatim-only section (or merge section with no AI content):
+            // use routed dictation.
+            if (src.dictation) {
+              const routed = routedMap.get(ts.id);
+              if (routed != null && routed.length > 0) {
+                return [ts.heading, routed];
+              }
+            }
+
+            return null;
+          })
+          .filter((s): s is [string, string] => s !== null);
+
+        const mergeCount = mergeSections.length;
+        const verbatimOnlyCount = verbatimOnlySections.length;
+        const labelParts: string[] = [];
+        if (mergeCount > 0) {
+          labelParts.push(`${mergeCount} merged`);
+        }
+        if (verbatimOnlyCount > 0) {
+          labelParts.push(`${verbatimOnlyCount} verbatim`);
+        }
+        const note: GeneratedNote = {
+          id: doc.id ?? crypto.randomUUID(),
+          templateName:
+            labelParts.length > 0 ? `${templateName} (${labelParts.join(", ")})` : templateName,
+          createdAt: Date.now(),
+          orderedSections,
+          creditsConsumed: result.usageInfo?.creditsConsumed ?? 0,
+        };
+        setGeneratedNotes((prev) => [note, ...prev]);
+        if (doc.id) {
+          onNoteGenerated?.(doc.id);
+        }
+      } else if (activeSource === "text" && templateSections.length > 0) {
+        // --- Dictation only ---
+        // Route dictated sentences to all template sections verbatim — no AI
+        // generation. Same routing as Combined with Dictation on for all
+        // sections, but without the per-section toggle UI.
+        let routedMap = new Map<string, string>();
+        if (text.trim()) {
+          try {
+            const routing = await routeDictationToSections({
+              client,
+              dictationText: text,
+              targetSections: templateSections.map((s) => ({
+                id: s.id,
+                heading: s.heading,
+                name: s.name,
+              })),
+            });
+            routedMap = routing.routed;
+            // Router placed nothing anywhere — classification failure, same
+            // fallback as an agent error: every section gets the full dictation
+            // instead of silently vanishing.
+            const placed = templateSections.some(
+              (s) => (routing.routed.get(s.id) ?? "").length > 0,
+            );
+            if (!placed) {
+              for (const s of templateSections) {
+                routedMap.set(s.id, text.trim());
+              }
+              setError(
+                "The routing agent placed no sentences in any section — filled them with the full dictation as a fallback.",
+              );
+            } else if (routing.unallocated.length > 0) {
+              setUnallocatedSentences(routing.unallocated);
+            }
+          } catch (e) {
+            for (const s of templateSections) {
+              routedMap.set(s.id, text.trim());
+            }
+            setError(
+              `Couldn't route dictation to sections — ${describeAgentError(e)}. Filled them with the full dictation as a fallback.`,
+            );
+          }
+        }
+
+        const orderedSections = templateSections
+          .map((ts): [string, string] | null => {
+            const routed = routedMap.get(ts.id);
+            if (routed != null && routed.length > 0) {
+              return [ts.heading, routed];
+            }
+            return null;
+          })
+          .filter((s): s is [string, string] => s !== null);
+
+        const note: GeneratedNote = {
+          id: crypto.randomUUID(),
+          templateName: `${templateName} (verbatim dictation)`,
+          createdAt: Date.now(),
+          orderedSections,
+          creditsConsumed: 0,
+        };
+        setGeneratedNotes((prev) => [note, ...prev]);
       } else {
-        const context = buildStandardContext();
-        result = await client.documents.generate({
-          outputLanguage: language,
-          templateRef: plainTemplateRef,
-          context,
-        });
-      }
+        // --- Non-Combined sources (interaction / ambient only / facts only) ---
+        // Also handles the edge case where "combined" or "text" was selected
+        // but templateSections haven't loaded yet — fall back to full-template
+        // generation with dictation text as context.
+        let context: Corti.GuidedDocumentContext[];
+        if (activeSource === "interaction") {
+          context = [];
+        } else if (activeSource === "text" || activeSource === "combined") {
+          context = text.trim() ? [{ type: "text", text }] : [];
+        } else if (activeSource === "transcript") {
+          const tc = buildTranscriptContext();
+          context = tc ? [tc] : [];
+        } else {
+          // facts
+          context = buildFactsContext();
+        }
 
-      const doc = result.document as GeneratedDocument;
-      const templateName =
-        filteredTemplates.find((t) => t.id === effectiveTemplateId)?.name ?? "Custom template";
+        if (activeSource === "interaction" && interactionId) {
+          result = await client.documents.generate({
+            outputLanguage: language,
+            interactionId,
+            templateRef: plainTemplateRef,
+          });
+        } else {
+          result = await client.documents.generate({
+            outputLanguage: language,
+            templateRef: plainTemplateRef,
+            context,
+          });
+        }
 
-      const orderedSections = extractOrderedSections(doc);
+        const doc = result.document as GeneratedDocument;
+        const orderedSections = extractOrderedSections(doc);
 
-      if (preserve) {
-        const selectedTemplateName =
-          filteredTemplates.find((t) => t.id === effectiveTemplateId)?.name ?? "Clinical Note";
-        const dictationHeading =
-          selectedTemplateName.replace(/\s*\([^)]*\)\s*/g, "").trim() || "Clinical Note";
-        orderedSections.unshift([dictationHeading, text]);
-      }
-
-      const note: GeneratedNote = {
-        id: doc.id ?? crypto.randomUUID(),
-        templateName: preserve ? `${templateName} (verbatim dictation)` : templateName,
-        createdAt: Date.now(),
-        orderedSections,
-        creditsConsumed: result.usageInfo?.creditsConsumed ?? 0,
-      };
-      setGeneratedNotes((prev) => [note, ...prev]);
-      if (doc.id) {
-        onNoteGenerated?.(doc.id);
+        const note: GeneratedNote = {
+          id: doc.id ?? crypto.randomUUID(),
+          templateName,
+          createdAt: Date.now(),
+          orderedSections,
+          creditsConsumed: result.usageInfo?.creditsConsumed ?? 0,
+        };
+        setGeneratedNotes((prev) => [note, ...prev]);
+        if (doc.id) {
+          onNoteGenerated?.(doc.id);
+        }
       }
     } catch (e) {
       setError(describeDocumentsError(e));
@@ -425,230 +796,338 @@ export function NoteGeneration({
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-3">
-      <div className="flex items-center gap-2">
-        <FileText className="h-4 w-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold text-foreground">Generate note</h3>
-      </div>
+    <Card className="flex min-w-0 flex-col">
+      <CardHeader
+        icon={FileText}
+        title="Note generation"
+        meta={
+          allNotes.length > 0
+            ? `${allNotes.length} note${allNotes.length > 1 ? "s" : ""}`
+            : undefined
+        }
+      />
+      <div className="flex flex-col gap-3 px-4 py-3.5">
+        {/* Template + language + source selectors */}
+        <div className="flex flex-col gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Template</Label>
+            {filteredTemplates.length > 0 ? (
+              <Select value={templateId} onValueChange={setTemplateId}>
+                <SelectTrigger className="h-8 rounded-[5px] text-[13px]">
+                  <SelectValue placeholder="Select a template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredTemplates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                value={manualTemplateId}
+                onChange={(e) => setManualTemplateId(e.target.value)}
+                placeholder={
+                  templatesLoading
+                    ? "Loading templates…"
+                    : "No templates found, paste a template UUID"
+                }
+                className="h-8 rounded-[5px] text-[13px]"
+              />
+            )}
+          </div>
 
-      {/* Template + language + source selectors */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="space-y-1.5">
-          <Label className="text-xs">Template</Label>
-          {filteredTemplates.length > 0 ? (
-            <Select value={templateId} onValueChange={setTemplateId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a template" />
+          {/* Output language */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Output language</Label>
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger className="h-8 rounded-[5px] text-[13px]">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {filteredTemplates.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
+                {OUTPUT_LANGUAGES.map((l) => (
+                  <SelectItem key={l.value} value={l.value}>
+                    {l.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          ) : (
-            <Input
-              value={manualTemplateId}
-              onChange={(e) => setManualTemplateId(e.target.value)}
-              placeholder={
-                templatesLoading
-                  ? "Loading templates…"
-                  : "No templates found, paste a template UUID"
-              }
-            />
-          )}
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Output language</Label>
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {OUTPUT_LANGUAGES.map((l) => (
-                <SelectItem key={l.value} value={l.value}>
-                  {l.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">
-            Source
-            {sourceOverride && <span className="text-muted-foreground/60"> (override)</span>}
-          </Label>
-          <Select
-            value={activeSource}
-            onValueChange={(v) => setSourceOverride(v as DocumentSource)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="combined">Combined (dictation + ambient + facts)</SelectItem>
-              <SelectItem value="combined-no-facts">Combined (dictation + ambient)</SelectItem>
-              <SelectItem value="interaction">Interaction (server-side)</SelectItem>
-              <SelectItem value="text">Editor text only</SelectItem>
-              <SelectItem value="transcript">Ambient only</SelectItem>
-              <SelectItem value="facts" disabled={!getFacts}>
-                Facts only
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+          </div>
 
-      {/* Generate button + preserve-dictated-text toggle */}
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => void generate()}
-          disabled={generating || !canGenerate}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded border px-3 py-1.5 text-sm font-medium transition-colors",
-            "border-lime-600 text-foreground hover:bg-lime-600/10 dark:border-corti-lime dark:hover:bg-corti-lime/10",
-            "disabled:opacity-50",
-          )}
-        >
-          {generating ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <FileText className="h-4 w-4" />
-          )}
-          {generating ? "Generating…" : "Generate note"}
-        </button>
+          {/* Source */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Source</Label>
+            <Select
+              value={activeSource}
+              onValueChange={(v) => {
+                const next = v as DocumentSource;
+                setSource(next);
+                onSourceChange?.(next);
+              }}
+            >
+              <SelectTrigger className="h-8 rounded-[5px] text-[13px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="combined">Combined</SelectItem>
+                {showInteractionSource && (
+                  <SelectItem value="interaction">Interaction (server-side)</SelectItem>
+                )}
+                <SelectItem value="text">Dictation only</SelectItem>
+                <SelectItem value="transcript">Ambient only</SelectItem>
+                {factsEnabled && <SelectItem value="facts">Facts only</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* biome-ignore lint/a11y/noLabelWithoutControl: label wraps the Checkbox control */}
-        <label
-          className={cn(
-            "flex items-center gap-2 text-xs",
-            dictationInContext ? "text-muted-foreground" : "text-muted-foreground/50",
+          {/* Per-section source table — only in Combined mode */}
+          {fetchingSections && showSectionSources && (
+            <p className="text-[11px] text-muted-foreground">Loading template sections…</p>
           )}
-          title={
-            dictationInContext
-              ? "Prepend the dictated editor text to the generated note verbatim."
-              : "Only has an effect when the source includes editor text (Combined or Editor text only)."
-          }
-        >
-          <Checkbox
-            checked={preserveDictatedText && dictationInContext}
-            disabled={!dictationInContext}
-            onCheckedChange={(v) => setPreserveDictatedText(v === true)}
-          />
-          Preserve dictated text verbatim
-        </label>
-      </div>
-
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-
-      {/* Notes (existing + generated) */}
-      {allNotes.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {allNotes.map((note) => {
-            const isExpanded = expandedId === note.id;
-            return (
+          {sectionsError && <p className="text-[11px] text-variant-error-text">{sectionsError}</p>}
+          {showSectionSources && !fetchingSections && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Sections</Label>
+              {/* Header row */}
               <div
-                key={note.id}
-                className="flex flex-col gap-2 border-t border-border pt-3 first:border-t-0 first:pt-0"
+                className={cn(
+                  "grid items-center gap-1.5 px-1",
+                  factsEnabled ? "grid-cols-[1fr_3rem_3rem_3rem]" : "grid-cols-[1fr_3rem_3rem]",
+                )}
               >
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setExpandedId(isExpanded ? null : note.id)}
-                    className="flex items-center gap-2 text-left"
-                  >
-                    {isExpanded ? (
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                    <span className="text-xs font-medium text-foreground">{note.templateName}</span>
-                    {note.isExisting && (
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                        Saved
-                      </span>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(note.createdAt).toLocaleString([], {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      Credits: {note.creditsConsumed}
-                    </span>
-                  </button>
-                  <div className="ml-auto flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => void copyNote(note)}
-                      className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    >
-                      {copiedId === note.id ? (
-                        <Check className="h-3.5 w-3.5" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                      {copiedId === note.id ? "Copied" : "Copy"}
-                    </button>
-                    {!note.isExisting && (
-                      <button
-                        type="button"
-                        onClick={() => removeNote(note.id)}
-                        className="rounded border border-border p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                        aria-label="Remove note"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                {isExpanded && (
-                  <div className="flex flex-col gap-2 pl-5">
-                    {note.orderedSections.map(([heading, content]) => {
-                      const sectionCopyKey = `${note.id}:${heading}`;
-                      return (
-                        <div key={heading} className="relative rounded-md border border-border p-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <button
-                              type="button"
-                              onClick={() => void copySectionWithHeading(note.id, heading, content)}
-                              title={`Copy "${heading}" with content`}
-                              className="text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
-                            >
-                              {heading}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => void copySection(note.id, heading, content)}
-                              title={`Copy "${heading}" content only`}
-                              className="shrink-0 rounded border border-border p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                            >
-                              {copiedSection === sectionCopyKey ? (
-                                <Check className="h-3 w-3" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </button>
-                          </div>
-                          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
-                            {content}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <span className="text-[11px] font-medium text-muted-foreground" />
+                <span className="text-center text-[11px] font-medium text-muted-foreground">
+                  Dict.
+                </span>
+                <span className="text-center text-[11px] font-medium text-muted-foreground">
+                  Amb.
+                </span>
+                {factsEnabled && (
+                  <span className="text-center text-[11px] font-medium text-muted-foreground">
+                    Facts
+                  </span>
                 )}
               </div>
-            );
-          })}
+              {/* Section rows */}
+              <div className="flex flex-col gap-0.5">
+                {templateSections.map((s) => {
+                  const src = sectionSources.get(s.id) ?? DEFAULT_SECTION_SOURCES;
+                  // Read the live value from `prev` inside the updater, not the
+                  // render-time snapshot in `src` — rapid toggles before a
+                  // re-render would otherwise be based on stale state and drop
+                  // clicks.
+                  const toggle = (key: keyof SectionSources) =>
+                    setSectionSources((prev) => {
+                      const current = prev.get(s.id) ?? DEFAULT_SECTION_SOURCES;
+                      const next = new Map(prev);
+                      next.set(s.id, {
+                        ...current,
+                        [key]: !current[key],
+                      });
+                      return next;
+                    });
+                  return (
+                    <div
+                      key={s.id}
+                      className={cn(
+                        "grid items-center gap-1.5 px-1 py-0.5",
+                        factsEnabled
+                          ? "grid-cols-[1fr_3rem_3rem_3rem]"
+                          : "grid-cols-[1fr_3rem_3rem]",
+                      )}
+                    >
+                      <span className="truncate text-[12px] text-foreground" title={s.heading}>
+                        {s.heading}
+                      </span>
+                      {/* biome-ignore lint/a11y/noLabelWithoutControl: label wraps the Checkbox control */}
+                      <label className="flex justify-center">
+                        <Checkbox
+                          checked={src.dictation}
+                          onCheckedChange={() => toggle("dictation")}
+                        />
+                      </label>
+                      {/* biome-ignore lint/a11y/noLabelWithoutControl: label wraps the Checkbox control */}
+                      <label className="flex justify-center">
+                        <Checkbox checked={src.ambient} onCheckedChange={() => toggle("ambient")} />
+                      </label>
+                      {factsEnabled && (
+                        /* biome-ignore lint/a11y/noLabelWithoutControl: label wraps the Checkbox control */
+                        <label className="flex justify-center">
+                          <Checkbox checked={src.facts} onCheckedChange={() => toggle("facts")} />
+                        </label>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Dictation routes your dictated sentences into the section verbatim. Ambient
+                {factsEnabled ? " and Facts" : ""} have the AI generate from those sources. Both on:
+                an agent merges them, keeping dictation verbatim.
+              </p>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+
+        {/* Generate button */}
+        <div className="flex flex-col gap-2.5">
+          <Button
+            type="button"
+            onClick={() => void generate()}
+            disabled={generating || !canGenerate}
+          >
+            {generating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            {generating ? "Generating…" : "Generate note"}
+          </Button>
+        </div>
+
+        {error && (
+          <Callout tone="error" icon={FileText}>
+            {error}
+          </Callout>
+        )}
+
+        {/* Dictated sentences the router placed in no Dictation section.
+            Not lost — they still feed the AI via context — but surfaced so the
+            clinician can see what didn't get a verbatim home. */}
+        {unallocatedSentences.length > 0 && (
+          <div className="rounded-[5px] border border-border bg-muted/40 p-2.5">
+            <p className="text-[11px] font-medium text-muted-foreground">
+              {unallocatedSentences.length} sentence
+              {unallocatedSentences.length > 1 ? "s" : ""} from the dictation weren&apos;t placed in
+              any Dictation section:
+            </p>
+            <p className="mt-1 whitespace-pre-wrap text-[12px] italic leading-relaxed text-muted-foreground">
+              {unallocatedSentences.join(" ")}
+            </p>
+          </div>
+        )}
+
+        {/* Notes (existing + generated) */}
+        {allNotes.length > 0 && (
+          <div className="flex flex-col gap-2.5">
+            {allNotes.map((note) => {
+              const isExpanded = expandedId === note.id;
+              return (
+                <div
+                  key={note.id}
+                  className={cn(
+                    "flex flex-col gap-2 rounded-md border border-border bg-background p-3",
+                    !note.isExisting && "animate-rise",
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(isExpanded ? null : note.id)}
+                      className="flex min-w-0 items-center gap-2 text-left"
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      )}
+                      <span className="truncate text-[13px] font-medium text-foreground">
+                        {note.templateName}
+                      </span>
+                      {note.isExisting && <Badge tone="neutral">Saved</Badge>}
+                      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+                        {new Date(note.createdAt).toLocaleString([], {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <span className="shrink-0 font-mono text-[11px] text-muted-foreground/60">
+                        {note.creditsConsumed} cr
+                      </span>
+                    </button>
+                    <div className="ml-auto flex shrink-0 items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        type="button"
+                        onClick={() => void copyNote(note)}
+                        className="h-6 px-2 text-[11px]"
+                      >
+                        {copiedId === note.id ? (
+                          <Check className="h-3 w-3" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                        {copiedId === note.id ? "Copied" : "Copy"}
+                      </Button>
+                      {!note.isExisting && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          type="button"
+                          onClick={() => removeNote(note.id)}
+                          className="h-6 w-6 px-0"
+                          aria-label="Remove note"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {isExpanded && (
+                    <div className="flex flex-col gap-2 pl-5">
+                      {note.orderedSections.map(([heading, content]) => {
+                        const sectionCopyKey = `${note.id}:${heading}`;
+                        return (
+                          <div
+                            key={heading}
+                            className="relative rounded-md border border-border p-3"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void copySectionWithHeading(note.id, heading, content)
+                                }
+                                title={`Copy "${heading}" with content`}
+                                className="text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground transition-colors hover:text-foreground"
+                              >
+                                {heading}
+                              </button>
+                              <Button
+                                variant="ghost"
+                                type="button"
+                                onClick={() => void copySection(note.id, heading, content)}
+                                title={`Copy "${heading}" content only`}
+                                className="shrink-0 p-1"
+                              >
+                                {copiedSection === sectionCopyKey ? (
+                                  <Check className="h-3 w-3" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                            <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
+                              {content}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Generation progress — thin flowing bar, pinned to the card bottom */}
+        {generating && <div className="mx-3.5 mb-1 h-0.5 animate-flow rounded-full" />}
+      </div>
+    </Card>
   );
 }

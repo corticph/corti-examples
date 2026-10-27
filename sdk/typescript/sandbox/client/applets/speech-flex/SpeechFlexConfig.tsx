@@ -2,8 +2,8 @@
  * SpeechFlexConfig — configuration dialog for the Speech Flex applet.
  *
  * Tabbed dialog with: Commands, Replacements, Dictionary, Cleanup prompt,
- * Formatting (dates, times, numbers, measurements, ordinals), and Ambient
- * settings (facts mode toggle + document generation source).
+ * Formatting (dates, times, numbers, measurements, ordinals), and Facts
+ * (facts extraction toggle).
  *
  * Reuses the same stores as the Dictation Suite applet (replacementStore,
  * termStore, commandStore, promptStore) so config is shared across applets
@@ -37,16 +37,11 @@ import {
   toExport as replacementsToExport,
 } from "../text-replacements/replacements";
 
-export type DocumentSource =
-  | "combined"
-  | "combined-no-facts"
-  | "interaction"
-  | "text"
-  | "transcript"
-  | "facts";
+export type DocumentSource = "combined" | "interaction" | "text" | "transcript" | "facts";
 
 export interface SpeechFlexSettings {
   factsEnabled: boolean;
+  showInteractionSource: boolean;
   documentSource: DocumentSource;
   formatting: FormattingConfig;
 }
@@ -60,7 +55,8 @@ function loadSettings(): SpeechFlexSettings {
       const parsed = JSON.parse(raw) as Partial<SpeechFlexSettings>;
       return {
         factsEnabled: parsed.factsEnabled ?? true,
-        documentSource: parsed.documentSource ?? "combined",
+        showInteractionSource: parsed.showInteractionSource ?? false,
+        documentSource: parsed.documentSource ?? "transcript",
         formatting: { ...DEFAULT_FORMATTING, ...parsed.formatting },
       };
     }
@@ -69,7 +65,8 @@ function loadSettings(): SpeechFlexSettings {
   }
   return {
     factsEnabled: true,
-    documentSource: "combined",
+    showInteractionSource: false,
+    documentSource: "transcript",
     formatting: { ...DEFAULT_FORMATTING },
   };
 }
@@ -82,7 +79,7 @@ function saveSettings(s: SpeechFlexSettings) {
   }
 }
 
-type TabId = "commands" | "replacements" | "dictionary" | "cleanup" | "formatting" | "ambient";
+type TabId = "commands" | "replacements" | "dictionary" | "cleanup" | "formatting" | "facts";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "commands", label: "Commands" },
@@ -90,7 +87,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "dictionary", label: "Dictionary" },
   { id: "cleanup", label: "Cleanup" },
   { id: "formatting", label: "Formatting" },
-  { id: "ambient", label: "Ambient" },
+  { id: "facts", label: "Facts" },
 ];
 
 function ReplacementsPanel() {
@@ -200,7 +197,7 @@ function FormattingPanel({
   );
 }
 
-function AmbientPanel({
+function FactsPanel({
   settings,
   onChange,
 }: {
@@ -214,112 +211,28 @@ function AmbientPanel({
           <span className="text-sm font-medium text-foreground">Facts extraction</span>
           <span className="text-xs text-muted-foreground">
             Enable real-time facts extraction during ambient recording. When disabled, ambient mode
-            uses transcription-only mode.
+            uses transcription-only mode and the "Facts only" source is hidden in the note
+            generation panel.
           </span>
         </div>
         <Switch
           checked={settings.factsEnabled}
-          onCheckedChange={(checked) => {
-            // If disabling facts while a facts-dependent source is selected,
-            // fall back to a source that doesn't need facts.
-            const source =
-              !checked &&
-              settings.documentSource !== "interaction" &&
-              settings.documentSource !== "text" &&
-              settings.documentSource !== "transcript" &&
-              settings.documentSource !== "combined-no-facts"
-                ? "text"
-                : settings.documentSource;
-            onChange({
-              ...settings,
-              factsEnabled: checked,
-              documentSource: source,
-            });
-          }}
+          onCheckedChange={(checked) => onChange({ ...settings, factsEnabled: checked })}
         />
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-foreground">Document generation source</span>
-        <span className="text-xs text-muted-foreground">
-          Choose what the note generator uses as input context when generating a note.
-        </span>
-        <div className="mt-2 flex flex-col gap-1.5">
-          {(
-            [
-              {
-                value: "combined",
-                label: "Combined (dictation + ambient + facts)",
-                desc: "Explicit context array with editor text, ambient transcript, and facts mixed",
-                needsFacts: true,
-              },
-              {
-                value: "combined-no-facts",
-                label: "Combined (dictation + ambient)",
-                desc: "Explicit context array with editor text and ambient transcript, no facts",
-                needsFacts: false,
-              },
-              {
-                value: "interaction",
-                label: "Interaction (server-side)",
-                desc: "Server pulls everything attached to the interaction",
-                needsFacts: false,
-              },
-              {
-                value: "text",
-                label: "Editor text only",
-                desc: "Just the dictation editor content as text context",
-                needsFacts: false,
-              },
-              {
-                value: "transcript",
-                label: "Ambient only",
-                desc: "Explicit ambient transcript segments as context",
-                needsFacts: false,
-              },
-              {
-                value: "facts",
-                label: "Facts only",
-                desc: "Explicit non-discarded facts as context",
-                needsFacts: true,
-              },
-            ] as {
-              value: DocumentSource;
-              label: string;
-              desc: string;
-              needsFacts: boolean;
-            }[]
-          ).map((opt) => {
-            const disabled = opt.needsFacts && !settings.factsEnabled;
-            return (
-              <label
-                key={opt.value}
-                className={cn(
-                  "flex items-start gap-2 rounded-md border p-2.5 transition-colors",
-                  disabled
-                    ? "cursor-not-allowed border-border opacity-40"
-                    : settings.documentSource === opt.value
-                      ? "cursor-pointer border-lime-600 bg-lime-600/5 dark:border-corti-lime dark:bg-corti-lime/5"
-                      : "cursor-pointer border-border hover:bg-accent",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="doc-source"
-                  value={opt.value}
-                  checked={settings.documentSource === opt.value}
-                  onChange={() => onChange({ ...settings, documentSource: opt.value })}
-                  disabled={disabled}
-                  className="mt-0.5 accent-lime-600 dark:accent-corti-lime"
-                />
-                <div className="flex flex-col">
-                  <span className="text-sm text-foreground">{opt.label}</span>
-                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
-                </div>
-              </label>
-            );
-          })}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-foreground">Interaction source</span>
+          <span className="text-xs text-muted-foreground">
+            Show the "Interaction (server-side)" option in the note generation source dropdown. Uses
+            persisted transcripts and facts from the server instead of browser context.
+          </span>
         </div>
+        <Switch
+          checked={settings.showInteractionSource}
+          onCheckedChange={(checked) => onChange({ ...settings, showInteractionSource: checked })}
+        />
       </div>
     </div>
   );
@@ -346,9 +259,9 @@ export function SpeechFlexConfig({
         <button
           type="button"
           title="Configuration"
-          className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-[5px] border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
-          <Wrench className="h-4 w-4" />
+          <Wrench className="h-3.5 w-3.5" />
         </button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -384,9 +297,7 @@ export function SpeechFlexConfig({
           {tab === "formatting" && (
             <FormattingPanel settings={settings} onChange={handleSettingsChange} />
           )}
-          {tab === "ambient" && (
-            <AmbientPanel settings={settings} onChange={handleSettingsChange} />
-          )}
+          {tab === "facts" && <FactsPanel settings={settings} onChange={handleSettingsChange} />}
         </div>
       </DialogContent>
     </Dialog>

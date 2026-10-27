@@ -10,6 +10,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import { AuthProvider } from "./context/AuthContext";
 import { SessionStatusProvider } from "./context/SessionStatusContext";
+import { AppletFullscreen } from "./pages/AppletFullscreen";
 import { AppletPage, Home } from "./pages/Home";
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,8 @@ const App = () => (
           <SessionStatusProvider>
             <BrowserRouter>
               <Routes>
+                {/* Standalone full-viewport demo — no docs shell */}
+                <Route path="/:workflow/:applet/fullscreen" element={<AppletFullscreen />} />
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Home />} />
                   <Route path="/:workflow/:applet" element={<AppletPage />} />

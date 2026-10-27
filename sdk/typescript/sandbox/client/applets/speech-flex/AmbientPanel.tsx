@@ -14,7 +14,18 @@
  */
 
 import type { Corti } from "@corti/sdk";
-import { Check, ChevronDown, ChevronRight, Pencil, Plus, Radio, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ListChecks,
+  MessageSquareText,
+  Pencil,
+  Plus,
+  Radio,
+  X,
+} from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -23,6 +34,7 @@ import {
   mergeDiarizedSegments,
 } from "../_shared/diarizedTranscript";
 import { cn } from "../_shared/utils";
+import { Badge, Card, Eyebrow } from "./kit";
 
 /** Which transcript source the panel is showing. */
 export type TranscriptPanelMode = "ambient" | "paste";
@@ -60,19 +72,19 @@ export function RecordingStatusBar({
   clips: AmbientClip[];
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2">
+    <div className="flex min-w-0 items-center gap-2.5">
       {isRecording ? (
         <>
-          <span className="relative flex h-2.5 w-2.5">
+          <span className="relative flex h-2.5 w-2.5 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
           </span>
-          <span className="text-sm font-medium text-foreground">Recording</span>
+          <span className="text-[13px] font-medium text-foreground">Recording</span>
         </>
       ) : (
         <>
-          <Radio className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">
+          <Radio className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="text-[12px] text-muted-foreground">
             {clips.length > 0
               ? `${clips.length} clip${clips.length > 1 ? "s" : ""} recorded`
               : "Ready to record"}
@@ -80,15 +92,12 @@ export function RecordingStatusBar({
         </>
       )}
       {clips.length > 0 && (
-        <div className="ml-auto flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {clips.map((clip) => (
-            <span
-              key={clip.clipIndex}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground"
-            >
+            <Badge key={clip.clipIndex} tone="neutral" className="font-mono">
               Clip {clip.clipIndex + 1}
               {clip.durationMs != null && ` · ${Math.round(clip.durationMs / 1000)}s`}
-            </span>
+            </Badge>
           ))}
         </div>
       )}
@@ -102,35 +111,36 @@ export function RecordingStatusBar({
 
 export function CollapsibleSection({
   title,
+  icon: Icon,
   count,
   defaultOpen,
   children,
 }: {
   title: string;
+  icon?: LucideIcon;
   count?: number;
   defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
   return (
-    <div className="rounded-md border border-border bg-background">
+    <Card>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left"
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
       >
         {open ? (
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         ) : (
-          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         )}
-        <span className="text-sm font-semibold text-foreground">{title}</span>
-        {count != null && count > 0 && (
-          <span className="text-xs text-muted-foreground">{count}</span>
-        )}
+        {Icon && <Icon size={13} className="shrink-0 text-muted-foreground" />}
+        <Eyebrow className="truncate">{title}</Eyebrow>
+        {count != null && count > 0 && <Badge tone="neutral">{count}</Badge>}
       </button>
-      {open && <div className="border-t border-border p-3">{children}</div>}
-    </div>
+      {open && <div className="border-t border-border px-3.5 py-3">{children}</div>}
+    </Card>
   );
 }
 
@@ -138,16 +148,34 @@ export function CollapsibleSection({
 /* Transcript panel                                                   */
 /* ------------------------------------------------------------------ */
 
+/** Empty state — icon in a circle, bold label, one-line description. */
+function PanelEmptyState({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2 py-7 text-center">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+        <MessageSquareText className="h-4 w-4 text-muted-foreground" />
+      </span>
+      <p className="text-[13px] font-semibold text-foreground">{title}</p>
+      <p className="max-w-[260px] text-[12px] text-muted-foreground">{detail}</p>
+    </div>
+  );
+}
+
 /** Speaker-run list shared by both panel modes so a parsed paste previews the same way as ambient output. */
 function SpeakerRuns({ runs }: { runs: ReturnType<typeof groupBySpeakerRuns> }) {
   if (runs.length === 0) {
-    return <p className="text-sm text-muted-foreground">No transcript yet.</p>;
+    return (
+      <PanelEmptyState
+        title="No transcript yet"
+        detail="Start an ambient recording, load an interaction with transcript segments, or paste one in."
+      />
+    );
   }
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2.5">
       {runs.map((run, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: speaker runs have no stable id
-        <div key={i} className="text-sm">
+        <div key={i} className="text-[13px] leading-relaxed">
           <span className="font-semibold text-lime-600 dark:text-corti-lime">
             {speakerLabel(run.speakerId, run.channel)}:
           </span>{" "}
@@ -176,22 +204,28 @@ export function TranscriptPanel({
 }) {
   const speakerRuns = useMemo(() => groupBySpeakerRuns(segments), [segments]);
   return (
-    <CollapsibleSection title="Transcript" count={speakerRuns.length}>
+    <CollapsibleSection
+      title="Ambient"
+      icon={Radio}
+      count={segments.length > 0 ? 1 : undefined}
+      defaultOpen
+    >
       {/* Mode switch — Ambient (live scribe output) vs Paste (paste-in text). */}
-      <div className="mb-3 flex gap-1">
+      <div className="mb-3 inline-flex overflow-hidden rounded-[5px] border border-border">
         {(["ambient", "paste"] as const).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => onModeChange(m)}
             className={cn(
-              "rounded border px-2.5 py-1 text-xs font-medium transition-colors",
+              "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium transition-colors",
+              m === "ambient" && "border-r border-border",
               m === mode
-                ? "border-lime-600 bg-lime-600/10 text-foreground dark:border-corti-lime dark:bg-corti-lime/10"
-                : "border-border text-muted-foreground hover:bg-accent hover:text-foreground",
+                ? "bg-lime-600/10 text-foreground dark:bg-corti-lime/10"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >
-            {m === "ambient" ? "Ambient recording" : "Paste transcript"}
+            {m === "ambient" ? "Ambient transcript" : "Paste transcript"}
           </button>
         ))}
       </div>
@@ -203,10 +237,10 @@ export function TranscriptPanel({
           placeholder={
             'Paste a transcript here. Lines like "Speaker 1: …" are split into speakers.'
           }
-          className="min-h-[140px]"
+          className="min-h-[140px] rounded-[5px] font-sans text-[13px]"
         />
       ) : (
-        <div className="max-h-[300px] overflow-auto">
+        <div className="themed-scrollbar max-h-[320px] overflow-auto">
           <SpeakerRuns runs={speakerRuns} />
         </div>
       )}
@@ -287,23 +321,24 @@ export function FactsPanel({
   };
 
   return (
-    <CollapsibleSection title="Facts" count={activeCount}>
-      <div className="max-h-[300px] overflow-auto">
+    <CollapsibleSection title="Facts" icon={ListChecks} count={activeCount}>
+      <div className="themed-scrollbar max-h-[320px] overflow-auto">
         {factGroups.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No facts yet.</p>
+          <PanelEmptyState
+            title="No facts yet"
+            detail="Extracted facts appear here in ambient facts mode. You can also add facts manually below."
+          />
         ) : (
           <div className="flex flex-col gap-3">
             {factGroups.map(([group, items]) => (
               <div key={group}>
-                <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-                  {group}
-                </p>
+                <Eyebrow className="mb-1.5">{group}</Eyebrow>
                 <ul className="flex flex-col gap-1">
                   {items.map((fact) => (
                     <li
                       key={fact.id}
                       className={cn(
-                        "flex items-start gap-1.5 text-sm",
+                        "flex items-start gap-1.5 text-[13px] leading-relaxed",
                         fact.isDiscarded && "opacity-40 line-through",
                       )}
                     >
@@ -314,7 +349,7 @@ export function FactsPanel({
                             value={editingFactText}
                             onChange={(e) => setEditingFactText(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-                            className="flex-1 rounded border border-border bg-background px-1.5 py-0.5 text-sm text-foreground outline-none focus:border-lime-600 dark:focus:border-corti-lime"
+                            className="flex-1 rounded-[5px] border border-border bg-background px-1.5 py-0.5 text-[13px] text-foreground outline-none focus:border-lime-600 dark:focus:border-corti-lime"
                           />
                           <button
                             type="button"
@@ -338,7 +373,7 @@ export function FactsPanel({
                             onClick={() => toggleDiscard(fact.id)}
                             title={fact.isDiscarded ? "Undiscard" : "Discard"}
                             className={cn(
-                              "mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border transition-colors",
+                              "mt-1 h-3 w-3 shrink-0 rounded-full border transition-colors",
                               fact.isDiscarded
                                 ? "border-border bg-transparent"
                                 : "border-lime-600 bg-lime-600 dark:border-corti-lime dark:bg-corti-lime",
@@ -372,14 +407,14 @@ export function FactsPanel({
       </div>
 
       {/* Add new fact */}
-      <div className="mt-3 flex flex-col gap-1.5 border-t border-border pt-2">
+      <div className="mt-3 flex flex-col gap-1.5 border-t border-border pt-2.5">
         <div className="flex gap-1.5">
           <input
             type="text"
             value={newFactGroup}
             onChange={(e) => setNewFactGroup(e.target.value)}
             placeholder="group"
-            className="w-20 rounded border border-border bg-background px-1.5 py-1 text-xs text-foreground outline-none focus:border-lime-600 dark:focus:border-corti-lime"
+            className="w-20 rounded-[5px] border border-border bg-background px-1.5 py-1 text-xs text-foreground outline-none focus:border-lime-600 dark:focus:border-corti-lime"
           />
           <input
             type="text"
@@ -387,13 +422,13 @@ export function FactsPanel({
             onChange={(e) => setNewFactText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addFact()}
             placeholder="Add a fact…"
-            className="flex-1 rounded border border-border bg-background px-1.5 py-1 text-xs text-foreground outline-none focus:border-lime-600 dark:focus:border-corti-lime"
+            className="flex-1 rounded-[5px] border border-border bg-background px-1.5 py-1 text-xs text-foreground outline-none focus:border-lime-600 dark:focus:border-corti-lime"
           />
           <button
             type="button"
             onClick={addFact}
             disabled={!newFactText.trim()}
-            className="rounded border border-border p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+            className="rounded-[5px] border border-border p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
             title="Add fact"
           >
             <Plus className="h-3.5 w-3.5" />

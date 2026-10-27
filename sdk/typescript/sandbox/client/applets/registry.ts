@@ -145,7 +145,7 @@ export interface AppletDefinition {
   description: string;
   workflow: WorkflowArea;
   icon: LucideIcon;
-  Component: ComponentType;
+  Component: ComponentType<{ onExit?: () => void }>;
   /** Optional card rendered between the applet body and the details card. */
   ExtraSection?: ComponentType;
   /** Heading for the details card. */
@@ -160,6 +160,14 @@ export interface AppletDefinition {
    * layout collapses into a stack at that width.
    */
   wide?: boolean;
+  /**
+   * Where the Live-demo section runs: "embedded" (default) mounts the
+   * component in the docs card, "fullscreen" links to the standalone
+   * full-viewport route instead, "both" embeds the demo AND offers the
+   * fullscreen route. The fullscreen route is only reachable for
+   * "fullscreen"/"both" applets.
+   */
+  demoPlacement?: "embedded" | "fullscreen" | "both";
 }
 
 export const WORKFLOW_TABS: Array<{
@@ -186,6 +194,7 @@ export const APPLETS: AppletDefinition[] = [
     Details: SuiteDetails,
     detailsBelowDemo: true,
     wide: true,
+    demoPlacement: "both",
   },
   {
     id: "speech-flex",
@@ -198,6 +207,7 @@ export const APPLETS: AppletDefinition[] = [
     detailsTitle: "How it works",
     Details: SpeechFlexDetails,
     wide: true,
+    demoPlacement: "fullscreen",
   },
   {
     id: "languages",
@@ -501,6 +511,7 @@ export const APPLETS: AppletDefinition[] = [
     Component: WakeCommandAgent,
     detailsTitle: "Details",
     Details: WakeCommandAgentDetails,
+    demoPlacement: "both",
   },
   {
     id: "conversational-agent",
@@ -511,6 +522,7 @@ export const APPLETS: AppletDefinition[] = [
     Component: ConversationalAgent,
     detailsTitle: "Details",
     Details: ConversationalAgentDetails,
+    demoPlacement: "both",
   },
   {
     id: "command-genie",
@@ -522,6 +534,7 @@ export const APPLETS: AppletDefinition[] = [
     detailsTitle: "How it works",
     Details: CommandGenieDetails,
     wide: true,
+    demoPlacement: "both",
   },
   {
     id: "recording-transcript",
@@ -615,6 +628,7 @@ export const APPLETS: AppletDefinition[] = [
     detailsTitle: "How it works",
     Details: ScribeLikeMeDetails,
     wide: true,
+    demoPlacement: "both",
   },
   {
     id: "real-time-nudge",
@@ -627,6 +641,7 @@ export const APPLETS: AppletDefinition[] = [
     detailsTitle: "How it works",
     Details: RealTimeNudgeDetails,
     wide: true,
+    demoPlacement: "both",
   },
 ];
 
@@ -659,6 +674,16 @@ export function workflowAreaFromSlug(slug: string): WorkflowArea | undefined {
 
 export function appletPath(applet: AppletDefinition): string {
   return `/${workflowSlug(applet.workflow)}/${applet.id}`;
+}
+
+/** Whether the applet is reachable on the standalone fullscreen route. */
+export function hasFullscreenRoute(applet: AppletDefinition): boolean {
+  return applet.demoPlacement === "fullscreen" || applet.demoPlacement === "both";
+}
+
+/** Route for the standalone full-viewport demo of a fullscreen-capable applet. */
+export function appletFullscreenPath(applet: AppletDefinition): string {
+  return `${appletPath(applet)}/fullscreen`;
 }
 
 export function getAppletByPath(
