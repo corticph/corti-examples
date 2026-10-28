@@ -72,7 +72,7 @@ export function AppletFullscreen() {
       ) : (
         <div className="min-h-dvh bg-background">
           <div className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-5 border-b border-border bg-background px-6">
-            <Logo className="h-[18px] w-auto shrink-0 text-foreground" />
+            <Logo className="h-7 w-auto shrink-0 text-foreground" />
             <span className="shrink-0 text-[13px] text-muted-foreground">{def.title}</span>
             <div className="ml-auto flex shrink-0 items-center gap-2">
               <Button variant="outline" size="sm" type="button" onClick={exitFullscreen}>
