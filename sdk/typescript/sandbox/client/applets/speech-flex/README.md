@@ -6,7 +6,7 @@ A visit schedule (Corti interactions sorted by scheduled date) anchors both mode
 
 ## Layout
 
-Runs as a full-viewport clinical app (the registry declares `demoPlacement: "fullscreen"`, so the sandbox serves it at `/:workflow/:applet/fullscreen` instead of embedding it in the docs card). A TopBar (logo · app label · config · exit) sits above the capture bar (mic control · mode pills · recording status), then three panels:
+Runs as a full-viewport clinical app (the registry declares `demoPlacement: "fullscreen"`, so the sandbox serves it at `/:workflow/:applet/fullscreen` instead of embedding it in the docs card). The fullscreen page's shared Navbar (logo · app label · theme toggle · exit full screen) sits above the capture bar (mic control · mode pills · recording status · config), then three panels:
 
 - **Left rail** — patient context + visit schedule. The patient context block shows the selected visit's identity (name, MRN, encounter type, scheduled time, interaction id) with an inline edit form (pencil), a single-click delete button (trash), and a clear button. The visit schedule lists interactions sorted by scheduled date (newest first) with patient name, encounter type, time, and MRN per row; a **New visit** form (expanded below the schedule heading — patient name, MRN, datetime) creates schedule entries, and selecting a visit anchors both capture modes. Interactions created without patient data get a deterministic fallback name (see `visitPatientName` in `workspaceState.ts`).
 - **Main panel** — the "EHR" column, top to bottom:
@@ -51,7 +51,7 @@ Templates are filtered by the spoken language (BCP 47 primary subtag matching). 
 
 ## Configuration
 
-The config dialog (wrench icon in the TopBar) has six tabs:
+The config dialog (wrench icon at the right end of the capture bar) has six tabs:
 
 - **Commands** — voice commands for the dictation endpoint (`/transcribe`). Uses `CommandManager` from the shared commands applet.
 - **Replacements** — server-side phrase rewrites in the final transcript (e.g. "BID" → "twice daily"). Uses `RuleManager` + `replacementStore`.
@@ -98,7 +98,7 @@ Ambient segments, facts, and clips are owned by `SpeechFlex.tsx` (in-memory Reac
 - **Phase 6:** agent features — dictation cleanup (copy-editor agent) with editable prompt from config dialog, revert support.
 - **Phase 7:** UX refactor — editor always visible (the "EHR"), collapsible transcript/facts panels, recording status bar, combined context for note generation (editor text + transcript + facts as explicit `context[]`), patient-context-scoped editor content transfer.
 - **Phase 8:** paste-transcript mode (Ambient/Paste toggle in the transcript panel, parsed into diarized segments), "preserve dictated text verbatim" toggle (parallel-call architecture), `combined-no-facts` document source, collapsible dictation editor.
-- **Phase 9:** full-screen clinical app redesign — TopBar + capture bar + three-panel layout (left rail: patient context + visit schedule; main: editor + transcript/facts; right: note generation) per the Corti clinical design language; visit lifecycle management (create via the New visit form, edit, delete); runs on its own route.
+- **Phase 9:** full-screen clinical app redesign — capture bar + three-panel layout (left rail: patient context + visit schedule; main: editor + transcript/facts; right: note generation) per the Corti clinical design language; visit lifecycle management (create via the New visit form, edit, delete); runs on its own route.
 
 ## Future opportunities
 
