@@ -2,30 +2,32 @@
  * Full-viewport page for applets whose registry placement makes them
  * reachable on `/:workflow/:applet/fullscreen` ("fullscreen" or "both").
  *
- * Renders the applet demo outside the docs shell (navbar, sidebar, footer)
- * so it fills the viewport like a standalone clinical app. The page owns:
+ * Renders the applet demo outside the docs shell (sidebar, footer) so it
+ * fills the viewport like a standalone app, under the same Navbar as main
+ * view: the applet title renders next to the logo, and the Console / API
+ * docs links are replaced by an "Exit full screen" button. The page owns:
  *   - the applet id context (session state namespacing),
- *   - the `onExit` callback (in-app button + Escape both return to docs).
+ *   - the exit-full-screen handler (nav button and Escape both return to
+ *     docs).
  *
  * Frame by placement:
- *   - "fullscreen": full-bleed `h-dvh` fill — the applet manages its own
- *     layout and internal scrolling (workspace apps like Speech Flex).
- *   - "both": document-style frame — sticky slim header (applet title +
- *     exit button), then a scrollable centered `max-w-6xl` column so
- *     natural-flow demos read like the docs page without the docs chrome.
+ *   - "fullscreen": Navbar plus full-bleed fill of the remaining viewport
+ *     height — the applet manages its own layout and internal scrolling
+ *     (workspace apps like Speech Flex).
+ *   - "both": document-style frame — the scrollable centered `max-w-6xl`
+ *     column so natural-flow demos read like the docs page without the
+ *     docs chrome.
  *
  * Unauthenticated visitors see the applet's own empty state (the applets
  * gate themselves on `isReady`), mirroring how the docs page gates embedded
  * demos behind authentication.
  */
 
-import { Minimize2 } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Logo } from "@/components/Logo";
-import { Button } from "@/components/ui/button";
 import { AppletIdProvider } from "../applets/_shared/sessionState";
 import { appletPath, getAppletByPath, hasFullscreenRoute } from "../applets/registry";
+import { Navbar } from "../components/layout/Navbar";
 import NotFound from "./NotFound";
 
 export function AppletFullscreen() {
@@ -65,24 +67,15 @@ export function AppletFullscreen() {
 
   return (
     <AppletIdProvider appletId={def.id}>
+      <Navbar label={def.title} onExit={exitFullscreen} />
       {def.demoPlacement === "fullscreen" ? (
-        <div className="h-dvh overflow-hidden bg-background">
-          <Demo onExit={exitFullscreen} />
+        <div className="h-[calc(100dvh-52px)] overflow-hidden bg-background">
+          <Demo />
         </div>
       ) : (
-        <div className="min-h-dvh bg-background">
-          <div className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-5 border-b border-border bg-background px-6">
-            <Logo className="h-7 w-auto shrink-0 text-foreground" />
-            <span className="shrink-0 text-[13px] text-muted-foreground">{def.title}</span>
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              <Button variant="outline" size="sm" type="button" onClick={exitFullscreen}>
-                <Minimize2 className="h-3.5 w-3.5" />
-                Exit full screen
-              </Button>
-            </div>
-          </div>
+        <div className="min-h-[calc(100dvh-52px)] bg-background">
           <div className="mx-auto w-full max-w-6xl px-6 py-8">
-            <Demo onExit={exitFullscreen} />
+            <Demo />
           </div>
         </div>
       )}

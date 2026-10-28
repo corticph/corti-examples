@@ -15,12 +15,13 @@
  *
  * Runs as a full-viewport clinical app on its own route
  * (`/:workflow/:applet/fullscreen`, via the registry's
- * `demoPlacement: "fullscreen"`). Layout per the Corti
+ * `demoPlacement: "fullscreen"`), under the shared Navbar
+ * rendered by AppletFullscreen. Layout per the Corti
  * clinical app design language:
  *
  *   ┌─────────────────────────────────────────────────────────────┐
- *   │ TopBar: logo · label · config · exit                        │
- *   │ Capture bar: mic control · mode pills · recording status    │
+ *   │ Navbar: logo · Speech Flex · theme toggle · exit             │
+ *   │ Capture bar: mic control · mode pills · status · config     │
  *   ├──────────┬──────────────────────────┬──────────────────────┤
  *   │ Left rail│ Main panel               │ Note generation      │
  *   │ 320px   │ dictation editor,        │ flex-1 — template,   │
@@ -47,7 +48,7 @@
  * Phase 8: paste-transcript mode, preserve-dictated-text verbatim toggle
  * (client-side verbatim routing via agent), collapsible
  * dictation editor.
- * Phase 9: full-screen clinical app redesign — TopBar + capture bar +
+ * Phase 9: full-screen clinical app redesign — capture bar +
  * three-panel layout per the Corti clinical design language; patient
  * identity lives in the left rail; runs on its own route.
  */
@@ -110,7 +111,7 @@ import type { WorkspaceMode } from "./workspaceState";
  */
 const greenText = "text-lime-600 dark:text-corti-lime";
 
-export function SpeechFlex({ onExit }: { onExit?: () => void }) {
+export function SpeechFlex() {
   const { authConfig, clientId, sdkEnvironment, isReady, tenantName } = useCortiAccessToken();
   const { language, onLanguagesChanged } = useDictationLanguage();
   const [mode, setMode] = useSessionState<WorkspaceMode>("mode", "dictation");
@@ -509,10 +510,7 @@ export function SpeechFlex({ onExit }: { onExit?: () => void }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
-      <TopBar
-        actions={<SpeechFlexConfig settings={settings} onSettingsChange={setSettings} />}
-        onExit={onExit}
-      >
+      <TopBar actions={<SpeechFlexConfig settings={settings} onSettingsChange={setSettings} />}>
         {/* Capture bar — mic web component, always visible. Disabled (greyed
             out, non-interactive) when no visit is selected, since both
             dictation and ambient require a visit to produce output. */}

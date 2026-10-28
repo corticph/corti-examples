@@ -145,7 +145,7 @@ export interface AppletDefinition {
   description: string;
   workflow: WorkflowArea;
   icon: LucideIcon;
-  Component: ComponentType<{ onExit?: () => void }>;
+  Component: ComponentType;
   /** Optional card rendered between the applet body and the details card. */
   ExtraSection?: ComponentType;
   /** Heading for the details card. */
