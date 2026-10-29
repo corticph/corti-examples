@@ -36,7 +36,7 @@ export function buildProdApp() {
 export function startProdServer(port: number = Number(process.env.PORT) || 3000) {
   const app = buildProdApp();
 
-  const server = app.listen(port, () => {
+  const server = app.listen(port, process.env.HOST ?? "127.0.0.1", () => {
     console.log(`Corti SDK Sandbox running at http://localhost:${port}`);
   });
 
