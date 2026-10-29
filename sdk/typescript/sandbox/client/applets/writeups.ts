@@ -2286,6 +2286,58 @@ const baseline = await client.documents.generate({
     ],
   },
 
+  "my-note-style": {
+    summary:
+      "Learn from edits to generated notes. A clinician generates a note, edits it section by section, and an agent interprets each edit — proposing a template prompt update that captures the clinician's style and rules. Accumulated memory is applied as runtime overrides on the next generation, and the baseline vs. personalised output is compared side-by-side.",
+    premise: [
+      "Corti's note generator gets better the more a clinician uses it. Every edit a clinician makes to a generated note is a signal: this is how I want my notes to read. This applet captures that signal — an agent interprets each edit, turns it into a template prompt update, and applies the accumulated memory as runtime overrides on the next generation.",
+      "Unlike the 'Scribe like me' applet (which learns from a clinician's historical notes), this applet learns from edits to generated output — the actual iterative loop a clinician experiences: generate, edit, store to memory, regenerate.",
+    ],
+    how: [
+      "Generate a note from a transcript against a Corti Standard template via client.documents.generate. The clinician edits each section in the main panel.",
+      "For each changed section, the My Note Style Memory agent (client.agents.*) receives the section heading, the current template prompts (contentPrompt, writingStylePrompt, miscPrompt), the original generated text, and the edited text. It interprets the edit and routes it to the right prompt surface — writing style, content, or a hard rule — and proposes the full replacement prompt text.",
+      "Memory entries persist to localStorage (namespaced per client/tenant) and accumulate across cycles. When regenerating, the same transcript is generated twice in parallel: once with no overrides (baseline) and once with accumulated memory applied as runtime templateRef.overrides. The side-by-side comparison shows how much the learning changed the output. Clinicians can also add a rule manually from the memory log panel.",
+    ],
+    snippets: [
+      {
+        caption: "The generate → edit → learn → regenerate loop",
+        lang: "mermaid",
+        code: `flowchart TD
+    G[Generate note from transcript] --> E[Clinician edits sections]
+    E --> S[Store to memory]
+    S --> A[Agent interprets each edit]
+    A -->|writing style| WS[writingStylePrompt override]
+    A -->|content| CP[contentPrompt override]
+    A -->|rule| MP[miscPrompt override]
+    WS --> M[Memory log: localStorage]
+    CP --> M
+    MP --> M
+    M --> R[Regenerate with overrides]
+    R --> C[Compare baseline vs. personalised]`,
+      },
+      {
+        caption: "Build runtime overrides from memory entries",
+        lang: "typescript",
+        code: `function buildOverrides(memories, template) {
+  // Group entries by section, accumulate by prompt surface
+  // Hard rules → miscPrompt "Very important rules" block
+  // Soft rules → writingStylePrompt or contentPrompt
+  return {
+    sections: overrides.map(o => ({
+      sectionId: o.sectionId,
+      generation: { instructions: o.instructions },
+    })),
+  };
+}`,
+      },
+    ],
+    considerations: [
+      "The diff is computed client-side (original vs. edited text in React state), not via the PATCH /documents endpoint. The learning from the diff is what matters for this PoC; server-side persistence of the edited document is a future enhancement.",
+      "Memory entries accumulate — each 'store to memory' cycle adds to the existing rules, and each cycle only captures new edits since the last store. Clearing the memory log resets to the out-of-the-box template behavior.",
+      "The agent only proposes contentPrompt, writingStylePrompt, and miscPrompt overrides. outputSchema node descriptions and section reordering (orderIndex) are not yet implemented here.",
+      "No MCP skills are used — template prompts are passed inline in the agent message. A more robust version would give the agent access to the template-section-authoring skill from docs.corti.ai/mcp.",
+    ],
+  },
   "real-time-nudge": {
     summary:
       "Subtle 'chirps' during documentation that surface missing specificity — CHF without type, diabetes without type, CKD without a stage. Nudges fire on cadence (not a timer), evaluate via text grammar, SNOMED-CT/ICD-10 code prediction, and prompt-based rules, and auto-resolve when the text changes to satisfy the rule. Never a hard-stop alert.",

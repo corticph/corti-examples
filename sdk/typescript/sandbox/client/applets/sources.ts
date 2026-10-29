@@ -31,6 +31,8 @@ import formattingDialogTsx from "./formatting/FormattingDialog.tsx?raw";
 import formattingOptionsTs from "./formatting/formattingOptions.ts?raw";
 import languagesTsx from "./languages/Languages.tsx?raw";
 import languagesApi from "./languages/languagesApi.ts?raw";
+import myNoteStyleAgent from "./my-note-style/agent.ts?raw";
+import myNoteStyleTsx from "./my-note-style/MyNoteStyle.tsx?raw";
 import onDemandAgentLogic from "./on-demand-agent/agent.ts?raw";
 import onDemandAgentTsx from "./on-demand-agent/OnDemandAgent.tsx?raw";
 import playbackHighlightingConcatAudio from "./playback-highlighting/concatAudio.ts?raw";
@@ -124,6 +126,10 @@ const SOURCES: Record<string, SourceFile[]> = {
   "scribe-like-me": [
     { name: "ScribeLikeMe.tsx", code: scribeLikeMeTsx },
     { name: "agent.ts", code: scribeLikeMeAgent },
+  ],
+  "my-note-style": [
+    { name: "MyNoteStyle.tsx", code: myNoteStyleTsx },
+    { name: "agent.ts", code: myNoteStyleAgent },
   ],
   "real-time-nudge": [
     { name: "RealTimeNudge.tsx", code: realTimeNudgeTsx },
