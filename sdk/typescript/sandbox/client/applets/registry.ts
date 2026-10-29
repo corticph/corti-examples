@@ -9,6 +9,7 @@ import {
   Bird,
   BookOpen,
   Boxes,
+  Brain,
   CalendarRange,
   CheckSquare,
   ClipboardCheck,
@@ -101,6 +102,8 @@ import { MultiAgentRoles } from "./multi-agent-roles/MultiAgentRoles";
 import { MultiAgentRolesDetails } from "./multi-agent-roles/MultiAgentRolesDetails";
 import { MultiAgentSpecialists } from "./multi-agent-specialists/MultiAgentSpecialists";
 import { MultiAgentSpecialistsDetails } from "./multi-agent-specialists/MultiAgentSpecialistsDetails";
+import { MyNoteStyle } from "./my-note-style/MyNoteStyle";
+import { MyNoteStyleDetails } from "./my-note-style/MyNoteStyleDetails";
 import { NoteDiff } from "./note-diff/NoteDiff";
 import { NoteToCode } from "./note-to-code/NoteToCode";
 import { NoteToCodeDetails } from "./note-to-code/NoteToCodeDetails";
@@ -629,6 +632,19 @@ export const APPLETS: AppletDefinition[] = [
     Details: ScribeLikeMeDetails,
     wide: true,
     demoPlacement: "both",
+  },
+  {
+    id: "my-note-style",
+    title: "My Note Style",
+    description:
+      "Learn from edits to generated notes — store diffs as memory rules, regenerate with personalisation.",
+    workflow: "text-generation",
+    icon: Brain,
+    Component: MyNoteStyle,
+    detailsTitle: "How it works",
+    Details: MyNoteStyleDetails,
+    wide: true,
+    demoPlacement: "fullscreen",
   },
   {
     id: "real-time-nudge",
