@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 
 dotenv.config({ override: true });
 
-import cors from "cors";
 import express from "express";
 import { getCreds, hasCreds } from "./lib/cortiToken";
 import { getSessionId } from "./lib/session";
@@ -11,8 +10,6 @@ import { cortiProxy } from "./routes/corti-proxy";
 
 export function createServer() {
   const app = express();
-
-  app.use(cors());
 
   // REST proxy MUST be mounted before the body parsers so POST bodies and
   // multipart recording uploads stream through to Corti untouched. The proxy

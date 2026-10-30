@@ -514,10 +514,6 @@ export const PARTICIPANT_ROLES = [
 ] as const;
 
 // Helper functions
-export function buildAuthUrl(cluster: string, tenant: string): string {
-  return `https://auth.${cluster}.corti.app/realms/${tenant}/protocol/openid-connect/token`;
-}
-
 // REST is proxied through the local server (best practice #3): the browser
 // holds no token/secret and the proxy injects auth + Tenant-Name. Origin-
 // relative so it works regardless of host/port. The `cluster` arg is kept for

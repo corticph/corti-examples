@@ -54,7 +54,8 @@ npm run dev
 ```
 
 The app runs at <http://localhost:8080>. Vite and the Express API share that
-port, so there is no separate server to start.
+port, so there is no separate server to start. Open the URL for the sandbox
+home page; a `GET /api/ping` on the same origin replies `{"message":"ping"}`.
 
 To run the production build instead:
 
@@ -85,7 +86,6 @@ save it to `./.env` for the next run.
     --cluster <name>    Corti cluster (otherwise $CORTI_ENVIRONMENT)
     --tenant <name>     Corti tenant (otherwise $CORTI_TENANT_NAME)
     --client-id <id>    OAuth client ID (otherwise $CORTI_CLIENT_ID)
-    --client-secret <s> OAuth client secret (otherwise $CORTI_CLIENT_SECRET)
 -h, --help              Show help
 ```
 
@@ -136,9 +136,6 @@ npm run typecheck  # TypeScript
 npm run lint       # Biome checks for client/ and server/
 npm run build      # Production client and server bundles
 ```
-
-CI runs `npm ci`, typecheck, test, lint, and build for this folder on every pull
-request that touches it.
 
 When you change `package.json` in a way that affects dependency resolution
 (add/remove `overrides`, change version ranges, swap packages), clear Vite's
