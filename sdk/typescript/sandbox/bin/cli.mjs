@@ -29,7 +29,6 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--cluster") flags.cluster = argv[++i];
   else if (a === "--tenant") flags.tenant = argv[++i];
   else if (a === "--client-id") flags.clientId = argv[++i];
-  else if (a === "--client-secret") flags.clientSecret = argv[++i];
 }
 
 if (flags.help) {
@@ -44,7 +43,6 @@ Options:
       --cluster <name>    Corti cluster (e.g. dev-weu); else $CORTI_ENVIRONMENT
       --tenant <name>     Corti tenant; else $CORTI_TENANT_NAME
       --client-id <id>    OAuth client id; else $CORTI_CLIENT_ID
-      --client-secret <s> OAuth client secret; else $CORTI_CLIENT_SECRET
   -h, --help              Show this help
 
 Credentials are read from CORTI_* env vars or a local .env file, and you are
@@ -85,7 +83,7 @@ function makePrompter() {
 async function resolveCreds() {
   const creds = {
     CORTI_CLIENT_ID: flags.clientId || process.env.CORTI_CLIENT_ID,
-    CORTI_CLIENT_SECRET: flags.clientSecret || process.env.CORTI_CLIENT_SECRET,
+    CORTI_CLIENT_SECRET: process.env.CORTI_CLIENT_SECRET,
     CORTI_ENVIRONMENT: flags.cluster || process.env.CORTI_ENVIRONMENT,
     CORTI_TENANT_NAME: flags.tenant || process.env.CORTI_TENANT_NAME,
   };
@@ -133,6 +131,7 @@ async function resolveCreds() {
         (existing && !existing.endsWith("\n") ? "\n" : "") +
           lines.join("\n") +
           "\n",
+        { mode: 0o600 },
       );
       console.log(`Saved to ${envPath}`);
     }

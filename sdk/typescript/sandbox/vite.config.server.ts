@@ -34,7 +34,6 @@ export default defineConfig({
         // they install for `npx`). Bundling these server libs (esp. the proxy)
         // is fragile, so keep them external.
         "express",
-        "cors",
         "axios",
         "http-proxy-middleware",
         "dotenv",
