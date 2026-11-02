@@ -113,7 +113,9 @@
         "id": "select_number",
         "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three'",
         "phrases": [
-          "select {number}, pick {number}, choose {number}"
+          "select {number}",
+          "pick {number}",
+          "choose {number}"
         ],
         "variables": [
           {
@@ -139,7 +141,9 @@
         "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three'",
         "phrases": [
           "select {choice} {number}",
-          "select {number} {choice}, pick {number} {choice}, choose {number} {choice}"
+          "select {number} {choice}",
+          "pick {number} {choice}",
+          "choose {number} {choice}"
         ],
         "variables": [
           {

@@ -62,6 +62,27 @@
           "insert signature",
           "sign the note"
         ]
+      },
+      {
+        "id": "epic_smarts",
+        "_comment": "Use to insert an Epic SmartPhrase to pull in pre-defined text or structured data. Example: 'dot vitals'",
+        "phrases": [
+          "dot {smartphrase}",
+          "pull {smartphrase}",
+          "insert {smartphrase}"
+        ],
+        "variables": [
+          {
+            "key": "smartphrase",
+            "type": "enum",
+            "enum": [
+              "vitals",
+              "labs",
+              "medications",
+              "attestation"
+            ]
+          }
+        ]
       }
     ]
   }
