@@ -5,7 +5,9 @@
  * Keyed by applet id (see `registry.ts`). Each entry lists the main component
  * plus the one domain/logic file that best explains the concept.
  */
+
 import type { SourceFile } from "../components/docs/CodeBlock";
+import playbackHighlightingTranscriptMessage from "./_shared/transcriptMessage.ts?raw";
 import ambientTsx from "./ambient-diarized/AmbientDiarized.tsx?raw";
 import ambientConfig from "./ambient-diarized/config.ts?raw";
 import appControlTsx from "./app-control/AppControl.tsx?raw";
@@ -121,6 +123,7 @@ const SOURCES: Record<string, SourceFile[]> = {
     { name: "LiveDictationPanel.tsx", code: playbackHighlightingLivePanel },
     { name: "LiveDictationConfig.tsx", code: playbackHighlightingLiveConfig },
     { name: "useLiveTranscript.ts", code: playbackHighlightingLiveTranscript },
+    { name: "transcriptMessage.ts", code: playbackHighlightingTranscriptMessage },
     { name: "concatAudio.ts", code: playbackHighlightingConcatAudio },
   ],
   "scribe-like-me": [

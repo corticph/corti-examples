@@ -49,7 +49,12 @@ interface SyncedTranscriptPlayerProps {
   diarize: boolean;
   wordLevel: boolean;
   primaryLanguage?: string;
-  rawResponse?: unknown;
+  /**
+   * JSON payload for the view/download dialog: the REST transcript response
+   * document in file mode, or the client-side accumulated live session in
+   * live mode.
+   */
+  transcriptJson?: unknown;
   transcriptId?: string;
   disabled?: boolean;
   commands?: DetectedCommand[];
@@ -176,14 +181,24 @@ function renderTextWithBreaks(text: string): React.ReactNode[] {
   return result;
 }
 
-function downloadTranscriptJson(transcriptId: string, payload: unknown) {
+function buildJsonFilename(transcriptId?: string): string {
+  // Live sessions have no transcript id, so the download is stamped with
+  // the current time instead.
+  if (transcriptId) {
+    return `corti-transcript-${transcriptId}.json`;
+  }
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return `corti-live-transcript-${stamp}.json`;
+}
+
+function downloadTranscriptJson(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
   });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `corti-transcript-${transcriptId}.json`;
+  link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -194,7 +209,7 @@ export function SyncedTranscriptPlayer({
   diarize,
   wordLevel,
   primaryLanguage,
-  rawResponse,
+  transcriptJson,
   transcriptId,
   disabled = false,
   commands,
@@ -529,7 +544,7 @@ export function SyncedTranscriptPlayer({
             ? "Word-level highlighting enabled via wordLevel.enabled: true"
             : "Phrase-level highlighting (wordLevel disabled) — toggle on for word-level precision"}
         </p>
-        {rawResponse && transcriptId && (
+        {transcriptJson && (
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={() => setShowJson(true)}>
               View JSON
@@ -537,7 +552,9 @@ export function SyncedTranscriptPlayer({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => downloadTranscriptJson(transcriptId, rawResponse)}
+              onClick={() =>
+                downloadTranscriptJson(buildJsonFilename(transcriptId), transcriptJson)
+              }
             >
               <Download className="h-3.5 w-3.5" /> Download JSON
             </Button>
@@ -550,16 +567,24 @@ export function SyncedTranscriptPlayer({
           <DialogHeader>
             <DialogTitle>Transcript JSON</DialogTitle>
             <DialogDescription>
-              Full response payload from{" "}
-              <code>
-                GET /interactions/{"{id}"}/transcripts/{"{transcriptId}"}
-              </code>
-              .
+              {transcriptId ? (
+                <>
+                  Full response payload from{" "}
+                  <code>
+                    GET /interactions/{"{id}"}/transcripts/{"{transcriptId}"}
+                  </code>
+                  .
+                </>
+              ) : (
+                "Final /transcribe transcript messages from this session, in arrival order — timestamps are session-relative seconds."
+              )}
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="h-[65vh] rounded-md border border-border bg-muted/20">
             <pre className="whitespace-pre-wrap p-4 text-xs text-foreground">
-              {rawResponse ? JSON.stringify(rawResponse, null, 2) : "No transcript JSON loaded."}
+              {transcriptJson
+                ? JSON.stringify(transcriptJson, null, 2)
+                : "No transcript JSON loaded."}
             </pre>
           </ScrollArea>
         </DialogContent>
