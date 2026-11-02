@@ -13,6 +13,14 @@ export function PlaybackHighlightingDetails() {
           sync-to-audio highlighting. When disabled, the player highlights at phrase granularity
           instead — same code, coarser highlighting.
         </p>
+        <p className="mt-2 text-muted-foreground">
+          On the live <code>/transcribe</code> socket, the finalized words of an utterance are
+          delivered together in one message whose <code>data</code> is a list of word items
+          (seconds-precision timings), and interim previews arrive as a one-element list; with{" "}
+          <code>wordLevel</code> disabled, <code>data</code> remains a single segment object. The
+          shared <code>normalizeTranscriptMessageData</code> helper narrows both shapes into one
+          batch.
+        </p>
       </div>
 
       <div>
@@ -87,7 +95,16 @@ export function PlaybackHighlightingDetails() {
         >
           docs.corti.ai — create transcript
         </a>{" "}
-        for the full <code>wordLevel</code> parameter spec.
+        for the full <code>wordLevel</code> parameter spec, and the{" "}
+        <a
+          className="underline"
+          href="https://docs.corti.ai/stt/guides/wordlevel"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          word-level transcripts guide
+        </a>{" "}
+        for the live message shapes.
       </p>
     </div>
   );

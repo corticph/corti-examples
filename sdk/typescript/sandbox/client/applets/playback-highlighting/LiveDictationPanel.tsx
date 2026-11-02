@@ -163,6 +163,7 @@ export function LiveDictationPanel({
   const {
     segments,
     commands,
+    finalMessages,
     interim,
     isRecording,
     hasRecording,
@@ -330,12 +331,16 @@ export function LiveDictationPanel({
             </Button>
           </div>
 
+          {/* A live session has no REST response document, so the player's
+              JSON view/download shows the final transcript messages in their
+              native wire shape instead. */}
           <SyncedTranscriptPlayer
             segments={segments as TranscriptSegment[]}
             audioUrl={audioUrl}
             diarize={false}
             wordLevel={wordLevel}
             primaryLanguage={language}
+            transcriptJson={finalMessages}
             disabled={isRecording}
             commands={commands}
           />

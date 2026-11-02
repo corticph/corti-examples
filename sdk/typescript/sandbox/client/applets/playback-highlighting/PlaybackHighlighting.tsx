@@ -383,7 +383,7 @@ export function PlaybackHighlighting() {
                 diarize={diarize}
                 wordLevel={result.wordLevel}
                 primaryLanguage={primaryLanguage}
-                rawResponse={result.rawResponse}
+                transcriptJson={result.rawResponse}
                 transcriptId={result.transcriptId}
               />
             </div>

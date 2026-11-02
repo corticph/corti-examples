@@ -194,10 +194,10 @@ const final = await client.transcripts.get(interactionId, created.id);`,
 
   "playback-highlighting": {
     summary:
-      "Word-level transcripts synced to audio playback with karaoke-style highlighting. The wordLevel.enabled parameter returns one transcript entry per word for precise timestamps, and a requestAnimationFrame loop binary-searches the sorted word array to track the currently-spoken word. Also supports live dictation with parallel audio capture and multi-recording sequencing.",
+      "Word-level transcripts synced to audio playback with karaoke-style highlighting. The wordLevel.enabled parameter returns one transcript entry per word — batched into a single message per utterance on the live socket — and a requestAnimationFrame loop binary-searches the sorted word array to track the currently-spoken word. Also supports live dictation with parallel audio capture and multi-recording sequencing.",
     premise: [
       "When you transcribe an audio file, each transcript segment comes with start and end timestamps. Play back the audio alongside the transcript and you can highlight the currently-spoken text — a karaoke-style synced view that makes it easy to verify transcription accuracy against the source audio. The same highlighting works for live dictation: capture speech via the `/transcribe` WebSocket, then replay the recorded audio with synced transcript after recording stops.",
-      "The `wordLevel.enabled` configuration parameter makes the API return one transcript entry per word instead of per phrase, giving the most granular timestamps for precise word-level highlighting. Without it, highlighting operates at the phrase/utterance level — still useful, just coarser.",
+      "The `wordLevel.enabled` configuration parameter makes the API return one transcript entry per word instead of per phrase, giving the most granular timestamps for precise word-level highlighting. On `/transcripts` each word comes back as its own segment; on `/transcribe` the finalized words of an utterance are delivered together in one message whose `data` is a list of word items. Without `wordLevel`, highlighting operates at the phrase/utterance level — still useful, just coarser.",
     ],
     how: [
       {
@@ -307,6 +307,7 @@ function shouldCapitalize(prevText) {
         heading: "Live dictation with parallel audio capture",
         text: [
           "The applet also supports live dictation via the `<corti-dictation>` web component connected to the `/transcribe` WebSocket. The same `wordLevel`, `diarize`, `automaticPunctuation`, `spokenPunctuation`, and `formatting` parameters are passed in the `TranscribeConfig`.",
+          "With `wordLevel` enabled, each finalized utterance arrives as one transcript message whose `data` is a list of word items with seconds-precision timings; interim previews stay segment level and arrive as a one-element list. With `wordLevel` disabled, `data` remains a single segment object. The shared `normalizeTranscriptMessageData` helper narrows all of these shapes into one batch.",
           "Since the web component owns its microphone internally and exposes no raw audio, a parallel `MediaRecorder` on the same device captures audio for post-recording playback. The component's `recording-state-changed` events gate the capture start/stop.",
         ],
         snippets: [
@@ -314,18 +315,21 @@ function shouldCapitalize(prevText) {
             caption: "Live transcript accumulation (seconds → ms)",
             lang: "typescript",
             code: `const handleTranscript = (e: CustomEvent) => {
-  const data = e.detail?.data;
-  if (!data || Array.isArray(data)) return;
-  if (!data.isFinal) {
-    setInterim(data.text);
+  const batch = normalizeTranscriptMessageData(e.detail?.data);
+  if (batch.kind === "ignore") return;
+  if (batch.kind === "interim") {
+    setInterim(batch.text);
     return;
   }
-  segmentsRef.current = [...segmentsRef.current, {
-    text: data.text,
-    start: Math.round(data.start * 1000),  // seconds → ms
-    end: Math.round(data.end * 1000),
-    channel: 0, participant: 0, speakerId: 0,
-  }];
+  setInterim("");
+  for (const item of batch.items) {
+    segmentsRef.current.push({
+      text: item.text,
+      start: Math.round(item.start * 1000) + gapOffset,  // seconds → ms
+      end: Math.round(item.end * 1000) + gapOffset,
+      channel: 0, participant: 0, speakerId: 0,
+    });
+  }
 };`,
           },
         ],
@@ -333,11 +337,13 @@ function shouldCapitalize(prevText) {
     ],
     considerations: [
       "REST `/transcripts` timestamps are integers in milliseconds. WebSocket `/transcribe` timestamps are floats in seconds. The `useLiveTranscript` hook converts live timestamps to milliseconds on intake so the `SyncedTranscriptPlayer` works unchanged across both modes.",
+      "On `/transcribe`, final transcript messages carry `data` as a list of word items (one message per finalized utterance) when `wordLevel` is enabled, and interim previews as a one-element list; with `wordLevel` disabled, `data` stays a single segment object. The shared `normalizeTranscriptMessageData` helper narrows all three shapes.",
       "Binary search finds the last segment whose `start` <= current time — O(log n) per frame. This avoids flickering during gaps between words where no segment's `[start, end]` range contains the current time.",
       "The transcript create request accepts `wordLevel`, `async`, `automaticPunctuation`, `spokenPunctuation`, and `formatting` alongside the standard fields.",
       "When `wordLevel` is disabled, the player highlights at phrase granularity. The sync code is identical — it matches on `start` regardless of whether each entry is a word or a phrase.",
       "Newlines in segment text (`\\n` → line break, `\\n\\n` → paragraph break) are rendered as `<br>` elements, preserving the transcript's structural formatting.",
       "Auto-scroll with `scrollIntoView({ block: 'nearest' })` keeps the active word visible without jumping the viewport when the word is already on screen.",
+      "The JSON view/download shows the raw `GET /transcripts` response document in file mode. Live mode has no response document or transcript id, so it exports the session's final `/transcribe` transcript messages instead — in their native wire shape, one array element per finalized utterance (session-relative second timestamps).",
       "Live mode uses a `tokenSeen` latch — the dictation component mounts after the first auth token resolves and never unmounts during token refresh, so the WebSocket connection survives.",
     ],
   },

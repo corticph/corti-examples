@@ -51,9 +51,31 @@ the segment source (REST pipeline vs live WebSocket) and the audio source
 4. Dictate using push-to-talk or toggle-to-talk. Interim text appears as
    ghost text while speaking; final segments accumulate in the background.
 5. Stop recording — the applet replays the captured audio with synced
-   highlighting using the same `SyncedTranscriptPlayer` as file mode.
+   highlighting using the same `SyncedTranscriptPlayer` as file mode. The
+   same View/Download JSON buttons export the session's final transcript
+   messages in their native wire shape (session-relative second timestamps) —
+   a live session has no REST response document to show.
 6. Start another recording — segments, commands, and audio accumulate
    additively across recordings. Click **Clear all** to reset.
+
+## Live transcript message shapes
+
+The `data` payload of a `/transcribe` transcript message depends on the
+session's `wordLevel` configuration:
+
+- **`wordLevel` enabled** — finalized words are delivered batched: one
+  message per finalized utterance whose `data` is a list of word items
+  (`text`, `rawTranscriptText`, `start`/`end` in seconds, `isFinal: true`).
+  Interim previews stay segment level and arrive as a one-element list
+  whose single item has `isFinal: false`.
+- **`wordLevel` disabled** — `data` is a single segment object, one message
+  per segment.
+
+The shared `normalizeTranscriptMessageData` helper
+(`../_shared/transcriptMessage.ts`) narrows all of these shapes into one
+batch, so `useLiveTranscript` accumulates final items and interim text
+without branching on the raw wire format. See the
+[word-level transcripts guide](https://docs.corti.ai/stt/guides/wordlevel).
 
 ## Command detection and sequencing
 
@@ -146,7 +168,8 @@ entries. See [`usePlaybackSync.ts`](./usePlaybackSync.ts) for the hook and
   replacements, dictionary)
 - `useLiveTranscript.ts` — hook for accumulating live `/transcribe` segments
   and commands (seconds → ms conversion, gap-offset for multi-recording
-  timestamp alignment, interim tracking, recording state)
+  timestamp alignment, interim tracking, recording state); narrows message
+  shapes via the shared `normalizeTranscriptMessageData` helper
 - `concatAudio.ts` — decodes WebM blobs to PCM via `AudioContext`,
   concatenates, re-encodes as WAV for accurate `currentTime`/`duration`
 - `PlaybackHighlightingDetails.tsx` — details card for the docs page
@@ -154,6 +177,9 @@ entries. See [`usePlaybackSync.ts`](./usePlaybackSync.ts) for the hook and
 ## Shared dependencies
 
 - `../_shared/useCortiAccessToken.ts` — SDK environment and auth config
+- `../_shared/transcriptMessage.ts` — normalizer for `/transcribe`
+  transcript message `data` (wordLevel word-item lists, one-element interim
+  lists, and singular segment objects)
 - `../_shared/useDictationLanguage.ts` — global dictation language store
 - `../_shared/cortiDictationReact.tsx` — React wrapper for
   `<corti-dictation>`
