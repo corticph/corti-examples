@@ -62,6 +62,27 @@
           "Unterschrift einfügen",
           "Notiz unterschreiben"
         ]
+      },
+      {
+        "id": "epic_smarts",
+        "_comment": "Use to insert an Epic SmartPhrase to pull in pre-defined text or structured data. Example: 'dot vitals' (Epic SmartPhrase einfügen, um vordefinierten Text oder strukturierte Daten einzubinden. Beispiel: 'Punkt Vitalwerte'). SmartPhrase-Namen sind organisationsabhängig und hier nur beispielhaft.",
+        "phrases": [
+          "Punkt {smartphrase}",
+          "rufe {smartphrase} ab",
+          "füge {smartphrase} ein"
+        ],
+        "variables": [
+          {
+            "key": "smartphrase",
+            "type": "enum",
+            "enum": [
+              "Vitalwerte",
+              "Laborwerte",
+              "Medikamente",
+              "Attest"
+            ]
+          }
+        ]
       }
     ]
   }

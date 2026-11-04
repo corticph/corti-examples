@@ -1,0 +1,55 @@
+{
+  "type": "config",
+  "configuration": {
+    "primaryLanguage": "fr",
+    "commands": [
+      {
+        "id": "select_text",
+        "_comment": "Use to select specific spoken text (up to ten words) in the current text area. Example: 'select essential hypertension' (Sélectionner un texte parlé spécifique (jusqu'à dix mots) dans la zone de texte actuelle. Exemple : 'sélectionner hypertension essentielle'). Pairs with the enum-based selection commands in select.json - commands with enum variables are recognized before commands with wildcard variables.",
+        "phrases": [
+          "sélectionner {text}"
+        ],
+        "variables": [
+          {
+            "key": "text",
+            "type": "wildcard"
+          }
+        ]
+      },
+      {
+        "id": "select_text_range",
+        "_comment": "Use to select a span of spoken text between the trigger and a literal endpoint, as an alternative to the ten word cap of select_text. Example: 'select forty year old male end select' (Sélectionner une portion de texte parlé entre le déclencheur et un point final littéral. Exemple : 'sélectionner patient de quarante ans fin de sélection')",
+        "phrases": [
+          "sélectionner {utterance} fin de sélection"
+        ],
+        "variables": [
+          {
+            "key": "utterance",
+            "type": "wildcard"
+          }
+        ]
+      },
+      {
+        "id": "insert_at_text",
+        "_comment": "Use to place the cursor before or after specific spoken text in the current text area. Example: 'insert before hypertension' (Placer le curseur avant ou après un texte parlé spécifique. Exemple : 'insérer avant hypertension'). Pairs with the enum-based insert_cursor command in navigation.json.",
+        "phrases": [
+          "insérer {direction} {word}"
+        ],
+        "variables": [
+          {
+            "key": "direction",
+            "type": "enum",
+            "enum": [
+              "avant",
+              "après"
+            ]
+          },
+          {
+            "key": "word",
+            "type": "wildcard"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -121,7 +121,8 @@
         "id": "select_number",
         "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three' (Sélectionner un choix ou une option dans une liste. Exemple : 'sélectionner option trois')",
         "phrases": [
-          "sélectionner {number}, choisir {number}"
+          "sélectionner {number}",
+          "choisir {number}"
         ],
         "variables": [
           {
@@ -147,7 +148,8 @@
         "_comment": "Use to select a choice or option from a list of choices or options. Example: 'select option three' (Sélectionner un choix ou une option dans une liste. Exemple : 'sélectionner option trois')",
         "phrases": [
           "sélectionner {choice} {number}",
-          "sélectionner {number} {choice}, choisir {number} {choice}"
+          "sélectionner {number} {choice}",
+          "choisir {number} {choice}"
         ],
         "variables": [
           {
