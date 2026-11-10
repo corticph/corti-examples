@@ -437,7 +437,7 @@ export async function handleFinal(text: string) {
   await streamResponse(normalized);
 }
 
-async function streamResponse(text: string) {
+async function streamResponse(text: string, retried = false) {
   if (!client || !agentId) {
     set({ status: "ready" });
     return;
@@ -518,16 +518,19 @@ async function streamResponse(text: string) {
     };
     emit();
   } catch (error) {
-    if (/404|not.?found/i.test(String(error)) && !state.externalAgentId) {
+    // A 404 means the cached agent (or its context) is gone: recreate the
+    // agent, drop the context, and retry once. A second 404 is surfaced.
+    if (!retried && /404|not.?found/i.test(String(error)) && !state.externalAgentId) {
       try {
         agentId = await ensureAgent(client, spec());
         store.set(AGENT_ID_KEY, agentId);
         state = {
           ...state,
+          contextId: null,
           messages: state.messages.filter((m) => m.id !== assistantId),
         };
         emit();
-        await streamResponse(text);
+        await streamResponse(text, true);
         return;
       } catch {
         // fall through
