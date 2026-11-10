@@ -4,6 +4,7 @@ dotenv.config({ override: true });
 
 import express from "express";
 import { getCreds, hasCreds } from "./lib/cortiToken";
+import { localOnly } from "./lib/localOnly";
 import { getSessionId } from "./lib/session";
 import authRouter from "./routes/auth";
 import { cortiProxy } from "./routes/corti-proxy";
@@ -11,13 +12,15 @@ import { cortiProxy } from "./routes/corti-proxy";
 export function createServer() {
   const app = express();
 
+  // Only answer the sandbox's own page on this machine (see lib/localOnly.ts).
+  app.use("/api", localOnly);
+
   // REST proxy MUST be mounted before the body parsers so POST bodies and
   // multipart recording uploads stream through to Corti untouched. The proxy
   // initialises lazily on first request, so the server boots without a .env.
   app.use("/api/corti", cortiProxy());
 
   app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {

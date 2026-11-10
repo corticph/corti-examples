@@ -64,7 +64,11 @@ npm run build
 npm start
 ```
 
-The production server listens on port `3000`, or the value of `PORT`.
+The production server listens on port `3000`, or the value of `PORT`. It binds
+to `127.0.0.1` unless `HOST` is set, and `/api/*` only answers same-origin
+requests addressed to `localhost`. If you deliberately serve it on another
+interface (`HOST=0.0.0.0`), list the hostnames clients will use in
+`ALLOWED_HOSTS` (comma-separated, no ports).
 
 ## Launcher
 

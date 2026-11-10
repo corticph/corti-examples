@@ -35,7 +35,8 @@ Run a single test: `npx vitest run client/applets/_shared/offsetMap.test.ts` (or
 
 **Server (`server/`).**
 
-- `index.ts`: mounts `/api/corti` (proxy) before the body parsers, then `GET /api/config`, `GET /api/ping`, and `/api/auth`.
+- `index.ts`: mounts the `localOnly` guard on `/api`, then `/api/corti` (proxy) before the body parser, then `GET /api/config`, `GET /api/ping`, and `/api/auth`.
+- `lib/localOnly.ts`: rejects `/api` requests whose `Host` isn't loopback (or in `ALLOWED_HOSTS`) or whose `Origin` doesn't match `Host`, blocking cross-site and DNS-rebinding use of the server-held credentials.
 - `routes/auth.ts`: `POST /api/auth/token` validates UI-entered credentials and stores them for the session; `POST /api/auth/stream-token` mints a short-lived token scoped to `transcribe` and/or `streams` for direct browser WebSockets.
 - `routes/corti-proxy.ts`: forwards `/api/corti/*` to `https://api.<cluster>.corti.app`, injecting the full-scope token, `Tenant-Name`, and `x-corti-analytics` (when missing). One proxy instance per cluster. The token is resolved before proxying because `proxyReq` fires synchronously. It must stay mounted before `express.json()` so uploads stream through.
 - `lib/cortiToken.ts`: credentials come from `CORTI_*` env vars (shared) or from the UI (scoped to the session). The full-scope token never leaves the server.

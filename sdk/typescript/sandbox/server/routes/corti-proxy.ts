@@ -3,7 +3,7 @@
  * server-held full-scope token + Tenant-Name. The browser sends neither the
  * credential nor a token — this is best practice #3 (backend proxy for REST).
  *
- * IMPORTANT: mount this BEFORE express.json()/urlencoded() so POST bodies and
+ * IMPORTANT: mount this BEFORE express.json() so POST bodies and
  * multipart recording uploads stream through untouched. Body parsers consume
  * the request stream and would break proxied writes.
  *
