@@ -7,9 +7,9 @@ export function HitlCheckpointDetails() {
           No built-in approval state
         </p>
         <p className="mt-1 text-muted-foreground">
-          There is no confirmed <code>client.agents.*</code> task status such as "awaiting approval"
-          in the current SDK. The checkpoint in this applet is implemented entirely in application
-          state: a <code>Proposal</code> object your app defines, not a Corti type.
+          There is no confirmed <code>client.agentic.agents.*</code> task status such as "awaiting
+          approval" in the current SDK. The checkpoint in this applet is implemented entirely in
+          application state: a <code>Proposal</code> object your app defines, not a Corti type.
         </p>
       </div>
 

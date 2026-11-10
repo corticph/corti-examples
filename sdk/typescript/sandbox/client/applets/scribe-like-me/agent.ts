@@ -1,6 +1,6 @@
 /**
  * The "scribe like me" tailoring pipeline: two Corti Agentic Framework agents
- * (`client.agents.*`, via `_shared/cortiAgent.ts`), run in sequence.
+ * (`client.agentic.agents.*`, via `_shared/cortiAgent.ts`), run in sequence.
  *
  * 1. Style Reviewer reads a clinician's historical notes and writes a prose
  *    style summary (structure, tone, terseness vs. narrative, characteristic

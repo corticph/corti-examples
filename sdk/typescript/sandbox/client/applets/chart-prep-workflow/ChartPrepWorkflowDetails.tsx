@@ -27,8 +27,8 @@ export function ChartPrepWorkflowDetails() {
         </p>
         <ul className="ml-4 mt-1 list-disc text-muted-foreground">
           <li>
-            Three Corti agents are created on first use (via client.agents.create if absent) and
-            cached for reuse.
+            Three Corti agents are created on first use (via client.agentic.agents.create if absent)
+            and cached for reuse.
           </li>
           <li>
             Stage 1 (fact extraction) output becomes Stage 2 (note drafting) input; Stage 2 output

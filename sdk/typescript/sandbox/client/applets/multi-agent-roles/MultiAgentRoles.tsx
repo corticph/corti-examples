@@ -1,13 +1,14 @@
 /**
  * Applet — CONCEPT: role-scoped multi-agent tool access
- * (`client.agents.create` with per-expert `mcpServers`), plus a routing
- * trace across several requests, including one that needs both experts and
+ * (one `client.agentic.agents.create` per role, each with its own MCP
+ * `connectors`, under an orchestrator), plus a routing trace across several
+ * requests, including one that needs both agents and
  * one that matches neither and should escalate to a human.
  *
  * This is a narrative applet: wiring a real orchestrator with real MCP
  * servers needs external tool infrastructure this sandbox cannot assume you
  * have. Instead, it renders the two ways teams structure this, tool access
- * scoped per expert (correct) versus one shared list on the orchestrator
+ * scoped per agent (correct) versus one shared list on the orchestrator
  * (the common mistake), and simulates the orchestrator's routing decision
  * for several sample requests so the routing logic is visible, not abstract.
  */
@@ -88,14 +89,14 @@ export function MultiAgentRoles() {
           Role-scoped agents: front desk and clinical notes
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          One orchestrator, two experts. Tool access is scoped per expert via{" "}
-          <code>mcpServers</code>, not shared across the whole agent.
+          One orchestrator, two specialist agents. Tool access is scoped per agent via its own{" "}
+          <code>connectors</code>, not shared across the whole system.
         </p>
       </div>
 
       <div className="flex items-center gap-2">
         <Button size="sm" variant={scoped ? "default" : "outline"} onClick={() => setScoped(true)}>
-          Scoped per expert (correct)
+          Scoped per agent (correct)
         </Button>
         <Button
           size="sm"
@@ -127,7 +128,7 @@ export function MultiAgentRoles() {
               scoped ? "border-border" : "border-dashed border-border",
             )}
           >
-            <p className="text-sm font-semibold text-foreground">Front desk expert</p>
+            <p className="text-sm font-semibold text-foreground">Front desk agent</p>
             <p className="mt-1 text-xs text-muted-foreground">scheduling, patient lookup</p>
             {scoped && (
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -140,7 +141,7 @@ export function MultiAgentRoles() {
             )}
             {!scoped && (
               <p className="mt-2 text-xs text-variant-error-foreground">
-                given the same full mcpServers list as every other expert, including clinical tools
+                given the same full connectors list as every other agent, including clinical tools
                 it should never call
               </p>
             )}
@@ -151,7 +152,7 @@ export function MultiAgentRoles() {
               scoped ? "border-border" : "border-dashed border-border",
             )}
           >
-            <p className="text-sm font-semibold text-foreground">Clinical notes expert</p>
+            <p className="text-sm font-semibold text-foreground">Clinical notes agent</p>
             <p className="mt-1 text-xs text-muted-foreground">facts extraction, coding</p>
             {scoped && (
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -164,8 +165,8 @@ export function MultiAgentRoles() {
             )}
             {!scoped && (
               <p className="mt-2 text-xs text-variant-error-foreground">
-                given the same full mcpServers list as every other expert, including scheduling
-                tools it has no business calling
+                given the same full connectors list as every other agent, including scheduling tools
+                it has no business calling
               </p>
             )}
           </div>
@@ -203,8 +204,8 @@ export function MultiAgentRoles() {
             <p className="text-sm text-foreground">"{trace.request}"</p>
             {trace.matched.length === 0 && (
               <p className="mt-2 text-sm text-variant-error-foreground">
-                No expert's tool set matches this request. Escalate to a human rather than guessing
-                with the wrong expert.
+                No agent's tool set matches this request. Escalate to a human rather than guessing
+                with the wrong agent.
               </p>
             )}
             {trace.matched.length === 1 && (

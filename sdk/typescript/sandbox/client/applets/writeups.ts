@@ -1314,7 +1314,7 @@ function toFormValues(byGroup: Record<string, Corti.FactsExtractResponseFactsIte
       "A human approval gate for agent-produced proposals. The Corti Agentic Framework has no built-in 'awaiting approval' task state, so the gate lives in application state: a Proposal object your app defines, guarded transitions, and an append-only audit log that captures every version across revisions.",
     premise: [
       "A common requirement in regulated and clinical settings is deceptively simple to state and genuinely hard to build correctly: an agent that gathers and structures data across sources is fine, but the agent cannot be the one that takes the action. A human has to look at what the agent produced and explicitly approve it before anything downstream happens, and that approval has to be logged well enough to survive an audit later. In a setting governed by a regulation like CFR Part 11, the FDA rule covering electronic records and signatures in clinical research, this turns from a nice-to-have review step into a hard blocker: without it, the system cannot ship at all, regardless of how good the agent's output is.",
-      'This pattern does not exist anywhere as a single API call, and it is important to understand exactly why before building it. The Corti Agentic Framework (client.agents.*) gives you orchestrator and expert agents, and a way to send them messages and read back structured results through client.agents.messageSend. It does not give you a built-in "awaiting human approval" task state. There is no confirmed status value in the SDK for a task that pauses pending a person\'s decision. That gap is not a missing feature to work around. It is the actual design point: the approval gate and the audit trail belong to your application, not to the framework, which is exactly the property a regulated environment needs, since the trail is then something your team owns and controls end to end rather than something opaque inside a third-party system.',
+      'This pattern does not exist anywhere as a single API call, and it is important to understand exactly why before building it. The Corti Agentic Framework (client.agentic.agents.*) gives you agents that delegate to other agents through connectors, and a way to send them messages and read back structured results through client.agentic.agents.sendMessage. It does not give you a built-in "awaiting human approval" task state. There is no confirmed status value in the SDK for a task that pauses pending a person\'s decision. That gap is not a missing feature to work around. It is the actual design point: the approval gate and the audit trail belong to your application, not to the framework, which is exactly the property a regulated environment needs, since the trail is then something your team owns and controls end to end rather than something opaque inside a third-party system.',
       "A plain binary gate, approve or reject with nothing in between, is a reasonable starting point and an incomplete real workflow. In practice a reviewer often does not want to reject an otherwise-good proposal outright just because one detail is off; they want to send it back with a specific note and get a corrected version, without losing the thread connecting the original proposal to its revision. This guide builds the full chain: a proposal, a reviewer who can approve, reject outright, or request a revision with feedback, an orchestrator step that produces a new version addressing that feedback, and an audit log that captures every version, not just the final one.",
     ],
     how: [
@@ -1373,19 +1373,30 @@ function toFormValues(byGroup: Record<string, Corti.FactsExtractResponseFactsIte
       {
         heading: "Building an orchestrator that gathers from multiple sources",
         text: [
-          'Create an orchestrator agent with client.agents.create({ name, description, agentType: "orchestrator", experts, mcpServers }). Its experts might include a facts extraction expert and a coding expert, each pulling from a different source: a referral document, a live encounter, a lab result. The orchestrator\'s job is only to gather what those experts return and produce one structured output describing a single proposed action, for example a fact to persist, a coded value to attach to a chart, or a message to send.',
+          'Create one agent per kind of data you gather, then an orchestrator agent that delegates to them: client.agentic.agents.create({ name, description, systemPrompt, connectors }), with one { type: "agent", agentId } connector per gatherer. The gatherers might be a facts extraction agent and a coding agent, each pulling from a different source: a referral document, a live encounter, a lab result. The orchestrator\'s job is only to gather what those experts return and produce one structured output describing a single proposed action, for example a fact to persist, a coded value to attach to a chart, or a message to send.',
         ],
         snippets: [
           {
-            caption: "An orchestrator with two data-gathering experts",
+            caption: "An orchestrator delegating to two data-gathering agents",
             lang: "typescript",
-            code: `const orchestrator = await client.agents.create({
+            code: `const factsGatherer = await client.agentic.agents.create({
+  name: "facts-gatherer",
+  description: "Extracts facts from intake sources",
+  systemPrompt: "Extract facts from the intake packet. Never persist anything.",
+});
+const codingSuggester = await client.agentic.agents.create({
+  name: "coding-suggester",
+  description: "Suggests codes for review, never applies them",
+  systemPrompt: "Suggest codes with supporting evidence. Never apply them.",
+});
+
+const orchestrator = await client.agentic.agents.create({
   name: "Intake review orchestrator",
   description: "Gathers facts and coding suggestions, proposes one action for review",
-  agentType: "orchestrator",
-  experts: [
-    { type: "new", name: "facts-gatherer", description: "Extracts facts from intake sources" },
-    { type: "new", name: "coding-suggester", description: "Suggests codes for review, never applies them" },
+  systemPrompt: 'Combine what your agents return into one JSON proposal: { "action", "payload" }.',
+  connectors: [
+    { type: "agent", agentId: factsGatherer.id },
+    { type: "agent", agentId: codingSuggester.id },
   ],
 });`,
           },
@@ -1394,14 +1405,15 @@ function toFormValues(byGroup: Record<string, Corti.FactsExtractResponseFactsIte
       {
         heading: "Reading the orchestrator's output as a proposal, not as final content",
         text: [
-          "The orchestrator's output is text from client.agents.messageSend, the same extractAgentText pattern already used by the on-demand-agent applet elsewhere in this sandbox. The difference here is what you do with that text: instead of inserting it somewhere as finished content, parse it as a structured proposal describing an action your application has not taken yet.",
+          "The orchestrator's output is text from client.agentic.agents.sendMessage, the same extractAgentText pattern already used by the on-demand-agent applet elsewhere in this sandbox. The difference here is what you do with that text: instead of inserting it somewhere as finished content, parse it as a structured proposal describing an action your application has not taken yet.",
         ],
         snippets: [
           {
             caption: "Send a message, parse the result as a proposal",
             lang: "typescript",
-            code: `const resp = await client.agents.messageSend(orchestrator.id, {
-  message: { role: "user", parts: [{ kind: "text", text: intakePacket }], messageId: crypto.randomUUID(), kind: "message" },
+            code: `const resp = await client.agentic.agents.sendMessage(orchestrator.id, {
+  message: { role: "ROLE_USER", parts: [{ text: intakePacket }], messageId: crypto.randomUUID() },
+  configuration: { historyLength: 2 }, // include the reply in task.history
 });
 const raw = extractAgentText(resp);
 const parsed = JSON.parse(raw); // { action: "facts.create", payload: {...} }`,
@@ -1541,7 +1553,7 @@ function record(actor: string, event: string) {
       },
     ],
     considerations: [
-      "There is no confirmed SDK task state for awaiting approval. Do not build the gate expecting the framework to pause execution for you; the agent's messageSend call already returned by the time you decide whether to act on it, so the pause has to live in your application, before you call whatever mutates real data.",
+      "There is no confirmed SDK task state for awaiting approval. Do not build the gate expecting the framework to pause execution for you; the agent's sendMessage call already returned by the time you decide whether to act on it, so the pause has to live in your application, before you call whatever mutates real data.",
       'Make invalid state transitions impossible, not just discouraged. A proposal that is approved twice, or rejected after already being approved, is exactly the kind of bug an auditor will find, so guard every transition (if proposal.status !== "pending", throw) rather than trusting the UI to only ever call it once.',
       "The audit log needs to be append-only and needs to survive independently of the proposal it describes. If a proposal record is later deleted or overwritten, the audit log entries referencing its taskId are what prove the decision, and every revision leading up to it, happened.",
       "Reject is not the absence of an action, it is an action, and so is a revision request. Log both with the same rigor as an approval: who decided, when, and, if you capture one, why. A regulator reviewing the trail cares as much about what was correctly stopped or sent back as what was correctly executed.",
@@ -1551,26 +1563,26 @@ function record(actor: string, event: string) {
 
   "multi-agent-roles": {
     summary:
-      "Structural tool-access scoping using per-expert mcpServers arrays. Each expert in an orchestrator's experts array can carry its own mcpServers list, so a front desk expert and a clinical notes expert have genuinely disjoint tool access inside one orchestrated system.",
+      "Structural tool-access scoping with per-agent connectors. Each role is its own agent with its own MCP connectors, and an orchestrator delegates to them through agent connectors, so a front desk agent and a clinical notes agent have genuinely disjoint tool access inside one orchestrated system.",
     premise: [
-      "A single agent built to handle two different jobs at once, say front desk work (scheduling, patient lookup) and clinical notes (facts, coding), tends to end up with access to every tool it uses for either job, all the time. Nothing stops the front desk half of that agent's reasoning from calling a clinical tool it should never touch, or the clinical half from reaching into a scheduling system it has no business modifying. This is a real production problem, not a hypothetical one, and the fix is not a smarter prompt telling the agent to behave itself. It is a structural fix: build two agents, or two experts under one orchestrator, and give each access to only the tools its own role actually needs.",
-      "The Corti Agentic Framework supports this directly, and it is worth being precise about where the mechanism actually lives, since it is easy to assume tool access is a property of the top level agent when it is not. client.agents.create takes an optional experts array, and each entry in that array can carry its own mcpServers list, completely separate from any other expert's list and separate from whatever the orchestrator itself declares. Scoping happens at the expert level. An orchestrator with two experts, each with a distinct mcpServers array, gives you two agents with genuinely disjoint tool access inside one orchestrated system.",
-      "Building the two scoped experts is only the first half of this guide. The second half is what makes a role split actually work in production: the orchestrator has to route every incoming request to the right expert, handle a request that genuinely spans both roles by calling both and combining their answers, and recognize a request that matches neither role instead of forcing it onto whichever expert happens to be closest. The role split in this guide, front desk versus clinical notes, is one axis you can cut a multi-agent system along, by department, by who in an organization the agent is standing in for. The other guide in this pair, on narrow-tool specialists, cuts along a different axis, by capability rather than role, so read them together if you are deciding how to structure a system with more than a couple of distinct jobs.",
+      "A single agent built to handle two different jobs at once, say front desk work (scheduling, patient lookup) and clinical notes (facts, coding), tends to end up with access to every tool it uses for either job, all the time. Nothing stops the front desk half of that agent's reasoning from calling a clinical tool it should never touch, or the clinical half from reaching into a scheduling system it has no business modifying. This is a real production problem, not a hypothetical one, and the fix is not a smarter prompt telling the agent to behave itself. It is a structural fix: build two agents under one orchestrator, and give each access to only the tools its own role actually needs.",
+      'The Corti Agentic Framework supports this directly, and it is worth being precise about where the mechanism lives. In client.agentic.agents.create, everything an agent can reach is its connectors list: MCP servers ({ type: "mcp" }), other agents ({ type: "agent" }), and pre-built registry connectors ({ type: "registry" }). There is no shared tool pool above that. Scoping happens per agent: give each role its own agent with its own MCP connectors, then give an orchestrator one agent connector per role, and you have two agents with genuinely disjoint tool access inside one orchestrated system.',
+      "Building the two scoped agents is only the first half of this guide. The second half is what makes a role split actually work in production: the orchestrator has to route every incoming request to the right agent, handle a request that genuinely spans both roles by calling both and combining their answers, and recognize a request that matches neither role instead of forcing it onto whichever agent happens to be closest. The role split in this guide, front desk versus clinical notes, is one axis you can cut a multi-agent system along, by department, by who in an organization the agent is standing in for. The other guide in this pair, on narrow-tool specialists, cuts along a different axis, by capability rather than role, so read them together if you are deciding how to structure a system with more than a couple of distinct jobs.",
     ],
     how: [
       {
         heading: "Seeing the two disjoint tool surfaces you are building toward",
         text: [
-          "The end state is one orchestrator with two experts, and critically, two separate mcpServers arrays, one per expert, with no overlap between them.",
+          "The end state is one orchestrator delegating to two specialist agents, and critically, two separate connectors lists, one per specialist, with no overlap between them.",
         ],
         snippets: [
           {
-            caption: "Two experts, two disjoint tool surfaces",
+            caption: "Two agents, two disjoint tool surfaces",
             lang: "mermaid",
             code: `flowchart TB
     O[Orchestrator]
-    O --> FD[Front desk expert]
-    O --> CN[Clinical notes expert]
+    O --> FD[Front desk agent]
+    O --> CN[Clinical notes agent]
     FD -.-> S1[scheduling-mcp]
     FD -.-> S2[patient-lookup-mcp]
     CN -.-> S3[facts-mcp]
@@ -1579,94 +1591,81 @@ function record(actor: string, event: string) {
         ],
       },
       {
-        heading: "Creating the orchestrator shell first",
+        heading: "Making each role its own agent",
         text: [
-          'Start with client.agents.create({ name, description, agentType: "orchestrator", experts: [] }), an orchestrator with no experts yet. agentType is optional on the request, but set it explicitly to "orchestrator" so the framework, and anyone reading the configuration later, understands this agent\'s job is to route and coordinate, not to answer directly.',
+          'There is no inline expert type in the v2 API. Each role is an ordinary agent with its own systemPrompt and connectors, and the orchestrator is another agent whose connectors point at them. Because the orchestrator references the specialists by id, create the specialists first. This guide uses two connector kinds: { type: "mcp", name, url, auth } for a tool server, and { type: "agent", agentId } for delegating to another agent.',
         ],
         snippets: [
           {
-            caption: "An empty orchestrator shell",
+            caption: "The two connector kinds this guide uses",
             lang: "typescript",
-            code: `const agent = await client.agents.create({
-  name: "Front desk / clinical orchestrator",
-  description: "Routes requests to a scheduling expert or a clinical notes expert",
-  agentType: "orchestrator",
-  experts: [],
+            code: `// A tool server this agent may call
+{ type: "mcp", name: "scheduling-mcp", url: "https://tools.example.com/scheduling", auth: { type: "bearer" } }
+
+// Another agent this agent may delegate to
+{ type: "agent", agentId: frontDesk.id }`,
+          },
+        ],
+      },
+      {
+        heading: "Giving the front desk agent its own, narrow connectors list",
+        text: [
+          'Create the front desk agent with only the MCP connectors that expose scheduling and patient lookup tools. Each MCP connector needs type: "mcp", name, and url, plus an auth block whose type ("none", "bearer", "apiKey", "oauth2", or "inherit") matches that server\'s auth flow, with a scope and tokenUrl for OAuth2 or a ref to a server-side stored secret.',
+        ],
+        snippets: [
+          {
+            caption: "Front desk agent, scheduling and patient lookup only",
+            lang: "typescript",
+            code: `const frontDesk = await client.agentic.agents.create({
+  name: "front-desk",
+  description: "Scheduling and patient lookup",
+  systemPrompt: "Handle scheduling and intake requests only.",
+  connectors: [
+    { type: "mcp", name: "scheduling-mcp", url: "https://tools.example.com/scheduling", auth: { type: "bearer" } },
+    { type: "mcp", name: "patient-lookup-mcp", url: "https://tools.example.com/patients", auth: { type: "bearer" } },
+  ],
 });`,
           },
         ],
       },
       {
-        heading: "Choosing inline experts for deployment-specific roles",
+        heading: "Defining the clinical notes agent with its own, separate list",
         text: [
-          'Each entry in experts is either an inline new expert, { type: "new", name, description, systemPrompt?, mcpServers? }, or a reference to a shared or registry expert, { type: "reference", id?, name?, systemPrompt?, config? }. For a role split like this one, inline new experts are usually the right choice, since a front desk expert and a clinical notes expert are specific to this deployment, not generic capabilities you would reuse verbatim across different systems.',
+          "Define the clinical notes agent the same way, with its own systemPrompt focused on facts and coding, and its own connectors list containing only the MCP servers that expose facts and coding tools. This must be a genuinely different list from the front desk agent's, not the same array reused, or the scoping does nothing.",
         ],
         snippets: [
           {
-            caption: "The shape of one inline expert entry",
+            caption: "Clinical notes agent, facts and coding only",
             lang: "typescript",
-            code: `const frontDeskExpert = {
-  type: "new" as const,
-  name: "front-desk",
-  description: "Scheduling and patient lookup",
-  systemPrompt: "Handle scheduling and intake requests only.",
-  mcpServers: [] as Corti.AgentsCreateMcpServer[], // filled in next
-};`,
-          },
-        ],
-      },
-      {
-        heading: "Giving the front desk expert its own, narrow mcpServers list",
-        text: [
-          "Define the front desk expert's mcpServers array with only the MCP servers that expose scheduling and patient lookup tools. Each AgentsCreateMcpServer entry needs name, transportType, authorizationType, and url at minimum, plus whatever authorizationScope, tokenUrl, or token that particular MCP server's auth flow requires.",
-        ],
-        snippets: [
-          {
-            caption: "Front desk mcpServers, scheduling and patient lookup only",
-            lang: "typescript",
-            code: `frontDeskExpert.mcpServers = [
-  { name: "scheduling-mcp", transportType: "http", authorizationType: "bearer", url: "https://tools.example.com/scheduling" },
-  { name: "patient-lookup-mcp", transportType: "http", authorizationType: "bearer", url: "https://tools.example.com/patients" },
-];`,
-          },
-        ],
-      },
-      {
-        heading: "Defining the clinical notes expert with its own, separate list",
-        text: [
-          "Define the clinical notes expert the same way, with its own systemPrompt focused on facts and coding, and its own mcpServers array containing only the servers that expose facts and coding tools. This array must be a genuinely different array from the front desk expert's, not the same reference reused, or the scoping does nothing.",
-        ],
-        snippets: [
-          {
-            caption: "Clinical notes expert, facts and coding only",
-            lang: "typescript",
-            code: `const clinicalNotesExpert = {
-  type: "new" as const,
+            code: `const clinicalNotes = await client.agentic.agents.create({
   name: "clinical-notes",
   description: "Facts extraction and medical coding",
   systemPrompt: "Handle clinical documentation requests only.",
-  mcpServers: [
-    { name: "facts-mcp", transportType: "http", authorizationType: "bearer", url: "https://tools.example.com/facts" },
-    { name: "coding-mcp", transportType: "http", authorizationType: "bearer", url: "https://tools.example.com/coding" },
-  ] as Corti.AgentsCreateMcpServer[],
-};`,
+  connectors: [
+    { type: "mcp", name: "facts-mcp", url: "https://tools.example.com/facts", auth: { type: "bearer" } },
+    { type: "mcp", name: "coding-mcp", url: "https://tools.example.com/coding", auth: { type: "bearer" } },
+  ],
+});`,
           },
         ],
       },
       {
-        heading: "Assembling the full agents.create call",
+        heading: "Creating the orchestrator over both agents",
         text: [
-          "With both experts defined, pass them together in the experts array on the same create call. The orchestrator itself can also declare its own mcpServers if there are tools every expert should share, but for a role split like this one, keep the orchestrator's own list empty or minimal; the whole point of the split is that the two experts do not share a tool surface, and a broad shared list on the orchestrator undermines that on the same call meant to enforce it.",
+          "With both specialists created, create the orchestrator with one agent connector per specialist. The orchestrator could also take MCP connectors of its own, but for a role split like this one keep its list to the two agent connectors: anything on the orchestrator's own list is reachable for every request, which undoes the split the specialists exist to enforce.",
         ],
         snippets: [
           {
-            caption: "The full call, two experts, two disjoint tool lists",
+            caption: "The orchestrator, delegating to two disjointly scoped agents",
             lang: "typescript",
-            code: `const agent = await client.agents.create({
+            code: `const agent = await client.agentic.agents.create({
   name: "Front desk / clinical orchestrator",
-  description: "Routes requests to a scheduling expert or a clinical notes expert",
-  agentType: "orchestrator",
-  experts: [frontDeskExpert, clinicalNotesExpert],
+  description: "Routes requests to a scheduling agent or a clinical notes agent",
+  systemPrompt: "Route each request to the agent whose role matches. Escalate if none does.",
+  connectors: [
+    { type: "agent", agentId: frontDesk.id },
+    { type: "agent", agentId: clinicalNotes.id },
+  ],
 });`,
           },
         ],
@@ -1674,7 +1673,7 @@ function record(actor: string, event: string) {
       {
         heading: "Understanding the three shapes a real request can take",
         text: [
-          "Once two scoped experts exist, every incoming request falls into one of three shapes: it clearly belongs to one expert, it genuinely spans both, or it belongs to neither. Handling only the first shape and hoping the others do not happen is how a role-scoped system quietly misroutes real traffic. The orchestrator, not your application code, is responsible for telling these three shapes apart, based on how each expert's systemPrompt and description were written when it was created.",
+          "Once two scoped agents exist, every incoming request falls into one of three shapes: it clearly belongs to one agent, it genuinely spans both, or it belongs to neither. Handling only the first shape and hoping the others do not happen is how a role-scoped system quietly misroutes real traffic. The orchestrator, not your application code, is responsible for telling these three shapes apart, based on how each agent's systemPrompt and description were written when it was created.",
         ],
         snippets: [
           {
@@ -1682,9 +1681,9 @@ function record(actor: string, event: string) {
             lang: "mermaid",
             code: `flowchart TD
     Req[Incoming request] --> Route{Orchestrator routes}
-    Route -->|matches front desk only| FD[Front desk expert answers]
-    Route -->|matches clinical notes only| CN[Clinical notes expert answers]
-    Route -->|matches both| Both[Both experts called, answers combined]
+    Route -->|matches front desk only| FD[Front desk agent answers]
+    Route -->|matches clinical notes only| CN[Clinical notes agent answers]
+    Route -->|matches both| Both[Both agents called, answers combined]
     Route -->|matches neither| Esc[Escalate to a human, do not guess]`,
           },
         ],
@@ -1692,142 +1691,140 @@ function record(actor: string, event: string) {
       {
         heading: "Letting the orchestrator route, not routing manually",
         text: [
-          "Once created, messages route to the orchestrator via client.agents.messageSend, and the orchestrator decides which expert handles a given request based on its systemPrompt and the experts' descriptions. Your application code does not need to manually route between the two experts; that routing decision is the orchestrator's job, driven by how each expert was described at creation time.",
+          "Once created, messages go to the orchestrator via client.agentic.agents.sendMessage, and the orchestrator decides which agent handles a given request based on its systemPrompt and the specialists' descriptions. Your application code does not need to manually route between the two agents; that routing decision is the orchestrator's job, driven by how each agent was described at creation time.",
         ],
         snippets: [
           {
             caption: "Send one request, let the orchestrator decide",
             lang: "typescript",
-            code: `const resp = await client.agents.messageSend(agent.id, {
-  message: { role: "user", parts: [{ kind: "text", text: userRequest }], messageId: crypto.randomUUID(), kind: "message" },
+            code: `const resp = await client.agentic.agents.sendMessage(agent.id, {
+  message: { role: "ROLE_USER", parts: [{ text: userRequest }], messageId: crypto.randomUUID() },
 });
-// the orchestrator, not your code, chose which expert(s) handled this`,
+// the orchestrator, not your code, chose which agent(s) handled this`,
           },
         ],
       },
       {
-        heading: "Combining both experts' answers for a request that spans both roles",
+        heading: "Combining both agents' answers for a request that spans both roles",
         text: [
-          "If a request genuinely needs both roles at once, for example a patient asking to reschedule while also asking about a lab result mentioned in their chart, that is the orchestrator's problem to solve by calling both experts and combining their output, not a reason to give one expert both tool sets. The combined answer should make clear which part came from which expert, since a reviewer troubleshooting a bad answer needs to know which expert, and therefore which tool, was responsible for which part of the response.",
+          "If a request genuinely needs both roles at once, for example a patient asking to reschedule while also asking about a lab result mentioned in their chart, that is the orchestrator's problem to solve by calling both agents and combining their output, not a reason to give one agent both tool sets. The combined answer should make clear which part came from which agent, since a reviewer troubleshooting a bad answer needs to know which agent, and therefore which tool, was responsible for which part of the response.",
         ],
       },
       {
-        heading: "Escalating a request that matches neither expert",
+        heading: "Escalating a request that matches neither agent",
         text: [
-          "A request that matches neither role, a question entirely outside scheduling and entirely outside clinical documentation, should not get forced onto whichever expert seems closest. Design the orchestrator's prompt and the surrounding application to recognize a no-match case explicitly and escalate it to a human, rather than letting an expert answer something its tools were never scoped to handle.",
+          "A request that matches neither role, a question entirely outside scheduling and entirely outside clinical documentation, should not get forced onto whichever agent seems closest. Design the orchestrator's prompt and the surrounding application to recognize a no-match case explicitly and escalate it to a human, rather than letting an agent answer something its tools were never scoped to handle.",
         ],
       },
       {
         heading: "Trying the routing decision yourself",
         text: [
-          "The interactive panel on this page does two things. First, it toggles between the two shapes built above: tool access scoped per expert, the correct version from the steps above, against one shared tool list handed to every expert, the mistake this pattern exists to prevent. Second, it simulates the orchestrator's routing decision across a set of sample requests, including one that matches only one expert, one that spans both and gets a combined response, and one that matches neither and should escalate. The full expert definitions and the routing logic are included in the Copy for LLM bundle for this page.",
+          "The interactive panel on this page does two things. First, it toggles between the two shapes built above: tool access scoped per agent, the correct version from the steps above, against one shared tool list handed to every agent, the mistake this pattern exists to prevent. Second, it simulates the orchestrator's routing decision across a set of sample requests, including one that matches only one agent, one that spans both and gets a combined response, and one that matches neither and should escalate. The full agent definitions and the routing logic are included in the Copy for LLM bundle for this page.",
         ],
       },
     ],
     considerations: [
-      "The common mistake is defining one mcpServers array and reusing the same reference or the same copy-pasted list for every expert, which produces two experts that read as separate roles in their name and description but have identical tool access underneath. Scoping only works if the arrays are actually different.",
-      'agentType: "orchestrator" is optional in the request type, but set it explicitly. An unset agentType leaves the framework and future maintainers to infer the agent\'s role from its experts array, which is fragile once a system grows past two or three experts.',
-      "Each mcpServer entry needs its own authorizationType and, depending on that type, an authorizationScope, tokenUrl, or token. Get these values from whatever MCP server you are integrating with, not from a shared secrets file meant for a different tool.",
-      "A request that spans both roles is not an edge case to special-case away later; design the combined-answer format from the start, since retrofitting attribution (which part of an already-shipped answer came from which expert) onto an existing system is much harder than building it in from the first version.",
-      "A no-match request that gets forced onto the nearest expert anyway is a silent failure mode, not a graceful one. Test explicitly for requests that should escalate, not only for requests that should route cleanly.",
+      "The common mistake is defining one connectors array and reusing the same reference or the same copy-pasted list on every specialist, which produces two agents that read as separate roles in their name and description but have identical tool access underneath. Scoping only works if the lists are actually different.",
+      "Keep MCP connectors off the orchestrator. Anything on the orchestrator's own connectors list is reachable for every request it handles, so a tool placed there for convenience quietly undoes the role split.",
+      "Each MCP connector carries its own auth block: a type and, depending on that type, a scope and tokenUrl for OAuth2 or a ref to a server-side stored secret. Get these values from whatever MCP server you are integrating with, not from a shared secrets file meant for a different tool.",
+      "A request that spans both roles is not an edge case to special-case away later; design the combined-answer format from the start, since retrofitting attribution (which part of an already-shipped answer came from which agent) onto an existing system is much harder than building it in from the first version.",
+      "A no-match request that gets forced onto the nearest agent anyway is a silent failure mode, not a graceful one. Test explicitly for requests that should escalate, not only for requests that should route cleanly.",
     ],
   },
 
   "multi-agent-specialists": {
     summary:
-      "A hub-and-spoke network where each specialist has access to exactly one tool, making the tool surface itself the guardrail. Supports both inline 'new' experts and 'reference' experts pulled from a shared registry, plus chained sequential delegation for compound questions.",
+      "A hub-and-spoke network where each specialist has access to exactly one tool, making the tool surface itself the guardrail. The orchestrator delegates to specialist agents you build through agent connectors and attaches pre-built registry connectors directly, plus chained sequential delegation for compound questions.",
     premise: [
-      "The role-scoped guide elsewhere in this section splits a system by department: front desk versus clinical notes. This guide splits it along a different axis entirely: by capability. Instead of two generalist experts each handling a whole area of work, a primary reasoning agent delegates to several narrow specialists, each of which does exactly one thing and has access to exactly the one tool it needs to do that thing. A literature lookup specialist can search, nothing else. A dosage calculator specialist can compute, nothing else. Neither can touch the other's tool, and neither needs to, because the orchestrator, not any individual specialist, is what holds the full picture of a request.",
-      "This shape matters for a concrete reason beyond tidiness: a specialist with one narrow tool is much easier to reason about, test, and constrain than a generalist with a broad tool set. If a dosage calculator expert only has access to a calculator MCP server, there is no scenario where it accidentally calls a web search tool and returns an answer sourced from an unverified page instead of an actual computation. The tool surface itself is the guardrail, not a prompt asking the model to stay in its lane.",
+      "The role-scoped guide elsewhere in this section splits a system by department: front desk versus clinical notes. This guide splits it along a different axis entirely: by capability. Instead of two generalist agents each handling a whole area of work, a primary reasoning agent delegates to several narrow specialists, each of which does exactly one thing and has access to exactly the one tool it needs to do that thing. A literature lookup specialist can search, nothing else. A dosage calculator specialist can compute, nothing else. Neither can touch the other's tool, and neither needs to, because the orchestrator, not any individual specialist, is what holds the full picture of a request.",
+      "This shape matters for a concrete reason beyond tidiness: a specialist with one narrow tool is much easier to reason about, test, and constrain than a generalist with a broad tool set. If a dosage calculator agent only has access to a calculator MCP server, there is no scenario where it accidentally calls a web search tool and returns an answer sourced from an unverified page instead of an actual computation. The tool surface itself is the guardrail, not a prompt asking the model to stay in its lane.",
       "Three independent specialists sitting next to a hub are only half the picture, though. Most real questions worth routing to a specialist network are compound: they need more than one specialist, in sequence, where the second specialist's job depends on what the first one found. A question about the correct dose of a drug and whether it interacts with something else is really two questions, and answering the second well can depend on the answer to the first. This guide builds the hub-and-spoke network, and then builds the chained delegation on top of it: how the orchestrator calls specialists one after another instead of all at once, and how it combines their separate outputs into one answer.",
     ],
     how: [
       {
         heading: "Seeing the hub-and-spoke shape you are building",
         text: [
-          "One orchestrator at the center, several narrow specialists as spokes, and each spoke connected to exactly one tool. Two of the spokes below are built inline for this deployment; the third is pulled from a shared registry instead of being redefined.",
+          "One orchestrator at the center, several narrow specialists as spokes, and each spoke connected to exactly one tool. Two of the spokes below are agents built for this deployment; the third is a pre-built registry connector attached instead of being redefined.",
         ],
         snippets: [
           {
             caption: "Hub-and-spoke: one capability per specialist",
             lang: "mermaid",
             code: `flowchart TB
-    O[Orchestrator] --> L[literature-search: new]
-    O --> C[dosage-calculator: new]
-    O --> R[coding-specialist: reference]
+    O[Orchestrator] --> L[literature-search: agent]
+    O --> C[dosage-calculator: agent]
+    O --> R[coding-expert: registry]
     L -.-> WS[web-search-mcp]
     C -.-> CALC[calculator-mcp]
-    R -.-> REG[(registry expert:\ninherited mcpServers)]`,
+    R -.-> REG[(registry connector:\nbrings its own tools)]`,
           },
         ],
       },
       {
-        heading: "Defining an inline specialist scoped to exactly one tool",
+        heading: "Defining a specialist agent scoped to exactly one tool",
         text: [
-          'An inline new expert has the shape { type: "new", name, description, systemPrompt?, mcpServers? }. For a narrow specialist, its mcpServers array should contain exactly one server. A literature search expert needs only a web search MCP server, nothing else in its tool list.',
+          "A specialist is an ordinary agent whose connectors list holds exactly one MCP connector. A literature search specialist needs only a web search MCP server, nothing else in its tool list.",
         ],
         snippets: [
           {
             caption: "A literature search specialist, one tool only",
             lang: "typescript",
-            code: `const literatureSearch = {
-  type: "new" as const,
+            code: `const literatureSearch = await client.agentic.agents.create({
   name: "literature-search",
   description: "Looks up drug interactions and clinical literature",
-  mcpServers: [
-    { name: "web-search-mcp", transportType: "http", authorizationType: "bearer", url: "https://tools.example.com/search" },
-  ] as Corti.AgentsCreateMcpServer[],
-};`,
+  systemPrompt: "Answer only using search results. Cite sources.",
+  connectors: [
+    { type: "mcp", name: "web-search-mcp", url: "https://tools.example.com/search", auth: { type: "bearer" } },
+  ],
+});`,
           },
         ],
       },
       {
-        heading: "Defining a second inline specialist the same way",
+        heading: "Defining a second specialist the same way",
         text: [
-          "Repeat the same shape for a second narrow capability, a dosage calculator, with its own single-entry mcpServers array pointing at a calculator MCP server instead of a search one. Nothing here is shared between the two experts; each has its own array from the start.",
+          "Repeat the same shape for a second narrow capability, a dosage calculator, with its own single-entry connectors list pointing at a calculator MCP server instead of a search one. Nothing here is shared between the two agents; each has its own list from the start.",
         ],
         snippets: [
           {
             caption: "A dosage calculator specialist, one tool only",
             lang: "typescript",
-            code: `const dosageCalculator = {
-  type: "new" as const,
+            code: `const dosageCalculator = await client.agentic.agents.create({
   name: "dosage-calculator",
   description: "Computes weight-based dosing and unit conversions",
-  mcpServers: [
-    { name: "calculator-mcp", transportType: "http", authorizationType: "bearer", url: "https://tools.example.com/calc" },
-  ] as Corti.AgentsCreateMcpServer[],
-};`,
+  connectors: [
+    { type: "mcp", name: "calculator-mcp", url: "https://tools.example.com/calc", auth: { type: "bearer" } },
+  ],
+});`,
           },
         ],
       },
       {
-        heading: "Listing available registry experts before building a third from scratch",
+        heading: "Listing registry connectors before building a third from scratch",
         text: [
-          "Before writing a third specialist inline, check whether one already exists. client.agents.getRegistryExperts() returns an AgentsRegistryExpertsResponse containing a list of AgentsRegistryExpert entries, each with name, description, an optional displayName and displayDescription for presenting it in a UI, an optional mcpServers list already configured for that expert, and an optional configSchema describing what a reference to it may override.",
+          "Before building a third specialist, check whether the registry already offers one. client.agentic.registry.connectors.list() returns a page of AgenticRegistryConnector entries, each with an id (the value to pass as a registry connector's name), a name, an optional title and description for presenting it in a UI, and an optional configSchema describing the config it accepts.",
         ],
         snippets: [
           {
-            caption: "Look up a published expert by name",
+            caption: "Look up a pre-built connector by id",
             lang: "typescript",
-            code: `const registryExperts = await client.agents.getRegistryExperts();
-const codingSpecialist = registryExperts.experts.find((e) => e.name === "coding-specialist");`,
+            code: `const registry = await client.agentic.registry.connectors.list();
+const codingExpert = registry.data.find((c) => c.id === "coding-expert");`,
           },
         ],
       },
       {
-        heading: "Referencing the registry expert instead of redefining it",
+        heading: "Attaching the registry connector instead of redefining it",
         text: [
-          "A reference expert has the shape { type: \"reference\", id?, name?, systemPrompt?, config? }. Pass id over name when you have it: id wins over name if you supply both, and a stable id keeps working even if the registry expert is later renamed, while a reference by name would start failing to resolve. The optional systemPrompt is an override, appended to or replacing the registry expert's own prompt depending on how it was published, and config is deep merged against that expert's configSchema, so you can adjust its behavior per orchestrator without forking its definition.",
+          "A registry connector has the shape { type: \"registry\", name, enabled?, config? }, where name is the registry entry's id. It brings its own tools with it, so the orchestrator gains the capability without you defining or hosting anything. config is validated against the entry's configSchema, but the server does not persist it on create yet, so do not build on per-orchestrator overrides until it does.",
         ],
         snippets: [
           {
-            caption: "Reference a registry expert with a config override",
+            caption: "A registry connector for the coding expert",
             lang: "typescript",
-            code: `const codingReference = {
-  type: "reference" as const,
-  id: codingSpecialist?.name,
-  config: { defaultSystems: ["icd10cm-outpatient", "cpt"] },
+            code: `const codingConnector = {
+  type: "registry" as const,
+  name: codingExpert?.id ?? "coding-expert",
 };`,
           },
         ],
@@ -1835,17 +1832,20 @@ const codingSpecialist = registryExperts.experts.find((e) => e.name === "coding-
       {
         heading: "Assembling the orchestrator from a mix of both kinds",
         text: [
-          'Create the orchestrator the same way as any other, client.agents.create({ name, description, agentType: "orchestrator", experts }), but populate experts with a straightforward mix: inline new experts for anything specific to this deployment, and reference experts for anything a registry already maintains centrally. There is no restriction on mixing both kinds in the same array; the SDK\'s AgentsCreateAgentExpertsItem type is a union of exactly these two shapes for precisely this reason.',
+          'Create the orchestrator with one connectors list that mixes both kinds: { type: "agent", agentId } for each specialist built for this deployment, and { type: "registry", name } for anything the registry already maintains. The SDK\'s CommonConnectorCreateRequest is a union of these shapes (plus mcp, a2a, and schema), so mixing them in one list is expected.',
         ],
         snippets: [
           {
-            caption: "The full call, two inline specialists and one reference",
+            caption: "The full call, two specialist agents and one registry connector",
             lang: "typescript",
-            code: `const agent = await client.agents.create({
+            code: `const agent = await client.agentic.agents.create({
   name: "Clinical reasoning orchestrator",
   description: "Delegates to narrow, single-purpose specialists",
-  agentType: "orchestrator",
-  experts: [literatureSearch, dosageCalculator, codingReference],
+  connectors: [
+    { type: "agent", agentId: literatureSearch.id },
+    { type: "agent", agentId: dosageCalculator.id },
+    codingConnector,
+  ],
 });`,
           },
         ],
@@ -1882,17 +1882,18 @@ const codingSpecialist = registryExperts.experts.find((e) => e.name === "coding-
           {
             caption: "Sequential delegation, second call informed by the first",
             lang: "typescript",
-            code: `const interactionCheck = await client.agents.messageSend(literatureSearch.id, {
-  message: { role: "user", parts: [{ kind: "text", text: interactionQuestion }], messageId: crypto.randomUUID(), kind: "message" },
+            code: `const interactionCheck = await client.agentic.agents.sendMessage(literatureSearch.id, {
+  message: { role: "ROLE_USER", parts: [{ text: interactionQuestion }], messageId: crypto.randomUUID() },
+  configuration: { historyLength: 2 },
 });
 
-const doseCalculation = await client.agents.messageSend(dosageCalculator.id, {
+const doseCalculation = await client.agentic.agents.sendMessage(dosageCalculator.id, {
   message: {
-    role: "user",
-    parts: [{ kind: "text", text: \`\${doseQuestion}\\n\\nKnown interaction context: \${extractAgentText(interactionCheck)}\` }],
+    role: "ROLE_USER",
+    parts: [{ text: \`\${doseQuestion}\\n\\nKnown interaction context: \${extractAgentText(interactionCheck)}\` }],
     messageId: crypto.randomUUID(),
-    kind: "message",
   },
+  configuration: { historyLength: 2 },
 });`,
           },
         ],
@@ -1915,9 +1916,9 @@ const doseCalculation = await client.agents.messageSend(dosageCalculator.id, {
         ],
       },
       {
-        heading: "Comparing inline and reference definitions side by side",
+        heading: "Comparing agent and registry definitions side by side",
         text: [
-          "The interactive panel on this page lets you click through each spoke in the hub-and-spoke diagram to see its actual expert definition. The two inline specialists show a full definition, name, description, and their single mcpServers entry. The registry-referenced specialist shows a visibly shorter definition, just the reference and its config override, since a reference expert points at something that already exists rather than redescribing it.",
+          "The interactive panel on this page lets you click through each spoke in the hub-and-spoke diagram to see its actual definition. The two specialist agents show a full create request, name, description, and their single MCP connector. The registry spoke shows a visibly shorter definition, just the registry connector, since it points at something that already exists rather than redescribing it.",
         ],
       },
       {
@@ -1928,10 +1929,10 @@ const doseCalculation = await client.agents.messageSend(dosageCalculator.id, {
       },
     ],
     considerations: [
-      "A registry expert's config is deep merged against its configSchema, not replaced wholesale. Check the configSchema before assuming a given override field exists; a typo in a config key is silently dropped rather than rejected, since it simply fails to match anything in the schema.",
-      "id wins over name when a reference expert supplies both. If a registry expert gets renamed, a reference by id keeps working while a reference by name may start failing to resolve, so prefer id in production configuration and reserve name for quick prototyping.",
-      "A narrow specialist is only as narrow as its mcpServers list. Double check that an inline new expert's mcpServers array really does contain exactly one server; it is easy to copy a broader list from another expert during development and forget to trim it down.",
-      "Not everything needs to be a registry expert. Something genuinely specific to one deployment, like a literature search scoped to one clinic's preferred medical databases, belongs inline as a new expert. Publish to the registry only what is actually meant to be reused across multiple orchestrators or customers.",
+      "A registry connector's config is validated against its configSchema, but the server does not persist config on create yet. Check the configSchema and the current API behavior before building on per-orchestrator overrides.",
+      "Pass the registry entry's id as the connector's name, not its title. The id is the stable identifier; title and description are for display and can change.",
+      "A narrow specialist is only as narrow as its connectors list. Double check that each specialist agent's connectors really do contain exactly one MCP connector; it is easy to copy a broader list from another agent during development and forget to trim it down.",
+      "Not everything needs to come from the registry. Something genuinely specific to one deployment, like a literature search scoped to one clinic's preferred medical databases, belongs in its own agent. Reach for a registry connector when the capability is generic and already maintained centrally.",
       "Sequential delegation costs more time and more calls than calling every specialist in parallel. Reserve it for questions where the second call genuinely benefits from the first call's output; a compound question whose two halves are truly independent does not need to wait for one before starting the other.",
     ],
   },
@@ -2022,7 +2023,7 @@ Object.entries(document.stringDocument); // [ [sectionName, sectionText], ... ]`
       "A raw transcript is not a chart. Getting from one to the other is naturally three distinct jobs, extracting facts, drafting a note, and suggesting codes, and each job does better with its own narrowly-scoped agent than one agent asked to do all three at once.",
     ],
     how: [
-      "Create (or reuse) three agents via client.agents.create, each with its own name and systemPrompt: a Fact Extractor, a Note Drafter, and a Code Suggester. Send the raw transcript to the first agent, then feed each agent's text response into the next agent's message as plain text. No shared conversation context is needed, behavior lives entirely in each stage's prompt.",
+      "Create (or reuse) three agents via client.agentic.agents.create, each with its own name and systemPrompt: a Fact Extractor, a Note Drafter, and a Code Suggester. Send the raw transcript to the first agent, then feed each agent's text response into the next agent's message as plain text. No shared conversation context is needed, behavior lives entirely in each stage's prompt.",
     ],
     snippets: [
       {
@@ -2258,7 +2259,7 @@ const allKeys = new Set(perEncounter.flatMap((r) => r.codes.map(key)));`,
       "This applet utilizes two agents in sequence to address this challenge: a reviewer that reads a batch of historical notes and describes the style in prose, and a tailor that turns that description into concrete Guided Documents section overrides against a real Corti Standard template. Neither agent alone does the job — a single agent asked to both interpret style and emit valid override JSON tends to blend the two badly.",
     ],
     how: [
-      "Both agents are created once (client.agents.create) and reused for every persona; nothing persona-specific lives in either agent's systemPrompt. The Reviewer's message is just the clinician's name, specialty, and historical notes, and it returns a plain-text style summary. The Tailor's message is that summary plus a JSON shortlist of candidate templates (each with its sections' default contentPrompt/writingStylePrompt), and it must return one override per section, grounded in a rationale, as strict JSON.",
+      "Both agents are created once (client.agentic.agents.create) and reused for every persona; nothing persona-specific lives in either agent's systemPrompt. The Reviewer's message is just the clinician's name, specialty, and historical notes, and it returns a plain-text style summary. The Tailor's message is that summary plus a JSON shortlist of candidate templates (each with its sections' default contentPrompt/writingStylePrompt), and it must return one override per section, grounded in a rationale, as strict JSON.",
       "Overrides are applied at generation time via documents.generate's templateRef.overrides — Corti's Path 2 pattern — so the base template is never mutated and a plain, override-free call against the same template produces the out-of-the-box baseline for comparison. Generating the same transcript under two personas' saved profiles, side by side, is the actual test of whether the tailoring did anything.",
     ],
     snippets: [
@@ -2301,7 +2302,7 @@ const baseline = await client.documents.generate({
     ],
     how: [
       "Generate a note from a transcript against a Corti Standard template via client.documents.generate. The clinician edits each section in the main panel.",
-      "For each changed section, the My Note Style Memory agent (client.agents.*) receives the section heading, the current template prompts (contentPrompt, writingStylePrompt, miscPrompt), the original generated text, and the edited text. It interprets the edit and routes it to the right prompt surface — writing style, content, or a hard rule — and proposes the full replacement prompt text.",
+      "For each changed section, the My Note Style Memory agent (client.agentic.agents.*) receives the section heading, the current template prompts (contentPrompt, writingStylePrompt, miscPrompt), the original generated text, and the edited text. It interprets the edit and routes it to the right prompt surface — writing style, content, or a hard rule — and proposes the full replacement prompt text.",
       "Memory entries persist to localStorage (namespaced per client/tenant) and accumulate across cycles. When regenerating, the same transcript is generated twice in parallel: once with no overrides (baseline) and once with accumulated memory applied as runtime templateRef.overrides. The side-by-side comparison shows how much the learning changed the output. Clinicians can also add a rule manually from the memory log panel.",
     ],
     snippets: [
@@ -2462,7 +2463,7 @@ const params = buildPredictParams(rules, snomedEnabled, icd10Enabled);
       "SNOMED and ICD-10 predict use `client.codes.predict()` via the SDK. The system identifiers (`snomedctint`, `icd10cm-outpatient`) are cast to `Corti.CommonCodingSystemEnum[]` at the call boundary since the SDK's enum does not include SNOMED-CT variants.",
       "The same agent evaluates both SNOMED and ICD-10 criteria. If reasoning quality degrades when handling both code systems, a separate ICD-10 agent may be needed.",
       "When both SNOMED and ICD-10 rules are active, the predict call batches both systems with no filter — the API applies the same filter to all requested systems, so a filter with SNOMED codes would cause ICD-10 validation to fail.",
-      "The agent provides hierarchy-aware reasoning (`is-a`/`descendent-of`) and contextual awareness (negation, family history, ruled-out conditions) without a client-side hierarchy cache. Agent results are parsed from JSON returned by `client.agents.messageSend`.",
+      "The agent provides hierarchy-aware reasoning (`is-a`/`descendent-of`) and contextual awareness (negation, family history, ruled-out conditions) without a client-side hierarchy cache. Agent results are parsed from JSON returned by `client.agentic.agents.sendMessage`.",
       "Dismissed nudges stay dismissed for the session even if the trigger re-matches — they only re-fire if the text changes such that the trigger was removed and re-added.",
       "The cadence detector hooks into the same onTranscript handler as dictation: a final transcript insertion triggers an 'edit' cadence event, starting the debounce cycle.",
       "A debug log card shows timestamped entries for predict request/response (with full request body), agent request/response, prompt request/response, and nudge state changes. Export as JSON.",
@@ -2520,7 +2521,7 @@ const result = parseGenieResponse(responseText, mode);
     ],
     considerations: [
       "The agent's system prompt is fixed (not user-editable) — a deliberate safety boundary. User inputs are sent as data, not instructions.",
-      "The agent has no experts, no MCP servers, no tools — it can only generate JSON text.",
+      "The agent has no connectors (no MCP servers, no tools), so it can only generate JSON text.",
       "The script action kind runs in a sandboxed new Function() scope — the same mechanism used by the existing command dispatch system. The agent generates the script, not the user.",
       "Generated items persist to the shared stores and appear in the Dictation commands and Real-time nudge applets for the same API client (clientId:tenant).",
       "Agent calls require standard API client credentials (full-scope token via /api/corti proxy). Limited-scope streaming tokens do not grant access to agent endpoints — a 403 error is expected.",

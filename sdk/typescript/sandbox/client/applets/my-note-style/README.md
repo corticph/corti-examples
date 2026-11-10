@@ -13,7 +13,7 @@ loop (as opposed to _Scribe like me_, which learns from historical notes).
 2. **Edit** — the clinician edits the generated note section by section in
    the main panel (editable textareas, one per section).
 3. **Store to memory** — for each changed section, the My Note Style Memory
-   agent (`client.agents.*`) receives:
+   agent (`client.agentic.agents.*`) receives:
    - The section heading and its current template prompts (`contentPrompt`,
      `writingStylePrompt`, `miscPrompt`)
    - The original generated text vs. the edited text (the diff)

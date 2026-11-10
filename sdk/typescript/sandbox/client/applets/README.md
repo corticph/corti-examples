@@ -75,8 +75,8 @@ for titles, descriptions, and order.
 | --- | --- |
 | [Multi-source FactsR extraction](facts-multisource/) | Facts across several documents (client.facts.extract) |
 | [Human approval checkpoint](hitl-checkpoint/) | An agent proposes; a human approves before it acts |
-| [Role-scoped multi-agent build](multi-agent-roles/) | Front desk vs clinical notes, scoped mcpServers |
-| [Narrow-tool specialist network](multi-agent-specialists/) | One capability per expert, inline and registry |
+| [Role-scoped multi-agent build](multi-agent-roles/) | Front desk vs clinical notes, per-agent connectors |
+| [Narrow-tool specialist network](multi-agent-specialists/) | One capability per specialist, custom and registry |
 | [Scribe like me](scribe-like-me/) | Two agents tailor a template to a clinician's style from their historical notes |
 | [Real-time nudge](real-time-nudge/) | Subtle 'chirps' bring feedback via SNOMED-CT and ICD-10-CM code prediction, grammar matching, and agent-assisted evaluation |
 
@@ -148,7 +148,7 @@ hardware integration.
   procedure applets.
 - `corti-codes.ts` and `CodingSettings.tsx`: medical coding helpers and
   settings.
-- `cortiAgent.ts`: thin helpers over the Agentic Framework (`client.agents.*`).
+- `cortiAgent.ts`: thin helpers over the Agentic Framework (`client.agentic.agents.*`).
 
 **State and configuration**
 

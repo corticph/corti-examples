@@ -75,7 +75,7 @@ function AgentPromptEditor({
 /** Details panel for the "scribe like me" applet: pipeline description plus
  * editable prompts for both agents (same pattern as second-pass-agent /
  * on-demand-agent). Saving pushes the new prompt to the live Corti agent via
- * `client.agents.update`; if that agent hasn't been created in this tenant
+ * `client.agentic.agents.update`; if that agent hasn't been created in this tenant
  * yet, the next run creates it with the current prompt directly. */
 export function ScribeLikeMeDetails() {
   const { reviewerPrompt, tailorPrompt, status, error } = useScribeAgentPrompts();

@@ -202,7 +202,7 @@ client/applets/real-time-nudge/
   Evaluator") and evaluates both SNOMED and ICD-10 criteria. Sent as
   stateless messages (no `contextId`). Its system prompt is editable from
   the UI, persisted per API client, and pushed live via
-  `client.agents.update`. Reset restores the built-in default.
+  `client.agentic.agents.update`. Reset restores the built-in default.
 - A separate "Nudge Prompt Evaluator" agent handles custom prompt criteria.
   Its system prompt is fixed (not user-editable) and versioned — auto-updated
   on existing agents when the built-in prompt changes. It uses a response

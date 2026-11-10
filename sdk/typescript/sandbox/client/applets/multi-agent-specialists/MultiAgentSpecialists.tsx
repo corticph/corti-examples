@@ -1,11 +1,11 @@
 /**
  * Applet — CONCEPT: a hub-and-spoke network of narrow-tool specialist agents
- * (`client.agents.create`, mixing inline "new" experts with registry
- * "reference" experts), plus a chained delegation trace for a compound
+ * (`client.agentic.agents.create`, mixing specialist agent connectors with
+ * pre-built registry connectors), plus a chained delegation trace for a compound
  * question that needs more than one specialist in sequence.
  *
  * This is a narrative applet: wiring a real orchestrator with real MCP
- * servers and a populated expert registry needs infrastructure specific to
+ * servers needs infrastructure specific to
  * your deployment. Instead, it renders the hub-and-spoke shape, lets you
  * inspect the request payload for each spoke, and simulates a compound
  * question being decomposed and answered one specialist at a time.
@@ -61,7 +61,7 @@ const COMPOUND_QUESTIONS: CompoundQuestion[] = [
       },
       {
         spokeId: "registry",
-        spokeName: "coding-specialist",
+        spokeName: "coding-expert",
         output: "Suggested code: I48.91, unspecified atrial fibrillation.",
       },
     ],
@@ -75,7 +75,7 @@ interface Spoke {
   name: string;
   description: string;
   tool: string;
-  kind: "new" | "reference";
+  kind: "agent" | "registry";
   code: string;
 }
 
@@ -85,39 +85,40 @@ const SPOKES: Spoke[] = [
     name: "literature-search",
     description: "Looks up drug interactions and clinical literature",
     tool: "web-search-mcp",
-    kind: "new",
-    code: `{
-  type: "new",
+    kind: "agent",
+    code: `await client.agentic.agents.create({
   name: "literature-search",
   description: "Looks up drug interactions and clinical literature",
   systemPrompt: "Answer only using search results. Cite sources.",
-  mcpServers: [{ name: "web-search-mcp", transportType: "http", authorizationType: "bearer", url: "https://tools.example.com/search" }],
-}`,
+  connectors: [
+    { type: "mcp", name: "web-search-mcp", url: "https://tools.example.com/search", auth: { type: "bearer" } },
+  ],
+});
+// attached to the orchestrator as { type: "agent", agentId }`,
   },
   {
     id: "calculator",
     name: "dosage-calculator",
     description: "Computes weight-based dosing and unit conversions",
     tool: "calculator-mcp",
-    kind: "new",
-    code: `{
-  type: "new",
+    kind: "agent",
+    code: `await client.agentic.agents.create({
   name: "dosage-calculator",
   description: "Computes weight-based dosing and unit conversions",
-  mcpServers: [{ name: "calculator-mcp", transportType: "http", authorizationType: "bearer", url: "https://tools.example.com/calc" }],
-}`,
+  connectors: [
+    { type: "mcp", name: "calculator-mcp", url: "https://tools.example.com/calc", auth: { type: "bearer" } },
+  ],
+});
+// attached to the orchestrator as { type: "agent", agentId }`,
   },
   {
     id: "registry",
-    name: "coding-specialist (registry)",
-    description: "A pre-built expert reused from the shared expert registry",
-    tool: "coding-mcp (inherited from registry)",
-    kind: "reference",
-    code: `{
-  type: "reference",
-  name: "coding-specialist",
-  config: { defaultSystems: ["icd10cm-outpatient", "cpt"] },
-}`,
+    name: "coding-expert (registry)",
+    description: "A pre-built connector reused from the Corti registry",
+    tool: "coding tools (provided by the registry connector)",
+    kind: "registry",
+    code: `// attached to the orchestrator directly, nothing to create
+{ type: "registry", name: "coding-expert" }`,
   },
 ];
 
@@ -143,7 +144,7 @@ export function MultiAgentSpecialists() {
         <h2 className="text-lg font-semibold text-foreground">Narrow-tool specialist network</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           One orchestrator delegates to single-purpose specialists, each with exactly one
-          capability. Click a spoke to see its expert definition.
+          capability. Click a spoke to see its definition.
         </p>
       </div>
 
@@ -166,7 +167,7 @@ export function MultiAgentSpecialists() {
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-foreground">{s.name}</p>
-                <Badge variant={s.kind === "reference" ? "secondary" : "outline"}>{s.kind}</Badge>
+                <Badge variant={s.kind === "registry" ? "secondary" : "outline"}>{s.kind}</Badge>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>
               <p className="mt-2 font-mono text-[11px] text-muted-foreground">{s.tool}</p>
@@ -177,7 +178,7 @@ export function MultiAgentSpecialists() {
 
       <div>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Expert definition: {spoke.name}
+          Definition: {spoke.name}
         </h3>
         <pre className="overflow-x-auto rounded-md border border-border bg-card p-3 font-mono text-xs text-foreground">
           {spoke.code}

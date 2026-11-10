@@ -1,4 +1,4 @@
-/** Details card: agents.create with per-expert mcpServers scoping. */
+/** Details card: per-agent connectors scoping under one orchestrator. */
 export function MultiAgentRolesDetails() {
   return (
     <div className="flex flex-col gap-4 text-sm">
@@ -7,33 +7,33 @@ export function MultiAgentRolesDetails() {
           Where scoping happens
         </p>
         <p className="mt-1 text-muted-foreground">
-          Each <code>experts</code> item can carry its own <code>mcpServers</code> array. There is
-          no generic "tool" or "function" type in the SDK; every capability an expert can reach is
-          whatever is in that expert's own <code>mcpServers</code> list.
+          An agent's <code>connectors</code> list is everything it can reach. Give each role its own
+          agent with its own <code>mcp</code> connectors, then attach those agents to the
+          orchestrator as <code>agent</code> connectors.
         </p>
       </div>
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Expert shape (inline "new")
+          Agent connector
         </p>
         <p className="mt-1 font-mono text-xs text-muted-foreground">
-          {'{ type: "new", name, description, systemPrompt?, mcpServers? }'}
+          {'{ type: "agent", agentId }'}
         </p>
       </div>
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          mcpServers item
+          MCP connector
         </p>
         <p className="mt-1 font-mono text-xs text-muted-foreground">
-          {"{ name, transportType, authorizationType, url, ... }"}
+          {'{ type: "mcp", name, url, auth? }'}
         </p>
       </div>
 
       <p className="rounded-md bg-muted/60 px-2 py-1.5 text-xs text-muted-foreground">
-        The common mistake is defining one <code>mcpServers</code> array and reusing it on every
-        expert. Give each expert its own list, scoped to exactly what that role needs.
+        The common mistake is defining one <code>connectors</code> list and reusing it on every
+        agent. Give each agent its own list, scoped to exactly what that role needs.
       </p>
     </div>
   );

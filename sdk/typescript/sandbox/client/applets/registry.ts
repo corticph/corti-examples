@@ -604,7 +604,7 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "multi-agent-roles",
     title: "Role-scoped multi-agent build",
-    description: "Front desk vs clinical notes, scoped mcpServers",
+    description: "Front desk vs clinical notes, per-agent connectors",
     workflow: "extended",
     icon: Network,
     Component: MultiAgentRoles,
@@ -614,11 +614,11 @@ export const APPLETS: AppletDefinition[] = [
   {
     id: "multi-agent-specialists",
     title: "Narrow-tool specialist network",
-    description: "One capability per expert, inline and registry",
+    description: "One capability per specialist, custom and registry",
     workflow: "extended",
     icon: Boxes,
     Component: MultiAgentSpecialists,
-    detailsTitle: "Inline vs reference experts",
+    detailsTitle: "Agent vs registry connectors",
     Details: MultiAgentSpecialistsDetails,
   },
   {

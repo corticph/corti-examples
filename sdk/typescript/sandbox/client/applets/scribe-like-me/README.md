@@ -14,7 +14,7 @@ as read-only compatibility context; the applet never proposes or applies an
 
 ## Pipeline
 
-1. **Scribe Style Reviewer** (`client.agents.*`) reads a persona's historical
+1. **Scribe Style Reviewer** (`client.agentic.agents.*`) reads a persona's historical
    notes and writes a prose style summary.
 2. **Scribe Template Tailor** takes that summary plus a shortlist of resolved
    Corti Standard templates (`client.documents.templates.list/get`) and
@@ -45,7 +45,7 @@ the role lives in the systemPrompt, persona data travels in the message body.
 This is the same shape as `chart-prep-workflow`'s 3-stage pipeline, just two
 stages. Both prompts are editable from the details panel (same pattern as
 `second-pass-agent`/`wake-command-agent`) — saving pushes the change to the
-live agent via `client.agents.update`.
+live agent via `client.agentic.agents.update`.
 
 ## Dependencies to copy
 
@@ -70,7 +70,7 @@ live agent via `client.agents.update`.
   section sequence, so relying on it made rendered notes read out of order.
 - Both agent prompts are editable from the details panel; each is persisted
   to `localStorage` per API client and, once that agent exists, saving (or
-  resetting) pushes the change live via `client.agents.update`. Since
+  resetting) pushes the change live via `client.agentic.agents.update`. Since
   `ensureAgent` matches an existing agent by *name*, a tenant that already
   created "Scribe Style Reviewer"/"Scribe Template Tailor" before a prompt
   change lands in this repo keeps running the old prompt until someone saves

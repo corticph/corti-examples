@@ -22,8 +22,8 @@ export function MyNoteStyleDetails() {
           </li>
           <li>
             <strong className="text-foreground">Store to memory</strong> — each edited section is
-            sent to an agent (<code className="text-[12px]">client.agents.*</code>) that interprets
-            the diff and proposes a template prompt update (
+            sent to an agent (<code className="text-[12px]">client.agentic.agents.*</code>) that
+            interprets the diff and proposes a template prompt update (
             <code className="text-[12px]">contentPrompt</code>,
             <code className="text-[12px]">writingStylePrompt</code>, or
             <code className="text-[12px]">miscPrompt</code>).
@@ -81,8 +81,8 @@ export function MyNoteStyleDetails() {
           <div className="flex items-start gap-2">
             <Brain size={13} className="mt-0.5 shrink-0 text-muted-foreground" />
             <span>
-              <code className="text-[12px]">client.agents.*</code> — the My Note Style Memory agent
-              interprets edits
+              <code className="text-[12px]">client.agentic.agents.*</code> — the My Note Style
+              Memory agent interprets edits
             </span>
           </div>
           <div className="flex items-start gap-2">
