@@ -37,7 +37,7 @@ Use a non-production cluster and a disposable test tenant.
 
 ## Prerequisites
 
-- Node.js 22 (see `.nvmrc`) and npm
+- Node.js 22.15+ or 24+ (see `.nvmrc`) and npm
 - Corti client credentials and access to a Corti tenant and cluster, available
   from [Corti Console](https://console.corti.app)
 - A supported browser; microphone and WebHID examples may require explicit

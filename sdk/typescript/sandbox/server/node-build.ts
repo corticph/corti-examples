@@ -10,8 +10,6 @@ import { createServer } from "./index";
 export function buildProdApp() {
   const app = createServer();
 
-  // Resolve via import.meta.url (works on Node 18+) rather than
-  // import.meta.dirname (Node 20.11+ only) so we honor the >=18 engines range.
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const distPath = path.join(__dirname, "../spa");
 
