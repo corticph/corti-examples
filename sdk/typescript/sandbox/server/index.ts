@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 
-dotenv.config({ override: true });
+// The CLI (bin/cli.mjs) has already loaded .env and applied its --tenant /
+// --cluster / --client-id flags on top; overriding here would undo them.
+dotenv.config({ override: !process.env.CORTI_SANDBOX_BIN });
 
 import express from "express";
 import { getCreds, hasCreds } from "./lib/cortiToken";

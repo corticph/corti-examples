@@ -31,7 +31,7 @@ Run a single test: `npx vitest run client/applets/_shared/offsetMap.test.ts` (or
 
 ## Architecture
 
-**Hybrid Vite + Express.** `vite.config.ts` registers `expressPlugin`, which mounts `createServer()` from `server/index.ts` on the Vite dev server, so `/api/*` hits Express in development. In production, `server/node-build.ts` serves `dist/spa` and the same Express app. `dotenv` reads `.env` from the working directory with `override: true`.
+**Hybrid Vite + Express.** `vite.config.ts` registers `expressPlugin`, which mounts `createServer()` from `server/index.ts` on the Vite dev server, so `/api/*` hits Express in development. In production, `server/node-build.ts` serves `dist/spa` and the same Express app. `dotenv` reads `.env` from the working directory with `override: true`, except under the CLI launcher (`CORTI_SANDBOX_BIN`), which loads `.env` itself so its flags win.
 
 **Server (`server/`).**
 
