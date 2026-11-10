@@ -17,8 +17,9 @@ export interface AgentSpec {
   systemPrompt: string;
   /** Model identifier (e.g. "corti-s1-mini-instant"). Tenant default if omitted. */
   model?: string;
-  /** "persistent" retains the agent across sessions. Defaults to "ephemeral". */
-  lifecycle?: "persistent";
+  /** Defaults to "persistent": callers cache the agent id, and "ephemeral"
+   *  agents expire after 24h, which would leave that cached id dangling. */
+  lifecycle?: Corti.AgentsLifecycle;
   /** Registry connectors to attach at creation (e.g. pubmed-expert, coding-expert). */
   connectors?: Corti.CommonConnectorCreateRequest[];
 }
@@ -106,7 +107,7 @@ export async function ensureAgentWithMeta(
     description: spec.description,
     systemPrompt: spec.systemPrompt,
     model: spec.model,
-    lifecycle: spec.lifecycle,
+    lifecycle: spec.lifecycle ?? "persistent",
     connectors: spec.connectors ?? [],
   });
   return { id: created.id, created: true };
