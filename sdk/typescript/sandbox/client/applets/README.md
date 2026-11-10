@@ -98,7 +98,12 @@ hardware integration.
 **Web components**
 
 - `cortiDictationReact.tsx` / `cortiAmbientReact.tsx`: `@lit/react` wrappers
-  for `<corti-dictation>` and `<corti-ambient>`.
+  for `<corti-dictation>` and `<corti-ambient>`. When copying them, also copy
+  what they import: `examplesAnalytics.ts`, `useDictationDevice.ts` (with
+  `dictationDevice.ts`, `hidRecording.ts`, and
+  `device-buttons/mappingStore.ts`), and
+  `client/context/SessionStatusContext.tsx`, which is a no-op without its
+  provider.
 - `DictationField.tsx`: a textarea plus `<corti-dictation>` that inserts final
   segments at the caret.
 - `useDictationLanguage.ts`: the global dictation language, persisted in

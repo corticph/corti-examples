@@ -38,10 +38,16 @@ export function SessionStatusProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const NOOP_SESSION_STATUS: SessionStatusContextValue = {
+  status: {},
+  setStatus: () => {},
+  clear: () => {},
+};
+
+/**
+ * Outside a provider this is a no-op, so the shared web-component wrappers
+ * keep working when copied into an app that has no session footer.
+ */
 export function useSessionStatus(): SessionStatusContextValue {
-  const ctx = useContext(SessionStatusContext);
-  if (!ctx) {
-    throw new Error("useSessionStatus must be used within a SessionStatusProvider");
-  }
-  return ctx;
+  return useContext(SessionStatusContext) ?? NOOP_SESSION_STATUS;
 }
