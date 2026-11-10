@@ -16,9 +16,10 @@ import {
   Sparkles,
   Stethoscope,
 } from "lucide-react";
-import { lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { AppletIdProvider } from "../applets/_shared/sessionState";
 import {
   APPLETS,
   type AppletDefinition,
@@ -45,17 +46,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { cn } from "../lib/utils";
-
-// three + R3F is heavy and only used on this Home page, so load it as its own chunk.
-const _CardHeaderGL = lazy(() =>
-  import("../components/docs/CardHeaderGL").then((m) => ({
-    default: m.CardHeaderGL,
-  })),
-);
-
-import { AppletIdProvider } from "../applets/_shared/sessionState";
 import { useAuth } from "../context/AuthContext";
+import { cn } from "../lib/utils";
 import { CLUSTERS } from "../types/websocket";
 import NotFound from "./NotFound";
 
@@ -438,7 +430,6 @@ export function Home() {
               to={first ? appletPath(first) : "/"}
               className="group flex flex-col overflow-hidden rounded-none border border-border bg-card no-underline transition-colors hover:border-foreground"
             >
-              {/* Three.js CardHeaderGL disabled for now; slot left blank. */}
               <div className="h-28 w-full border-b border-border bg-muted/30" />
               <div className="flex flex-1 flex-col gap-2 p-5">
                 <div className="flex items-center gap-2">
