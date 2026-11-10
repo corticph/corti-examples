@@ -48,7 +48,7 @@ function makeProposal(version: number, payload: string): Proposal {
     taskId: `task-${taskCounter}`,
     version,
     proposedAt: new Date().toISOString(),
-    proposedBy: "clinical-notes-expert",
+    proposedBy: "clinical-notes-agent",
     action: "facts.create",
     payload,
     status: "pending",
@@ -153,7 +153,7 @@ export function HitlCheckpoint() {
     setChain((prev) => [...prev, revised]);
     record(
       `orchestrator revised proposal to v${nextVersion} (${current.taskId}) based on feedback`,
-      "clinical-notes-expert",
+      "clinical-notes-agent",
     );
   };
 

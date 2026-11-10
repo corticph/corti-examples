@@ -21,7 +21,7 @@ import { useSessionState } from "../_shared/sessionState";
 const FRONT_DESK_TOOLS = ["scheduling-mcp", "patient-lookup-mcp"];
 const CLINICAL_TOOLS = ["facts-mcp", "coding-mcp"];
 
-type ExpertId = "front-desk" | "clinical-notes";
+type RoleAgentId = "front-desk" | "clinical-notes";
 
 const FRONT_DESK_KEYWORDS = [
   "reschedule",
@@ -52,9 +52,9 @@ const SAMPLE_REQUESTS = [
   "What's the weather like tomorrow?",
 ];
 
-function matchExperts(request: string): ExpertId[] {
+function matchAgents(request: string): RoleAgentId[] {
   const lower = request.toLowerCase();
-  const matched: ExpertId[] = [];
+  const matched: RoleAgentId[] = [];
   if (FRONT_DESK_KEYWORDS.some((k) => lower.includes(k))) {
     matched.push("front-desk");
   }
@@ -64,8 +64,8 @@ function matchExperts(request: string): ExpertId[] {
   return matched;
 }
 
-function mockResponse(expert: ExpertId): string {
-  return expert === "front-desk"
+function mockResponse(role: RoleAgentId): string {
+  return role === "front-desk"
     ? "[front-desk, scheduling-mcp / patient-lookup-mcp] Found the appointment and updated it."
     : "[clinical-notes, facts-mcp / coding-mcp] Pulled the relevant fact and returned it for review.";
 }
@@ -75,11 +75,11 @@ export function MultiAgentRoles() {
   const [request, setRequest] = useSessionState("request", SAMPLE_REQUESTS[0]);
   const [trace, setTrace] = useSessionState<{
     request: string;
-    matched: ExpertId[];
+    matched: RoleAgentId[];
   } | null>("trace", null);
 
   const send = () => {
-    setTrace({ request, matched: matchExperts(request) });
+    setTrace({ request, matched: matchAgents(request) });
   };
 
   return (
@@ -217,9 +217,9 @@ export function MultiAgentRoles() {
             {trace.matched.length > 1 && (
               <div className="mt-2 space-y-1">
                 <Badge variant="secondary">routed to both, orchestrator combines the results</Badge>
-                {trace.matched.map((expert) => (
-                  <p key={expert} className="text-sm text-muted-foreground">
-                    {mockResponse(expert)}
+                {trace.matched.map((role) => (
+                  <p key={role} className="text-sm text-muted-foreground">
+                    {mockResponse(role)}
                   </p>
                 ))}
               </div>

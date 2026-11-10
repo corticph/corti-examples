@@ -118,8 +118,8 @@ export function CommandGenieDetails() {
             descriptions.
           </li>
           <li>
-            The agent has no <code>experts</code> (no MCP servers, no tools) — it can only generate
-            JSON text.
+            The agent has no <code>connectors</code> (no MCP servers, no tools) — it can only
+            generate JSON text.
           </li>
           <li>
             The <code>script</code> action kind runs in a sandboxed <code>new Function()</code>{" "}

@@ -66,7 +66,7 @@ client/applets/command-genie/
 
 ## Notes
 
-- The agent's system prompt is fixed (not user-editable) — a deliberate safety boundary. The agent has no experts, no MCP servers, no tools — it can only generate JSON text.
+- The agent's system prompt is fixed (not user-editable) — a deliberate safety boundary. The agent has no connectors (no MCP servers, no tools), so it can only generate JSON text.
 - User inputs are sent as data, not instructions. The system prompt instructs the agent to treat all user input as configuration descriptions.
 - The `script` action kind runs in a sandboxed `new Function()` scope — the same mechanism used by the existing command dispatch system. The agent generates the script, not the user.
 - Generated items persist to the shared stores (`commandStore` / `nudgeRuleStore`) and appear in the Dictation commands and Real-time nudge applets for the same API client.

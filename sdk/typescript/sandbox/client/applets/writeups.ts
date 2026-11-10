@@ -1373,7 +1373,7 @@ function toFormValues(byGroup: Record<string, Corti.FactsExtractResponseFactsIte
       {
         heading: "Building an orchestrator that gathers from multiple sources",
         text: [
-          'Create one agent per kind of data you gather, then an orchestrator agent that delegates to them: client.agentic.agents.create({ name, description, systemPrompt, connectors }), with one { type: "agent", agentId } connector per gatherer. The gatherers might be a facts extraction agent and a coding agent, each pulling from a different source: a referral document, a live encounter, a lab result. The orchestrator\'s job is only to gather what those experts return and produce one structured output describing a single proposed action, for example a fact to persist, a coded value to attach to a chart, or a message to send.',
+          'Create one agent per kind of data you gather, then an orchestrator agent that delegates to them: client.agentic.agents.create({ name, description, systemPrompt, connectors }), with one { type: "agent", agentId } connector per gatherer. The gatherers might be a facts extraction agent and a coding agent, each pulling from a different source: a referral document, a live encounter, a lab result. The orchestrator\'s job is only to gather what those agents return and produce one structured output describing a single proposed action, for example a fact to persist, a coded value to attach to a chart, or a message to send.',
         ],
         snippets: [
           {
@@ -1593,7 +1593,7 @@ function record(actor: string, event: string) {
       {
         heading: "Making each role its own agent",
         text: [
-          'There is no inline expert type in the v2 API. Each role is an ordinary agent with its own systemPrompt and connectors, and the orchestrator is another agent whose connectors point at them. Because the orchestrator references the specialists by id, create the specialists first. This guide uses two connector kinds: { type: "mcp", name, url, auth } for a tool server, and { type: "agent", agentId } for delegating to another agent.',
+          'Each role is an ordinary agent with its own systemPrompt and connectors, and the orchestrator is another agent whose connectors point at them. Because the orchestrator references the specialists by id, create the specialists first. This guide uses two connector kinds: { type: "mcp", name, url, auth } for a tool server, and { type: "agent", agentId } for delegating to another agent.',
         ],
         snippets: [
           {
