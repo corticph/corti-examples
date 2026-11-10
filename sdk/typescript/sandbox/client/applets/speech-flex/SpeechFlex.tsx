@@ -141,6 +141,9 @@ export function SpeechFlex() {
   const [existingNotes, setExistingNotes] = useState<ExistingNote[]>([]);
   const [interactionLoading, setInteractionLoading] = useState(false);
   const fetchedRef = useRef<string | null>(null);
+  // Bumped whenever the visit changes, so an in-flight load for the previous
+  // visit can tell it is stale and drop its results.
+  const loadSeqRef = useRef(0);
 
   // Document IDs per interaction, persisted in localStorage so generated
   // notes survive page refresh. Keyed by `${clientId}:${tenant}:${interactionId}`.
@@ -295,6 +298,8 @@ export function SpeechFlex() {
   useEffect(() => {
     if (fetchedRef.current !== selectedVisitId) {
       fetchedRef.current = null;
+      loadSeqRef.current++;
+      setInteractionLoading(false);
       setAmbientSegments([]);
       setAmbientFacts([]);
       setAmbientClips([]);
@@ -317,14 +322,22 @@ export function SpeechFlex() {
       return;
     }
     fetchedRef.current = selectedVisitId;
+    const visitId = selectedVisitId;
+    const seq = ++loadSeqRef.current;
+    // Switching visits mid-load must not write this visit's transcript, facts,
+    // or notes into the next one, so bail out after every await.
+    const isStale = () => loadSeqRef.current !== seq;
     setInteractionLoading(true);
 
     void (async () => {
       try {
         // Fetch transcripts (full: true returns segment data, not just the sample).
-        const transcriptList = await client.transcripts.list(selectedVisitId, {
+        const transcriptList = await client.transcripts.list(visitId, {
           full: true,
         });
+        if (isStale()) {
+          return;
+        }
         const transcripts = transcriptList.transcripts ?? [];
         const allSegments: DiarizedSegment[] = [];
         for (const item of transcripts) {
@@ -349,7 +362,10 @@ export function SpeechFlex() {
 
         // Fetch facts.
         if (settings.factsEnabled) {
-          const factsResponse = await client.facts.list(selectedVisitId);
+          const factsResponse = await client.facts.list(visitId);
+          if (isStale()) {
+            return;
+          }
           const fetchedFacts = (factsResponse.facts ?? []).map((f) => ({
             id: f.id ?? "",
             text: f.text ?? "",
@@ -371,7 +387,7 @@ export function SpeechFlex() {
         // so listing by interactionId returns nothing. Instead, we persist
         // document IDs per interaction in localStorage and fetch each via
         // client.documents.get().
-        const docIds = getDocIds(selectedVisitId);
+        const docIds = getDocIds(visitId);
         if (docIds.length > 0 && client) {
           const notes: ExistingNote[] = [];
           for (const docId of docIds) {
@@ -395,6 +411,9 @@ export function SpeechFlex() {
             } catch {
               // Document may have been deleted or expired — skip it.
             }
+            if (isStale()) {
+              return;
+            }
           }
           if (notes.length > 0) {
             setExistingNotes(notes);
@@ -403,7 +422,9 @@ export function SpeechFlex() {
       } catch {
         // Non-fatal — the user can still record and generate new notes.
       } finally {
-        setInteractionLoading(false);
+        if (!isStale()) {
+          setInteractionLoading(false);
+        }
       }
     })();
   }, [client, selectedVisitId, settings.factsEnabled]);
