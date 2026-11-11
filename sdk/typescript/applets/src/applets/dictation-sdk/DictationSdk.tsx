@@ -90,8 +90,16 @@ export function DictationSdk() {
       socketRef.current = socket;
 
       socket.on("message", (message) => {
-        if (message.type === "transcript" && message.data.isFinal) {
-          const seg = message.data.text;
+        if (message.type !== "transcript") {
+          return;
+        }
+        // data is one segment, or a list of word items when wordLevel is enabled
+        const segments = Array.isArray(message.data) ? message.data : [message.data];
+        for (const segment of segments) {
+          if (!segment.isFinal) {
+            continue;
+          }
+          const seg = segment.text;
           setText((prev) => {
             const { text: next } = spliceSegment(prev, prev.length, prev.length, seg, {
               primaryLanguage: LANGUAGE,

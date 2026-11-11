@@ -135,9 +135,14 @@ export async function startSession(options: SessionOptions): Promise<ActiveSessi
           console.error("[dictation] Config timed out");
           break;
 
-        case "transcript":
-          onTranscriptCb?.(message.data);
+        case "transcript": {
+          // data is one segment, or a list of word items when wordLevel is enabled
+          const segments = Array.isArray(message.data) ? message.data : [message.data];
+          for (const segment of segments) {
+            onTranscriptCb?.(segment);
+          }
           break;
+        }
 
         case "command":
           onCommandCb?.(message.data);

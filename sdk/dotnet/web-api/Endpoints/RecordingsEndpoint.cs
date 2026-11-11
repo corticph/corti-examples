@@ -38,7 +38,7 @@ public static class RecordingsEndpoint
             });
             var demoInteractionId = created.InteractionId;
 
-            var recordsList = await client.Recordings.ListAsync(demoInteractionId);
+            var recordsList = await client.Recordings.ListAsync(demoInteractionId, new RecordingsListRequest());
             var listRecordings = recordsList.Recordings?.ToList() ?? new List<string>();
 
             var samplePath = CortiHelpers.ResolveSampleFilePath(env.ContentRootPath, "trouble-breathing.mp3");
