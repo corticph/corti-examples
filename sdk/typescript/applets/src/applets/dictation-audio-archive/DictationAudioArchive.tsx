@@ -348,21 +348,25 @@ export function DictationAudioArchive() {
         if (message.type !== "transcript") {
           return;
         }
-        if (message.data.isFinal) {
+        // data is one segment, or a list of word items when wordLevel is enabled
+        const segments = Array.isArray(message.data) ? message.data : [message.data];
+        for (const segment of segments) {
+          if (!segment.isFinal) {
+            setInterim(segment.text);
+            continue;
+          }
           setInterim("");
           setText((previous) => {
             const { text: next } = spliceSegment(
               previous,
               previous.length,
               previous.length,
-              message.data.text,
+              segment.text,
               { primaryLanguage: LANGUAGE },
             );
             return next;
           });
-          return;
         }
-        setInterim(message.data.text);
       });
 
       socket.on("error", (socketError) => {
