@@ -185,21 +185,24 @@ export function useComparisonConnections(language: string) {
             configuration: config,
           });
           socket.on("message", (message) => {
-            if (message.type === "transcript") {
-              const entry = socketsRef.current.find((c) => c.option.value === option.value);
-              if (!entry) {
-                return;
-              }
-              if (message.data.isFinal) {
-                entry.interim = "";
-                entry.final = entry.final
-                  ? `${entry.final} ${message.data.text}`
-                  : message.data.text;
-              } else {
-                entry.interim = message.data.text;
-              }
-              scheduleUpdate();
+            if (message.type !== "transcript") {
+              return;
             }
+            const entry = socketsRef.current.find((c) => c.option.value === option.value);
+            if (!entry) {
+              return;
+            }
+            // data is one segment, or a list of word items when wordLevel is enabled
+            const segments = Array.isArray(message.data) ? message.data : [message.data];
+            for (const segment of segments) {
+              if (!segment.isFinal) {
+                entry.interim = segment.text;
+                continue;
+              }
+              entry.interim = "";
+              entry.final = entry.final ? `${entry.final} ${segment.text}` : segment.text;
+            }
+            scheduleUpdate();
           });
           socket.on("error", (e: Error) => {
             const entry = socketsRef.current.find((c) => c.option.value === option.value);
