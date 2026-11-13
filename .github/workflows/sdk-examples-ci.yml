@@ -1,4 +1,4 @@
-# Format check and build for SDK examples (runs only on PRs)
+# Format check, lint and build for SDK examples, plus typecheck and test where enabled (runs only on PRs)
 # Each job runs only when files in its path were changed.
 name: SDK Examples CI
 
@@ -38,8 +38,8 @@ jobs:
             react-next-agent-chat:
               - 'agents/react/next-agent-chat/**'
               - '.github/workflows/sdk-examples-ci.yml'
-            applets:
-              - 'sdk/typescript/applets/**'
+            sandbox:
+              - 'sdk/typescript/sandbox/**'
               - '.github/workflows/sdk-examples-ci.yml'
             search-documents-ui:
               - 'agents/react/search-documents-ui/**'
@@ -76,7 +76,7 @@ jobs:
         run: dotnet build --no-restore -c Release
 
   typescript:
-    name: TypeScript ${{ matrix.project }} lint & build
+    name: TypeScript ${{ matrix.project }} checks
     needs: changes
     if: needs.changes.outputs.ts_projects != '[]'
     runs-on: ubuntu-latest
@@ -91,8 +91,11 @@ jobs:
             path: sdk/typescript/next-auth-examples
           - project: react-next-agent-chat
             path: agents/react/next-agent-chat
-          - project: applets
-            path: sdk/typescript/applets
+          - project: sandbox
+            path: sdk/typescript/sandbox
+            node-version-file: sdk/typescript/sandbox/.nvmrc
+            typecheck: true
+            test: true
           - project: search-documents-ui
             path: agents/react/search-documents-ui
           - project: search-documents-mcp
@@ -109,12 +112,22 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Projects with an .nvmrc set node-version-file; everything else uses Node 20.
+          node-version: ${{ !matrix.node-version-file && '20' || '' }}
+          node-version-file: ${{ matrix.node-version-file }}
           cache: "npm"
           cache-dependency-path: ${{ matrix.path }}/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Typecheck
+        if: matrix.typecheck
+        run: npm run typecheck
+
+      - name: Test
+        if: matrix.test
+        run: npm test
 
       - name: Lint (Biome)
         run: npm run lint
